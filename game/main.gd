@@ -137,6 +137,7 @@ const DRAG_RADIUS = 65.0
 var drag_origin = Vector2.ZERO
 var mouse_dragging = false
 var move_touch = -1
+var move_touch_active = false
 var touch_move = Vector2.ZERO
 var camera_center = Vector2(640, 390)
 var terrain_cell = Vector2i(2147483647, 2147483647)
@@ -471,6 +472,7 @@ func update_drag(position: Vector2) -> void:
 func clear_touch() -> void:
 	mouse_dragging = false
 	move_touch = -1
+	move_touch_active = false
 	touch_move = Vector2.ZERO
 
 func home_tab_rect(index: int) -> Rect2:
@@ -592,17 +594,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
-			if can_begin_drag(event.position) and move_touch == -1 and not mouse_dragging:
+			if can_begin_drag(event.position) and not move_touch_active and not mouse_dragging:
 				move_touch = event.index
+				move_touch_active = true
 				drag_origin = event.position
 				touch_move = Vector2.ZERO
 			else:
 				activate_pointer(event.position)
-		elif event.index == move_touch:
+		elif move_touch_active and event.index == move_touch:
 			clear_touch()
 		return
 	if event is InputEventScreenDrag:
-		if event.index == move_touch and state == "playing":
+		if move_touch_active and event.index == move_touch and state == "playing":
 			update_drag(event.position)
 		return
 	if event is InputEventMouseMotion and mouse_dragging:
@@ -643,7 +646,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			choose_upgrade(event.keycode - KEY_1)
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			if can_begin_drag(event.position) and move_touch == -1:
+			if can_begin_drag(event.position) and not move_touch_active:
 				mouse_dragging = true
 				drag_origin = event.position
 				touch_move = Vector2.ZERO
@@ -768,7 +771,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	var move = Vector2(float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)), float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP))).normalized()
 	if bot_move != Vector2.INF:
 		move = bot_move.normalized()
-	elif move_touch >= 0 or mouse_dragging:
+	elif move_touch_active or mouse_dragging:
 		move = touch_move if touch_move.length() > 0.12 else Vector2.ZERO
 	elif not Input.get_connected_joypads().is_empty():
 		var device = Input.get_connected_joypads()[0]
@@ -2227,7 +2230,7 @@ func draw_hud() -> void:
 	set_scene_transform(Vector2.ZERO)
 
 func draw_touch_controls() -> void:
-	var active_drag = move_touch >= 0 or mouse_dragging
+	var active_drag = move_touch_active or mouse_dragging
 	if settings.values.show_joystick or active_drag or DisplayServer.is_touchscreen_available():
 		var origin = drag_origin if active_drag else Vector2(145,1150 + ui_offset().y)
 		draw_circle(origin,DRAG_RADIUS,Color(0.22,0.35,0.12,0.25))

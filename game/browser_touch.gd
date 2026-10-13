@@ -11,12 +11,17 @@ func setup() -> void:
  if (!canvas) return;
  window.backyardTouchQueue = [];
  window.backyardTouchUntil = 0;
+ const fingers = new Map();
+ let nextFinger = 0;
  const record = (event, kind) => {
   const rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
   for (const touch of event.changedTouches) {
-   window.backyardTouchQueue.push([kind, touch.identifier,
+   if (kind === "down") fingers.set(touch.identifier, nextFinger++);
+   if (!fingers.has(touch.identifier)) continue;
+   window.backyardTouchQueue.push([kind, fingers.get(touch.identifier),
     (touch.clientX-rect.left)/rect.width, (touch.clientY-rect.top)/rect.height]);
+   if (kind === "up") fingers.delete(touch.identifier);
   }
   window.backyardTouchUntil = performance.now()+800;
   if (event.cancelable) event.preventDefault();
@@ -26,7 +31,7 @@ func setup() -> void:
  canvas.addEventListener('touchmove', e => record(e, 'move'), {passive:false});
  canvas.addEventListener('touchend', e => record(e, 'up'), {passive:false});
  canvas.addEventListener('touchcancel', e => record(e, 'up'), {passive:false});
- window.addEventListener('blur', () => window.backyardTouchQueue.push(['cancel',0,0,0]));
+ window.addEventListener('blur', () => { fingers.clear(); window.backyardTouchQueue.push(['cancel',0,0,0]); });
  window.backyardReadTouches = () => JSON.stringify(window.backyardTouchQueue.splice(0));
 })();
 """, true)
