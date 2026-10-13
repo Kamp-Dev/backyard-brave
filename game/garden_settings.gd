@@ -1,9 +1,9 @@
 extends RefCounted
 const BUTTON = Rect2(577,177,108,62)
 const CLOSE = Rect2(230,1022,260,70)
-const KEYS = ["sound","music","vibration","reduced_vfx","reduced_flashes","damage_numbers","show_joystick","low_graphics"]
-const LABELS = ["Sound effects","Music","Vibration","Reduced effects","Reduced flashes","Damage numbers","Show joystick","Graphics"]
-var values = {"sound":true,"music":false,"vibration":false,"reduced_vfx":false,"reduced_flashes":false,"damage_numbers":true,"show_joystick":false,"low_graphics":false}
+const KEYS = ["sound","music","vibration","reduced_vfx","reduced_flashes","damage_numbers","show_joystick","low_graphics","battery_saver"]
+const LABELS = ["Sound effects","Music","Vibration","Reduced effects","Reduced flashes","Damage numbers","Show joystick","Graphics","Battery saver"]
+var values = {"sound":true,"music":false,"vibration":false,"reduced_vfx":false,"reduced_flashes":false,"damage_numbers":true,"show_joystick":false,"low_graphics":false,"battery_saver":false}
 var host: Node2D
 var opened = false
 var tab = 0
@@ -18,6 +18,9 @@ var numbers: Array[Dictionary] = []
 
 func setup(node: Node2D) -> void:
  host=node
+ values.battery_saver=OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
+ if OS.has_feature("web"):
+  values.battery_saver=values.battery_saver or bool(JavaScriptBridge.eval("navigator.maxTouchPoints > 0"))
  var cfg=ConfigFile.new()
  var result=cfg.load("user://settings.cfg")
  if result==OK:
@@ -33,6 +36,11 @@ func setup(node: Node2D) -> void:
  if result in [OK,ERR_FILE_NOT_FOUND]: persist()
  else: notice="Settings could not be read; defaults loaded."
  sync_music()
+ apply_performance()
+
+func apply_performance() -> void:
+ var target=30 if values.battery_saver or host.state!="playing" else 60
+ if Engine.max_fps!=target: Engine.max_fps=target
 
 func persist() -> bool:
  var cfg=ConfigFile.new()
@@ -57,7 +65,7 @@ func sync_music() -> void:
  if not music.playing: music.play()
 
 func row(index: int) -> Rect2:
- return Rect2(105,414+index*62,510,57)
+ return Rect2(105,410+index*56,510,53)
 
 func toggle(index: int) -> void:
  var key=KEYS[index]
@@ -71,6 +79,7 @@ func toggle(index: int) -> void:
   for voice in host.audio_players: voice.stop()
  if key=="music": sync_music()
  if key=="damage_numbers": numbers.clear()
+ if key=="battery_saver": apply_performance()
  notice="Saved"
 
 func handle(event: InputEvent) -> bool:
@@ -93,7 +102,7 @@ func handle(event: InputEvent) -> bool:
   elif Rect2(110,340,245,58).has_point(event.position): tab=0; focus=0
   elif Rect2(365,340,245,58).has_point(event.position): tab=1; focus=0
   elif tab==0:
-   for i in range(8):
+   for i in range(KEYS.size()):
     if row(i).has_point(event.position): focus=i; toggle(i)
   else:
    for i in range(3):
@@ -103,7 +112,7 @@ func handle(event: InputEvent) -> bool:
 func navigate(key: int) -> void:
  if key==KEY_ESCAPE: opened=false
  elif key in [KEY_LEFT,KEY_RIGHT,KEY_TAB]: tab=1-tab; focus=0
- elif key in [KEY_UP,KEY_DOWN]: focus=posmod(focus+(1 if key==KEY_DOWN else -1),8 if tab==0 else 3)
+ elif key in [KEY_UP,KEY_DOWN]: focus=posmod(focus+(1 if key==KEY_DOWN else -1),KEYS.size() if tab==0 else 3)
  elif key in [KEY_ENTER,KEY_SPACE]:
   if tab==0: toggle(focus)
   else: save_action(focus)
@@ -123,6 +132,7 @@ func save_action(index: int) -> void:
   notice="Save file readable. No issues found." if ok else "Save unreadable. Existing file left untouched."
 
 func advance(delta: float) -> void:
+ apply_performance()
  if values.sound==host.mute:
   values.sound=not host.mute
   persist()
@@ -181,7 +191,7 @@ func paint() -> void:
  host.draw_pause_action(Rect2(110,340,245,58),"GENERAL",tab==0)
  host.draw_pause_action(Rect2(365,340,245,58),"SAVE & INFO",tab==1)
  if tab==0:
-  for i in range(8):
+  for i in range(KEYS.size()):
    var rect=row(i)
    host.text_at(rect.position+Vector2(12,37),LABELS[i],25,host.JOURNAL_INK)
    var toggle_rect=Rect2(rect.position+Vector2(351,4),Vector2(145,48))
@@ -189,7 +199,7 @@ func paint() -> void:
     host.draw_garden_button(toggle_rect,"LOW" if values.low_graphics else "HIGH",focus==i,22)
    else:
     host.draw_garden_toggle(toggle_rect,values[KEYS[i]])
-  host.center_text(942,"Language: English",21,host.LEAF_GREEN)
+  host.center_text(942,"Battery saver: 30 FPS / Normal: 60 FPS",18,host.LEAF_GREEN)
   host.center_text(973,"Vibration requires a supported device.",18,host.LEAF_GREEN)
  else:
   host.center_text(452,"LOCAL SCOUT PROFILE",26,host.JOURNAL_INK)

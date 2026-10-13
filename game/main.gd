@@ -876,9 +876,12 @@ func steering(e: Dictionary, desired: Vector2) -> Vector2:
 				tangent = -tangent
 			result = (tangent + from_obstacle.normalized() * 0.25).normalized()
 	for other in enemies:
-		if e == other:
+		if e.uid == other.uid:
 			continue
 		var diff: Vector2 = e.p - other.p
+		var separation: float = e.radius + other.radius + 14
+		if diff.length_squared() >= separation * separation:
+			continue
 		var distance = diff.length()
 		if distance < 0.01:
 			result += Vector2.from_angle(mini(e.uid,other.uid)*2.39996)*(0.6 if e.uid>other.uid else -0.6)
@@ -898,6 +901,8 @@ func update_player_bullets(dt: float) -> void:
 		for o in obstacles:
 			wall_hit = minf(wall_hit, Combat.hit_fraction(start, b.p, o, 41))
 		var consumed = false
+		# Cheap swept bounds reject distant enemies before segment/circle math.
+		var swept_bounds = Rect2(start, Vector2.ZERO).expand(b.p)
 		# Resolve every pierced target along this swept segment in distance order.
 		for contact in range(3):
 			var first_hit = wall_hit
@@ -905,6 +910,8 @@ func update_player_bullets(dt: float) -> void:
 			for ei in range(enemies.size()):
 				var e = enemies[ei]
 				if b.hit_ids.has(e.uid) or not enemy_targetable(e):
+					continue
+				if not swept_bounds.grow(e.radius + 5.001).has_point(e.p):
 					continue
 				var hit = Combat.hit_fraction(start, b.p, e.p, e.radius + 5)
 				if hit < first_hit:
@@ -1397,7 +1404,13 @@ func save_progress() -> bool:
 
 func burst(p: Vector2, color: Color, count: int) -> void:
 	for i in range(count):
-		effects.append({"p": p, "v": Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(50, 140), "life": 0.25, "color": color})
+		# Preserve RNG consumption so visual quality never changes spawn/drop rolls.
+		var velocity = Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(50, 140)
+		if settings.values.low_graphics or effects.size() >= 120:
+			continue
+		if (settings.values.battery_saver or settings.values.reduced_vfx) and i % 3 != 0:
+			continue
+		effects.append({"p": p, "v": velocity, "life": 0.25, "color": color})
 
 func tone(freq: float, _duration: float) -> void:
 	var cues={90:"scout-hurt",150:"boss-arrival",180:"charge-warning",210:"shell-hit",290:"soft-hit",220:"roll-rustle",280:"bug-spit",340:"bug-defeat",520:"berry-heal",660:"upgrade",740:"guard-block",880:"seed-pickup"}
@@ -1643,18 +1656,21 @@ func _draw() -> void:
 	drawing_world = true
 	set_scene_transform(Vector2.ZERO)
 	draw_ground()
+	var visible_world = world_view()
+	var pickup_view = visible_world.grow(30)
+	var enemy_view = visible_world.grow(140)
 	for o in obstacles:
-		if world_view().grow(80).has_point(o):
+		if visible_world.grow(80).has_point(o):
 			draw_backyard_rock(o)
 	draw_bug_deaths()
 	for g in gems:
-		if world_view().grow(30).has_point(g):
+		if pickup_view.has_point(g):
 			draw_pickup(g, 0, 15)
 	for p in repairs:
-		if world_view().grow(30).has_point(p):
+		if pickup_view.has_point(p):
 			draw_pickup(p, 1, 23)
 	for drop in bonus_drops:
-		if world_view().grow(30).has_point(drop.p):
+		if pickup_view.has_point(drop.p):
 			draw_pickup(drop.p, drop.kind, 25)
 	draw_movement_fx()
 	for b in bullets:
@@ -1664,7 +1680,7 @@ func _draw() -> void:
 		draw_circle(b.p, b.radius, Color("ff776d"))
 		draw_circle(b.p, b.radius * 0.4, Color("ffd29e"))
 	for e in enemies:
-		if world_view().grow(140).has_point(e.p):
+		if enemy_view.has_point(e.p):
 			draw_enemy(e)
 	for i in range(effects.size()):
 		if settings.values.low_graphics or (settings.values.reduced_vfx and i%3!=0): continue
@@ -2404,6 +2420,55 @@ func test_storybook_controls() -> void:
 		assert(upgrade_ranks[index] == 1 and state == "playing")
 	start_run()
 
+func test_mobile_performance() -> void:
+	var previous_settings = settings.values.duplicate()
+	var previous_rng = rng.state
+	settings.values.battery_saver = true
+	start_run()
+	settings.apply_performance()
+	assert(Engine.max_fps == 30)
+	settings.values.battery_saver = false
+	settings.apply_performance()
+	assert(Engine.max_fps == 60)
+	state = "paused"
+	settings.apply_performance()
+	assert(Engine.max_fps == 30)
+	var positions: Array[Vector2] = []
+	for fps in [30, 60]:
+		start_run()
+		obstacles.clear()
+		spawn_timer = 100
+		for frame in range(fps): simulate(1.0 / fps, Vector2.RIGHT)
+		positions.append(player)
+		assert(absf(elapsed - 1.0) < 0.001)
+	assert(positions[0].distance_to(positions[1]) < 0.01, "Battery mode must preserve movement speed")
+	start_run()
+	obstacles.clear()
+	var target = make_enemy(player + Vector2(50,0), 2)
+	target.hp = 100
+	enemies.append(target)
+	bullets.append({"p":player,"v":Vector2(6000,0),"life":1.0,"power":1.0,"pierce":0})
+	update_player_bullets(1.0 / 30.0)
+	assert(target.hp == 99, "Swept broad phase must retain fast projectile hits")
+	settings.values.low_graphics = false
+	settings.values.reduced_vfx = false
+	settings.values.battery_saver = false
+	rng.seed = 1234
+	effects.clear()
+	burst(player, Color.WHITE, 90)
+	var normal_rng = rng.state
+	assert(effects.size() == 90)
+	settings.values.battery_saver = true
+	rng.seed = 1234
+	effects.clear()
+	burst(player, Color.WHITE, 90)
+	assert(effects.size() == 30 and rng.state == normal_rng)
+	settings.values = previous_settings
+	rng.state = previous_rng
+	start_run()
+	settings.apply_performance()
+	print("MOBILE PERFORMANCE CHECKS PASSED: frame caps, equal movement/timing at 30/60 FPS, swept projectile hit, reduced particles and stable RNG")
+
 func smoke_test() -> void:
 	# Deterministic fixtures must not inherit the developer's saved stage/build.
 	growth = ScoutGrowth.new()
@@ -2411,6 +2476,7 @@ func smoke_test() -> void:
 	selected_stage = 1
 	unlocked_stage = 1
 	state = "title"
+	test_mobile_performance()
 	test_stages()
 	test_home_navigation()
 	test_five_star_progression()
