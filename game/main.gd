@@ -965,7 +965,7 @@ func make_enemy(p: Vector2, kind: int) -> Dictionary:
 func spawn_boss() -> void:
 	if elapsed >= SPAWN_DURATION or boss_spawned: return
 	boss_spawned = true
-	var p = camera_center + Vector2(0, -world_view().size.y / 2 - 85)
+	var p = nearby_spawn_point(340,380)
 	var kind: int = Chapter.FINALES[run_stage-1] if Chapter.active(run_stage) else 5
 	var finale = make_enemy(p,kind)
 	finale.finale = true
@@ -997,7 +997,7 @@ func update_elite_schedule() -> void:
 	var kind: int = ELITE_KINDS[elite_spawn_index]
 	if Chapter.active(run_stage): kind = Chapter.ELITES[run_stage-1][elite_spawn_index]
 	elite_spawn_index += 1
-	var spawn_point = camera_center + Vector2((world_view().size.x / 2 + 85) * (-1 if elite_spawn_index % 2 == 0 else 1), 0)
+	var spawn_point = nearby_spawn_point(320,360)
 	enemies.append(make_enemy(spawn_point, kind))
 	banner = Tuning.ENEMY_NAMES[kind].to_upper() + " / " + ("BOSS" if kind == 6 else "MINIBOSS")
 	banner_timer = 3.0
@@ -1050,6 +1050,9 @@ func update_elite(e: Dictionary, dt: float) -> void:
 	walk_enemy(e,direction,pursuit_speed,dt)
 
 func update_enemy(e: Dictionary, dt: float) -> void:
+	if e.get("arrival",0.0)>0:
+		e.arrival=maxf(0,float(e.arrival)-dt)
+		return
 	# Catch-up applies outside the visible playfield only; never teleport or award
 	# kills for stragglers. Distance-based pace bounds long endless-map tails.
 	if not world_view().grow(28).has_point(e.p):
@@ -1207,18 +1210,19 @@ func kill_enemy(index: int) -> void:
 	# Open rewards after simulation finishes, never inside projectile iteration.
 	tone(340, 0.045)
 
+func nearby_spawn_point(minimum: float, maximum: float) -> Vector2:
+	var angle=rng.randf()*TAU
+	var candidate=player
+	for attempt in range(48):
+		candidate=player+Vector2.from_angle(angle+attempt*2.399963)*rng.randf_range(minimum,maximum)
+		# Reserve room for even the largest enemy, without placing it in a rock.
+		if constrain_actor(candidate,62).is_equal_approx(candidate): return candidate
+	return constrain_actor(candidate,62)
+
 func spawn_enemy() -> void:
 	if elapsed >= SPAWN_DURATION or enemies.size() >= 70:
 		return
-	var p: Vector2
-	var edges = world_view().grow(60)
-	match rng.randi_range(0, 3):
-		0: p = Vector2(rng.randf_range(edges.position.x, edges.end.x), edges.position.y)
-		1: p = Vector2(rng.randf_range(edges.position.x, edges.end.x), edges.end.y)
-		2: p = Vector2(edges.position.x, rng.randf_range(edges.position.y, edges.end.y))
-		3: p = Vector2(edges.end.x, rng.randf_range(edges.position.y, edges.end.y))
-	if p.distance_to(player) < 200:
-		p = camera_center * 2 - p
+	var p=nearby_spawn_point(260,320)
 	var kind = 0
 	var roll = rng.randf()
 	if wave >= 4 and roll < 0.18:
@@ -1237,6 +1241,7 @@ func spawn_enemy() -> void:
 		var pool = Chapter.pool(run_stage,elapsed)
 		kind = pool[mini(pool.size()-1,int(roll*pool.size()))]
 	enemies.append(make_enemy(p, kind))
+	enemies[-1].arrival=0.55
 
 func target_direction() -> Vector2:
 	var target = player + facing
@@ -2229,6 +2234,7 @@ func draw_enemy(e: Dictionary) -> void:
 	var offset: Vector2 = e.get("hit_dir", Vector2.ZERO) * kick * 5 * strength
 	set_scene_transform(p + offset, angle + sin(impact * TAU) * 0.16 * strength, Vector2(1.0 - kick * 0.15 * strength, 1.0 + kick * 0.12 * strength))
 	var tint = Color(1.7, 1.7, 1.7) if e.flash > 0 and not settings.values.reduced_flashes else Color.WHITE
+	if e.get("arrival",0.0)>0: tint.a=clampf(1.0-float(e.arrival)/0.55,0.15,1.0)
 	if e.flash <= 0 and e.mode == "windup" and int(e.timer * 6) % 2 == 0:
 		tint = Color(1.25, 1.2, 1.05)
 	draw_texture_rect_region(texture, Rect2(-size / 2, size), region, tint)
@@ -2581,13 +2587,15 @@ func smoke_test() -> void:
 	start_run()
 	spawn_enemy()
 	enemies[0].p = player
+	assert(not enemy_contact(enemies[0],player), "Arriving bugs must not deal contact damage")
+	enemies[0].arrival = 0
 	simulate(0.016)
 	assert(hp == 7)
 	simulate(0.016)
 	assert(hp == 7, "Damage grace period should prevent repeated hits")
 	start_run()
-	spawn_enemy()
-	spawn_enemy()
+	enemies.append(make_enemy(player+Vector2(70,0),0))
+	enemies.append(make_enemy(player+Vector2(400,0),0))
 	enemies[0].p = player + Vector2(70, 0)
 	enemies[1].p = player + Vector2(400, 0)
 	boss_spawned = true
@@ -2609,6 +2617,7 @@ func smoke_test() -> void:
 	start_run()
 	spawn_enemy()
 	enemies[0].p = player
+	enemies[0].arrival = 0
 	hp = 1
 	boss_spawned = true
 	elapsed = SPAWN_DURATION
@@ -3061,7 +3070,8 @@ func test_mobile_world() -> void:
 		for i in range(20):
 			spawn_enemy()
 		for e in enemies:
-			assert(not world_view().grow(40).has_point(e.p), "New bugs must enter from outside the view")
+			assert(e.p.distance_to(player)>=259.9 and e.p.distance_to(player)<=320.1, "New bugs must stay in the nearby safe spawn ring")
+			assert(constrain_actor(e.p,e.radius).is_equal_approx(e.p), "Spawns must clear rocks")
 		var free = Vector2(destination.x, floorf(destination.y / 600) * 600 + 40)
 		assert(move_actor(free, Vector2(60,0), 17).distance_to(free) > 59, "No hidden arena wall at distant coordinates")
 	player = Vector2(640,390)
@@ -3098,7 +3108,7 @@ func test_mobile_world() -> void:
 	spawn_enemy()
 	assert(enemies.size() == count_at_cutoff, "Spawning must stop at three minutes even far from the starting area")
 	start_run()
-	print("MOBILE WORLD PASSED: multitouch, pause, upgrade taps, three-minute travel, stable terrain, offscreen spawns and final cleanup")
+	print("MOBILE WORLD PASSED: multitouch, pause, upgrade taps, three-minute travel, stable terrain, nearby safe spawns and final cleanup")
 
 func test_mouse_drag() -> void:
 	start_run()
@@ -3301,6 +3311,10 @@ func test_stages() -> void:
 		refresh_terrain()
 		assert(rocks == obstacles and player == stage_start(stage))
 		assert(constrain_actor(player,17).is_equal_approx(player), "Starting area must be clear")
+		for sample in range(16):
+			var point=nearby_spawn_point(260,320)
+			assert(point.distance_to(player)>=259.9 and point.distance_to(player)<=320.1)
+			assert(constrain_actor(point,62).is_equal_approx(point), "Nearby spawns must be clear in every stage")
 		var old_rng = rng.state
 		roll_preview_enemy()
 		assert(preview_enemy >= 0 and preview_enemy < Tuning.ENEMY_NAMES.size() and old_rng == rng.state)
@@ -3709,6 +3723,7 @@ func enemy_targetable(e: Dictionary) -> bool:
 	return not (e.kind==11 and e.mode=="burrow")
 
 func enemy_contact(e: Dictionary, previous: Vector2) -> bool:
+	if e.get("arrival",0.0)>0: return false
 	if e.kind==11 and e.mode in ["dig","burrow","emerge"]: return false
 	if e.kind==10:
 		if e.mode in ["crouch","hop"]: return false
