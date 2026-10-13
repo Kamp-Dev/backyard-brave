@@ -31,14 +31,13 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
           unzip -q /tmp/templates.zip 'templates/web*' 'templates/android*' -d /tmp/templates
           cp /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
-      - uses: actions/cache@v4
-        with:
-          path: /tmp/backyard-debug.keystore
-          key: backyard-android-test-signing-v1
       - name: Configure Android tools and test signing
+        env:
+          ANDROID_DEBUG_KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
         run: |
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "build-tools;35.0.0" "platforms;android-35"
-          test -f /tmp/backyard-debug.keystore || keytool -genkeypair -keystore /tmp/backyard-debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "build-tools;36.0.0" "platforms;android-36"
+          test -n "$ANDROID_DEBUG_KEYSTORE_B64"
+          printf '%s' "$ANDROID_DEBUG_KEYSTORE_B64" | base64 --decode > /tmp/backyard-debug.keystore
           mkdir -p ~/.config/godot
           printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "%s"\nexport/android/java_sdk_path = "%s"\n' "$ANDROID_HOME" "$JAVA_HOME" > ~/.config/godot/editor_settings-4.7.tres
       - name: Import and export
