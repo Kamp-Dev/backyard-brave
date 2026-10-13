@@ -445,7 +445,9 @@ func shutdown() -> void:
 	get_tree().quit()
 
 func ui_offset() -> Vector2:
-	return (get_viewport_rect().size - Vector2(720,1280)) / 2
+	var offset = (get_viewport_rect().size - Vector2(720,1280)) / 2
+	if state == "title": offset.y = 0
+	return offset
 
 func pause_hit_rect() -> Rect2:
 	return Rect2(PAUSE_BUTTON.position - Vector2(0, ui_offset().y), PAUSE_BUTTON.size)
@@ -553,6 +555,12 @@ func activate_pointer(position: Vector2) -> void:
 			if upgrade_card_rect(i).has_point(position):
 				choose_upgrade(i)
 				break
+
+func _input(event: InputEvent) -> void:
+	# Capture gameplay fingers before GUI controls can consume touch/drag events.
+	if state in ["playing", "upgrade", "paused"] and (event is InputEventScreenTouch or event is InputEventScreenDrag):
+		_unhandled_input(event)
+		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Drawn menus use a centered 720x1280 layout; pointers share that transform.
@@ -2215,11 +2223,14 @@ func draw_hud() -> void:
 	set_scene_transform(Vector2.ZERO)
 
 func draw_touch_controls() -> void:
-	if settings.values.show_joystick:
-		var origin = drag_origin if move_touch>=0 or mouse_dragging else Vector2(145,1150)
+	var active_drag = move_touch >= 0 or mouse_dragging
+	if settings.values.show_joystick or active_drag or DisplayServer.is_touchscreen_available():
+		var origin = drag_origin if active_drag else Vector2(145,1150 + ui_offset().y)
 		draw_circle(origin,DRAG_RADIUS,Color(0.22,0.35,0.12,0.25))
 		draw_arc(origin,DRAG_RADIUS,0,TAU,48,Color(0.65,0.76,0.36,0.7),3,true)
 		draw_circle(origin+touch_move*DRAG_RADIUS,25,Color(0.77,0.84,0.47,0.7))
+		if not active_drag:
+			text_at(origin + Vector2(-76,90),"DRAG TO MOVE",19,PAPER)
 	draw_set_transform(Vector2(ui_offset().x, ui_offset().y * 2))
 	draw_garden_button(Rect2(470,1092,215,110),"ROLL",false,28,roll_timer<=0)
 	# Small shadow keeps the readiness label readable over grass.
