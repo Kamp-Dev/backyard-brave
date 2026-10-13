@@ -1,0 +1,18 @@
+BACKYARD SCOUT
+Generated with the built-in imagegen tool using the approved comparison board
+as the character identity reference. Four directional poses, not an animation strip.
+2x2 reading order: front/down, right, back/up, left.
+RGBA transparency; bold outlines; imported with mipmaps for clean minification.
+Each cell is trimmed in Godot, normalized to 56px tall, and anchored at the feet.
+The 17px gameplay collision radius is unchanged.
+
+Generation prompt:
+Use the attached board as a CHARACTER IDENTITY REFERENCE ONLY. Select ONLY the middle character, B / Backyard Scout. Ignore the other two characters and all environments and labels.
+Create a production-ready transparent RGBA SPRITE SHEET for that exact Backyard Scout: brown tousled hair, pale blue bandana, orange-red short jacket, cream shirt, charcoal shorts, brown boots and compact brown backpack, human face, small wooden slingshot. Match the reference's appealing 2.5-head-tall proportions and identity.
+Layout: EXACTLY FOUR equal cells in a 2 by 2 grid, square overall canvas, NO visible grid lines. One full body sprite in each cell with equal height, plenty of transparent margin, centered horizontally, aligned feet. All sprites upright on the page, same three-quarter overhead camera used in top-down RPGs, same lighting and colors.
+TOP LEFT: facing DOWN toward viewer (front view), slingshot aimed slightly downward in a readable two-hand ready pose.
+TOP RIGHT: facing RIGHT (right-facing side view), slingshot held ahead toward the right edge, other hand pulling pouch back.
+BOTTOM LEFT: facing UP away from viewer (back view), backpack and bandana knot clearly visible, slingshot held toward top of page.
+BOTTOM RIGHT: facing LEFT (left-facing side view), slingshot held ahead toward left edge, other hand pulling pouch back.
+These are four different compass directions, NOT four front-facing variations. Keep same character size and anatomy across cells. Both feet completely visible in every cell. Resting combat stance, slightly bent knees, weight grounded, compact silhouette.
+NON-NEGOTIABLE bold dark clean prominent silhouette outlines; restrained thin internal lines; crisp two/three-tone cel shading; clear warm red jacket and pale-blue bandana at small gameplay scale. No soft outlines, no gradients, no motion blur, no extra limbs, no anatomical errors. Simplify fine details for display at 56 pixels tall. Clean transparent background: no ground, shadow, scenery, insects, labels, lettering, watermark, frames, or additional characters. This must be four usable game sprites, not a concept illustration.

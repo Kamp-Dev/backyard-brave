@@ -1,0 +1,14 @@
+Seed Packet Album asset pipeline, 2026-10-12
+User-selected concept overrides the global default art style for this UI.
+Reference: exec-dcc27373-9dbf-4845-8796-5a9a16160968.png, Seed Packet Album.
+New art: built-in image generation; prompt saved in growth-album-art.json.
+
+Target follows storybook-pieces.png and storybook-navigation.png:
+PNG with soft transparent alpha, front-facing UI components, warm parchment,
+olive greens, dark brown contours, no pixel-art quantization.
+Atlas is 1280x1280; no cropping/resampling of the original generated pixels.
+Godot draws regions: envelope (16,105,858,415); ribbon (877,58,371,1151);
+banner (12,572,868,301); acorn (249,890,395,340).
+Linear filtering with mipmaps for painted art. Native font text and lock
+glyphs are independent of the raster artwork. No font text baked into art.
+Checked at the game's 450x800 desktop preview and in the clipped scroll view.

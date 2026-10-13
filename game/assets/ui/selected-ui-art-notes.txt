@@ -1,0 +1,28 @@
+SELECTED UI ART - 2026-10-12
+Generated with the built-in image_gen tool using the user-selected concepts.
+Original PNGs copied into this project; RGBA transparency retained. Godot uses
+atlas regions at source resolution with mipmaps; no external cache dependency.
+All numerical labels, names, descriptions and reward values are native text.
+
+Gardener Workbench prompt:
+Production UI asset edit. Extract ONLY HEADER A gardener workbench from the top design of reference. No title above, no Header B. Preserve same Garden Storybook art, bold dark clean silhouette outlines, restrained interior lines, wood base, seed packet stack left, golden acorn right, daisies and leaves. Make the two pinned parchment writing panels BLANK: remove ALL lettering, numbers, small currency icons, progress bar and divider lines; keep pins and blank parchment. Center narrow leaf motif retained. Layout optimized for mobile: side decorations occupy only outer 12% each, left parchment x14%-48%, right parchment x53%-87%, panels tall and generously blank. One wide horizontal workbench, approximately 3.2:1 visible silhouette, tightly framed with small transparent margin. Genuine transparent background. Same art as chosen top reference; no new objects, no text anywhere.
+
+Scout Report prompt:
+Production game UI asset sheet from ONLY Results B Scout Report right-hand design. Preserve exact warm Garden Storybook style and bold clean dark silhouette outlines. Four separate assets on transparent canvas with ample gutters, arranged 2x2: top-left a pinned cream instant-photo frame containing the SAME smiling brown-haired blue-headband backyard scout portrait from reference, blank bottom caption strip; top-right a torn cream rectangular statistics parchment, completely BLANK; bottom-left wooden seed packet tray with three illustrated flower/clover/leaf seed packets and leafy corners, blank wide wooden header plank, same reference; bottom-right green leaf-imprint wax medal with short green ribbon tails and a BLANK cream angled label. No text letters numbers anywhere, no outer screen frame, no backgrounds outside separate objects, no UI buttons. All four isolated complete silhouettes, no touching or overlaps across gutters. These will be cropped as native Godot atlas regions.
+
+Growing Vine prompt:
+Production game UI asset derived ONLY from right side ACORNS B Growing Vine in reference. Single reusable vertical milestone card segment on genuine transparent background, 3:4 aspect ratio. Preserve exactly warm garden storybook colors, bold clean dark silhouette outlines, thinner restrained inner lines. One broad blank cream parchment card in dark rounded wooden frame entwined with climbing green vines and leaves, a few tiny daisies. Vine extends above and below centrally so copies can join into climbing reward track. Card occupies center x12%-88%, y20%-85%. Keep ALL interior parchment blank, no acorn, no icons, no text, no numbers, no locks, no wax seal; engine will overlay these. Include small blank hanging parchment pennant below. No backdrop, no header, no ground, no multiple cards. Clean readable mobile UI art matching reference B precisely.
+
+Verification: alpha inspected; native Godot 450x800 previews inspected for
+Growth, learned/ready/locked Acorns, mid-scroll, victory and defeat. Selected
+UI input checks, Growth economy/persistence, profile choices, pause/exit and
+reward regression checks passed. Test saves isolated from player data.
+
+FIX: Header uses one uniform scale (646/2172), with explicit Growth and Acorn
+Rewards leaf buttons below. Acorn cards also preserve source proportions.
+The old repeated vine ends were replaced by one native continuous curved
+stem in scroll-space, behind independently rendered cards.
+New acorn-vine-card.png generated via built-in image_gen, prompt:
+Edit this exact UI asset. Remove ONLY the long vine stalk extending ABOVE the card and the long curling stalk extending BELOW the hanging pennant. Retain the rectangular wooden card, blank cream parchment, all foliage wrapped around its sides, daisies and blank bottom pennant exactly in the same art style. Result is a single isolated card with no exposed central stem extending beyond top or bottom; a continuous vine will be drawn behind it by the engine. Genuine transparent background. Bold dark crisp outer outlines preserved, no new details, no text or icons. Crop canvas closely around remaining card and side leaves with a small transparent margin, avoid excessive empty space.
+
+Classic Split A applied using existing art: Growth envelopes left, Acorn vine right, independent scroll offsets, no track tabs. No new raster artwork generated for this layout change. Verified both columns, keyboard focus, drag without spending, purchases and persistence.

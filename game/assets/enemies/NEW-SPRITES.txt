@@ -1,0 +1,16 @@
+Generated with the built-in OpenAI image-generation tool, not fal.
+Subjects: Garden Weevil; Grasshopper; Mole Cricket.
+Shared generation brief: ONE production game sprite for Backyard Brave.
+Exactly top-down orthographic garden insect facing directly RIGHT, whole
+insect centered, all appendages inside image with empty margins. Match
+simple illustrated garden insects: bold prominent clean dark brown
+silhouette outlines, restrained internal anatomy lines, crisp 2-3 tone
+earthy cel shading, correct insect anatomy, readable at 48 pixels.
+No text, UI, floor, shadows, glow, scenery, extra insects or ornament.
+Genuine transparent background. Single walking neutral pose.
+Weevil: olive ochre ribbed shell, long narrow snout, six jointed legs,
+two elbowed antennae. Grasshopper: slender green body, folded leaf-green
+wings, six legs including powerful bent hind legs, brown eyes and antennae.
+Mole Cricket: warm ochre segmented abdomen, six legs including broad spade
+forelegs, long antennae and tiny dark eyes. Runtime transform animation,
+hops, digging and warning shapes supply the action states.

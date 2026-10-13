@@ -1,0 +1,18 @@
+Backyard endless terrain - 2026-10-12
+Created with OpenAI image generation. Output: backyard-endless.png.
+Prompt: Production top-down terrain texture for Backyard Brave, a stylized
+Japanese chibi RPG about a tiny scout fighting backyard insects. Square seamless
+repeating ground tile, fills entire canvas, no transparency. Continuous warm
+muted ochre brown dirt mixed with irregular low olive grass patches, small
+loose clusters of three-blade grass and tiny scattered pebbles. Evenly distributed
+natural variation; no center composition, no framed arena, no lawn border, no
+enclosed clearing, no straight paths or grid. No objects that imply collision:
+no rocks larger than tiny gravel, no trees, fences, stumps, flowers, characters,
+insects, text, shadows or UI. Strict straight overhead 2D, crisp restrained
+two-tone cel-shaded marks with clean dark brown outlines on the few grass blades,
+rich controlled muted earthy colors, very low visual contrast so combat sprites
+read clearly. Opposite edges must connect seamlessly. Match warm dirt/olive
+backyard palette. Flat playable ground only.
+Implementation: original generated pixels retained; Godot reflects alternate
+640-unit tiles so adjacent edges match, with mipmaps for portrait scaling.
+Solid rocks are separate world geometry with deterministic cell placement.

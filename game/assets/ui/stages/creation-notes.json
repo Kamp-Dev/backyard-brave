@@ -1,0 +1,212 @@
+[
+  {
+    "stage": 1,
+    "name": "The First Clearing",
+    "file": "stage-01.png",
+    "prompt": "Edit this exact approved Backyard Brave illustration. Preserve its composition, all fence posts, tipped pot, rocks, clover, daisies, ant, spider, island silhouette, simple line art, shading and warm original colors. ONE CHANGE ONLY: remove the winding sandy footpath completely, including the portion ending at the fence. Replace all sandy path pixels with matching continuous green grass, so the entire island top is a grassy clearing. No dirt path or dead end anywhere on top. Leave the ochre exposed soil sides unchanged. Do not redesign or add objects. Preserve real transparent background.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 2,
+    "name": "Pebble Crossing",
+    "file": "stage-02.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Four flat stepping stones in a short loose cluster at the rear right, short two-post fence at rear left, small upright terracotta pot at back center. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 3,
+    "name": "Clover Corner",
+    "file": "stage-03.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: L-shaped low fence at rear left, three giant clover leaves at rear right, one broad flat pebble near left edge. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 4,
+    "name": "Potting Patch",
+    "file": "stage-04.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Broken terracotta flowerpot on its side at rear left with two curved pottery shards beside it; low clover and two daisies at rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 5,
+    "name": "Daisy Patch",
+    "file": "stage-05.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Three tall simple daisies at rear right, two giant clover stems at rear center, one squat rounded rock at rear left. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 6,
+    "name": "Quiet Clearing",
+    "file": "stage-06.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Three large smooth mossy pebbles across rear edge, low clover left and two daisies right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 7,
+    "name": "Leafy Passage",
+    "file": "stage-07.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Two groups of oversized clover leaves at left rear and right rear, a short single wooden rail between them in the far back. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 8,
+    "name": "Stone Gate",
+    "file": "stage-08.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Two large rounded mossy boulders at rear left and rear right form a gap, a few daisies behind them and low clover beside them. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 9,
+    "name": "Fence Gap",
+    "file": "stage-09.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Two separate short wooden fence sections in the far rear with an open gap between, one small rock at left and low clover right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 10,
+    "name": "Clover Circle",
+    "file": "stage-10.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: A loose arc of low clover clusters around a wide lawn, one giant clover rear left, three smooth stones along rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 11,
+    "name": "Pebble Terrace",
+    "file": "stage-11.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Two broad low stone slabs form a tiny terrace along the far back, one small upright terracotta pot on right end, clover at left end. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 12,
+    "name": "Twin Boulders",
+    "file": "stage-12.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Pair of chunky mossy boulders side by side at rear left, two much smaller flat stones at rear right, two daisies beside them. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 13,
+    "name": "Broken Rim",
+    "file": "stage-13.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: A large half-circle broken terracotta pot rim at rear right, two smooth mossy stones at rear left, a clover behind each. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 14,
+    "name": "Pebble Slope",
+    "file": "stage-14.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Four rounded pebbles on a gentle grassy slope in the rear, two tall clovers at rear left, daisy group rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 15,
+    "name": "Garden Steps",
+    "file": "stage-15.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Three chunky flat stone steps rise toward a small back terrace and short fence rail at rear left; one terracotta shard and clover on rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.\nTargeted correction: Precise edit of this game illustration. The stone steps currently end at a wooden fence rail: fix this spatial mistake. Remove the horizontal wooden rail entirely, leaving the two vertical posts as an OPEN gateway with a wide completely unobstructed gap at the top of the steps. Show a small flat grassy landing through this gap continuing to the rear edge of the cutaway island. No wood, flowers, clover, stone or other obstruction in this gateway. Preserve all other details, the steps themselves, tipped pot, island composition, grass foreground, warm colors, original clean outlined simple style and transparent alpha background. Do not add any sandy dirt path. Only fix the blocked stair exit.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 16,
+    "name": "Split Stones",
+    "file": "stage-16.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: One big rounded mossy boulder at rear center with two smaller stones on its left and a small daisy group on its right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 17,
+    "name": "Pot and Pebbles",
+    "file": "stage-17.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Upright terracotta pot with one broad clover plant at rear left, an arc of three rounded rocks rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 18,
+    "name": "Stone Shelf",
+    "file": "stage-18.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: A broad flat gray-green rock shelf rear left with tiny clovers growing on top, short rounded rock rear right, daisies behind it. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 19,
+    "name": "Pebble Bend",
+    "file": "stage-19.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Two offset pairs of rounded rocks across back left, giant clover back right, two daisies along left side. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 20,
+    "name": "Pebble Court",
+    "file": "stage-20.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Five chunky smooth mossy pebbles in a loose arc at the back, one short wooden fence rail far back right, clover rear left. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 21,
+    "name": "Root Clearing",
+    "file": "stage-21.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Small cut wooden stump rear left with two thick simple roots along rear edge, low clover rear right and two daisies along left edge. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 22,
+    "name": "Daisy Meadow",
+    "file": "stage-22.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Three separated small daisy groups around the rear edge, two broad clover stems at back center, low curved root rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 23,
+    "name": "Fallen Branch",
+    "file": "stage-23.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: A short thick fallen wooden branch across rear left with two simple side twigs, clover behind it, rounded mossy stone rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 24,
+    "name": "Sunny Patch",
+    "file": "stage-24.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Two low clover patches and short far-rear wooden fence section, small terracotta shard left side, two smooth pebbles right rear. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 25,
+    "name": "Root Arch",
+    "file": "stage-25.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: A small bent exposed root forms a low arch at rear right, mossy rock rear left with two giant clover leaves behind it, two daisies on left. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 26,
+    "name": "Old Pot Garden",
+    "file": "stage-26.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Squat chipped terracotta planter rear center with three simple clover leaves growing out, two flat stones rear left and low root rear right. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 27,
+    "name": "Fence Meadow",
+    "file": "stage-27.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Single leaning wooden fence post with short rail rear right, broad clover cluster rear left, tiny daisy group on right edge. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 28,
+    "name": "Stump Hollow",
+    "file": "stage-28.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: A low hollow tree stump at rear center with dark oval opening, clover left and a smooth gray-green pebble right, one small daisy at left side. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 29,
+    "name": "Garden Fork",
+    "file": "stage-29.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: A V-shaped fallen twig lying along back left edge, three low rounded stones at rear right, clover behind twig and two daisies behind rocks. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  },
+  {
+    "stage": 30,
+    "name": "Grand Clearing",
+    "file": "stage-30.png",
+    "prompt": "Production transparent PNG of one new Backyard Brave stage-select diorama. Supplied image is reference for STYLE ONLY. Match its simple charming mobile game illustration, thick clean dark brown outlines, limited warm olive/lime greens, ochre soil, terracotta, restrained crisp shaded shapes; same 3/4 isometric raised irregular square soil island and grass rim, whole silhouette with transparent margins. New composition using this scene: Short wooden fence at rear left, a small stump rear right, two terracotta shards beside stump, clover and three daisies beside fence. STRICT LOGIC: There is NO PATH anywhere. Cover the WHOLE top in continuous simple grass. No sandy trails, no forks, no strips of dirt, no dead ends. Put all major props at the BACK third and side edges, never in the center. Center and front-middle must be a broad unobstructed grassy area for an animated bug walking a small loop. A few sparse tiny grass tufts only there. Keep the same original warm palette and simple art style; don't add extra props or complexity, realistic texture, dramatic lighting, text, people, animals, bugs, interface, or background. Real transparency outside the complete soil island. Square image.",
+    "method": "built-in image_gen; original first-stage art used as style reference"
+  }
+]

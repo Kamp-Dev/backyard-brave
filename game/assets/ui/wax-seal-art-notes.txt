@@ -1,0 +1,22 @@
+SCOUT SIGNET WAX SEAL / CLOSED GROWTH ENVELOPES
+
+Chosen concept: 3, Scout Signet. Green wax with diagonal leaf imprint.
+Learned Growth upgrades render a folded-shut envelope and a full-color seal
+across the flap seam. Unlearned upgrades keep the existing open envelope;
+available rows show a faint wax seal, gated rows retain their lock.
+No square stamp border. Text on closed envelopes sits below the fold.
+Appearance derives directly from saved ranks, including existing upgrades.
+
+Assets: scout-wax-seal.png and growth-album-closed.png, 1280 x 1280 RGBA.
+Original generated pixels preserved. Native Godot atlas region 16,105,858,415
+selects only the closed envelope. Other UI still uses the original atlas.
+Seal faces upper right, centered in a 48 x 48 logical-pixel rectangle.
+Soft alpha, linear filtering with mipmaps; illustrated dark outer contour.
+Generated with built-in image generation, referenced approved concept 3
+and original growth-album atlas. Prompts requested a standalone transparent
+seal matching the concept, and closing only the original envelope opening,
+removing exposed seeds/tabs while preserving its parchment and leaf motifs.
+
+Verification: wax_preview.tscn captures before purchase, after purchase,
+and after config reload in an isolated test profile. Purchase and persistence
+assertions passed. Rendered frames visually inspected for seam/text spacing.

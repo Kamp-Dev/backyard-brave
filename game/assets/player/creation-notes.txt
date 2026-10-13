@@ -1,0 +1,12 @@
+Created with the built-in imagegen tool.
+Engine use: transparent RGBA PNG, right-facing, centered pivot; Godot trims
+transparent margins at runtime and renders at 48 pixels wide with smooth filtering.
+The collision radius remains 17 pixels. Small procedural squash supports movement;
+the dash has a short hop lift. No hand-drawn animation frames are claimed.
+
+Generation prompt:
+Create ONE production-ready 2D game sprite: a small brave tree frog, for a top-down arena game where it spits at bugs and spiders and hops to dodge. Transparent background, no ground, no shadow, no text, no sheet, no inset, no scene, no decorative effects.
+STRICT camera: orthographic DIRECTLY OVERHEAD, looking straight down onto the frog's back, zero perspective tilt. Whole frog is pointing RIGHT, snout at right, rear at left. Symmetry above and below the horizontal body axis. Four anatomically attached legs only: two short forelegs beside the head and two large bent hind legs at the rear, tucked close to the body for a compact squat silhouette. NO tail, NO wings, NO clothing, NO armor, NO accessories, NO weapons.
+Design for an actual 48-pixel-wide gameplay sprite, although rendered large here: oversized broad rounded head and round compact torso; two conspicuous small amber eye bumps at the front sides of the head, eyes consistent with overhead camera; a short clear rounded snout pointing right; large simple pale mint-green body masses, dark teal underside/leg shadow shapes, cream highlights limited to two simple head/back shapes. Feet use three broad rounded toes, simplified enough to survive reduction. Hero feels alert and appealing, not realistic or disgusting.
+Style: modern Japanese chibi game art simplified for production sprite readability. NON-NEGOTIABLE bold, dark navy, prominent, clean continuous SILHOUETTE OUTLINES around all limbs and the whole character. Crisp exactly 2-3-tone cel shading, very restrained thinner internal lines. Uniform diffuse overhead lighting so rotating the sprite in a top-down game remains credible. No gradients, no painterly texture, no mottling, no pores, no greebles, no glow, no particles, no soft outlines.
+Composition: one large centered horizontal frog occupying roughly 80 percent of canvas width, all feet fully visible with safe transparent margins. Compact body roughly 1.15 times as wide as tall. Clean RGBA transparency outside the character. The result must read as a usable overhead game sprite, NOT a character illustration or concept poster.

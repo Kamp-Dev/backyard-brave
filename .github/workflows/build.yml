@@ -2,7 +2,7 @@ name: Build and publish test game
 on:
   push:
     branches: [main]
-    paths: ['source-*.part', '.github/workflows/build.yml']
+    paths: ['game/**', '.github/workflows/build.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -20,11 +20,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Unpack game
-        run: |
-          cat source-*.part > /tmp/source.zip
-          unzip -q /tmp/source.zip -d game
-          mkdir -p web android
+      - name: Prepare outputs
+        run: mkdir -p web android
       - name: Install Godot and export templates
         run: |
           curl -fL --retry 3 https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -o /tmp/godot.zip
@@ -34,10 +31,14 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
           unzip -q /tmp/templates.zip 'templates/web*' 'templates/android*' -d /tmp/templates
           cp /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/backyard-debug.keystore
+          key: backyard-android-test-signing-v1
       - name: Configure Android tools and test signing
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "build-tools;35.0.0" "platforms;android-35"
-          keytool -genkeypair -keystore /tmp/backyard-debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          test -f /tmp/backyard-debug.keystore || keytool -genkeypair -keystore /tmp/backyard-debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
           mkdir -p ~/.config/godot
           printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "%s"\nexport/android/java_sdk_path = "%s"\n' "$ANDROID_HOME" "$JAVA_HOME" > ~/.config/godot/editor_settings-4.7.tres
       - name: Import and export

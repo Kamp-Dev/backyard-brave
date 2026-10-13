@@ -1,0 +1,19 @@
+CLOVER PATCH CHAPTER ILLUSTRATION
+Method: built-in OpenAI image generation, transparent background, 2026-10-12.
+File: clover-chapter.png. Unmodified source pixels; Godot scales proportionally
+with mipmaps. The original version composited the scout in-engine. The current homepage uses
+separate stage illustrations and a live roaming enemy. See stages/creation-notes.json.
+Final generation prompt:
+Production game UI illustration asset, transparent background. An isolated
+charming backyard chapter diorama for Backyard Brave, modern Japanese chibi RPG
+art with clean bold dark brown outlines and crisp 2-3-tone cel shading,
+controlled warm earthy palette. Three-quarter isometric small raised irregular
+island of ochre soil with lush olive grass rim. A short rustic wooden garden
+fence across back, terracotta flowerpot tipped gently on one side, giant clover
+leaves, daisies, smooth pebbles, a winding tiny dirt footpath and a small garden
+ant and friendly-looking wolf spider on ground. Center open grass patch reserved
+for a separately rendered game scout. Cozy adventurous miniature backyard at a
+child's scale. Strong readable silhouette, generous transparent space around
+complete silhouette, no cropped elements. No text, letters, UI borders, buttons,
+currency, stars, watermark, characters or humans. High quality polished 2D game
+chapter selection icon, square canvas.

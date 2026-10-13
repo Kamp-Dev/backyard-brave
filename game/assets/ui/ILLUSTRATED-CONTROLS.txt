@@ -1,0 +1,3 @@
+The green and natural wooden tab PNGs were generated using the built-in imagegen tool from the approved A+B garden controls reference. Native text remains separate. Horizontal three-slice rendering preserves the painted end caps and full-size leaf, with mipmaps for small-screen clarity.
+
+Cactus and toggle leaf: built-in imagegen illustrations replace the former line/polygon decorations. Aspect-preserving rendering and mipmaps maintain clarity at phone size. Settings validation passed using an isolated test save.

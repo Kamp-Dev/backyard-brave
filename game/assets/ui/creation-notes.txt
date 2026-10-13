@@ -1,0 +1,28 @@
+GARDEN STORYBOOK UI — ART AND IMPLEMENTATION NOTES
+Generated with the built-in image_gen tool; generated RGBA files copied unchanged.
+Reference: outputs/ui-concepts/03-garden-storybook.png.
+Art: assets/ui/storybook-pause.png (1634x962), storybook-pieces.png (1536x1024),
+storybook-skills.png (1323x1189). Soft transparent edges; linear filtering with mipmaps.
+All artwork is straight-on 2D; bold dark outlines and cel-shaded earthy colors.
+Atlas rectangles are explicit STORY_* constants in main.gd; no offline slicing or resampling.
+Generated pieces do not follow equal-cell spacing, so source rectangles use actual bounds.
+Paper is opaque; outside foliage silhouettes is transparent.
+Live labels, values, ranks, and family ribbons are rendered by Godot.
+Pause panel: 860x490 at (210,120); resume art and input share RESUME_BUTTON.
+Upgrade card: 310x350; draw and input share upgrade_card_rect().
+One selected card at a time: mouse motion updates focus, controller D-pad changes it.
+All nine cards and pause were rendered and inspected. Smoke checks cover pause/resume,
+mouse clicks near the new card bottom, controller focus/confirmation, and gameplay.
+Artwork selection does not change balance, targeting, progression or gameplay HUD.
+
+EXACT GENERATION PROMPTS
+
+PAUSE
+Use the supplied image ONLY as an art-style reference for Garden Storybook UI in Backyard Brave. Create ONE production 2D game UI panel asset, landscape approximately 1.7:1 aspect. A large pale ivory paper interior enclosed by warm brown curved twig frame, bold dark clean silhouette outlines, stylized olive green oak leaves with two acorns at upper left, leaves and a tiny cream flower at upper right, restrained leaves in lower corners. Match the PAUSE FRAME in the reference. The entire broad central 80 percent must be clean blank pale ivory, including bottom center: NO text, NO lettering, NO symbols, NO buttons, NO dividers, NO icons inside. Leaves confined to outer margins. Whole object fits image with thin transparent margin. Real transparent outside; opaque paper inside. Flat straight-on view. No backdrop or drop shadow. Maintain the reference style: authored storybook illustration, rich controlled earthy palette, clean bold dark outlines, crisp restrained cel shading, no photoreal texture, no fuzzy edges. This is engine-ready artwork, not a screenshot or mockup.
+
+PIECES
+Use the supplied image ONLY as an art-style reference for Garden Storybook UI in Backyard Brave. Create a production 2D game UI atlas with EXACTLY 4 equal cells in a 2 columns by 2 rows grid, generous transparent separation. Upper left: tall portrait blank ivory upgrade card enclosed by brown twig frame and green leaves, blank small leaf medallion at top, matching reference upgrade cards, empty interior with NO icons/text/ribbons. Upper right: wide short blank ivory title plaque with twig border and green leaves at either end, aspect3.8:1. Lower left: wide leaf-shaped green resume button with central vein but clean center for later text, aspect4:1. Lower right: wide short blank ivory pickup legend strip with a simple twig border and tiny end leaves, aspect8:1. Each asset wholly inside its equal cell. Bold dark clean outer outlines, clean large writing surfaces. True transparent canvas between and around assets. NO text, letters, numbers, game screen, scenery, gradients, glow. Maintain the reference style: authored storybook illustration, rich controlled earthy palette, clean bold dark outlines, crisp restrained cel shading, no photoreal texture, no fuzzy edges. This is engine-ready artwork, not a screenshot or mockup.
+
+ICONS
+Use the supplied image ONLY as an art-style reference for Garden Storybook UI in Backyard Brave. Create a production sprite atlas of EXACTLY NINE skill illustrations in a precise 3 columns by 3 rows grid with generous transparent gutters. Row1 left QUICK DRAW: wooden slingshot with two short gold speed strokes; center SCATTER SEEDS: three green pointed seeds flying apart; right HARD SEEDS: one red powerful seed with cream highlight. Row2 left FORAGER POUCH: brown drawstring leather pouch with green four-leaf-clover emblem; center TUCK AND ROLL: curled blue scout scarf looping around a simple brown boot with two curved blue motion strokes, clearly a tumble/dodge symbol; right TRAIL BOOTS: pair of brown hiking boots with green cuffs. Row3 left DEW BARRIER: luminous pale mint protective bubble enclosing a blue dew drop on a green leaf, restrained mint rim; center NEEDLE SEEDS: two long teal pointed seed darts; right THUMP SHOT: round purple seed striking a small tan impact star. Match skill icons in reference. Nine separate objects, no frames, ribbons, backgrounds, text, numbers or labels. Opaque bold dark clean outlines on each object, restrained thin inner lines, modern Japanese chibi RPG, crisp2-3tone cel shading. Full transparent background, no shadows. Consistent scale and large readable silhouettes. Maintain the reference style: authored storybook illustration, rich controlled earthy palette, clean bold dark outlines, crisp restrained cel shading, no photoreal texture, no fuzzy edges. This is engine-ready artwork, not a screenshot or mockup.
+

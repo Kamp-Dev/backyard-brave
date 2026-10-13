@@ -1,0 +1,4 @@
+2026-10-12: campsite-header-name.png is an ImageGen edit of the existing
+campsite header, removing baked SCOUT CAMP lettering only. Native Godot text
+now renders the editable scout name. Existing composition and art retained.
+Mipmaps enabled. Concept boards are previews, not production UI assets.

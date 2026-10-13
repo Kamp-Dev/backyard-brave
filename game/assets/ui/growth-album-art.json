@@ -1,0 +1,7 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Use case: precise-object-edit. Create a production game UI asset atlas derived EXACTLY from the attached Seed Packet Album concept. Preserve its warm parchment, olive stitched cloth, brown ink outlines, painterly simple garden storybook artwork. Transparent background. No text, letters, numbers, locks, upgrade pictures, or leaf rank stamps baked in: these will be drawn dynamically. Canvas 1536x1536. Four clearly separated elements: TOP LEFT in area x0-1000 y0-600: one large horizontal blank cream seed envelope, slightly open folded lip with a few brown seeds peeking, two small tape corners, little pale botanical flourishes in bottom corners, softly shaded brown outline, blank large center, width roughly 940 height440. TOP RIGHT x1080-1536 y0-1100: one tall olive green cloth scout merit ribbon with stitched borders, pointed bottom and wooden crossbar top, completely blank center, width380 height1000. BOTTOM LEFT x0-950 y700-1100: wide curled blank parchment garden banner with a tiny twig and leaves at each end, blank center for Locked text. BOTTOM CENTER x200-600 y1150-1536: one gold acorn merit medallion with oak brown cap and two green leaves, no lock, no text. Large clear transparent gutters around every element; no overlaps. Assets front facing, no perspective, use reference art faithfully.",
+  "asset": "growth-album.png",
+  "reference": "Seed Packet Album concept 2",
+  "generated_source": "exec-5bd08f4e-2ba5-4e56-a91c-f15ce6383558.png"
+}

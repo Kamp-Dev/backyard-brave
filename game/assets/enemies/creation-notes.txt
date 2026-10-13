@@ -1,0 +1,17 @@
+BACKYARD ENEMIES
+Generated using the built-in image_gen tool.
+Final asset: backyard-bugs.png, RGBA 1225x1284 with mipmaps.
+Three columns x four rows: ant/wolf spider/pill bug pose A, same pose B, stag beetle/spitter beetle/broodmother pose A, same pose B.
+Runtime uses explicit atlas rectangles and rotates the overhead right-facing sprites toward their targets. Two walking poses alternate per 9 pixels traveled; attack windups keep a locked pose. Damage brightens the sprite. Existing attack warning shapes remain readable.
+Scout height: 68px, previously 56px (+21%).
+Enemy maximum visual extents: 44, 46, 48, 50, 46, 86px (boss last).
+Collision radii: 12, 11, 17, 15, 14, 30px; movement, projectile hits and spawn constraints use these values.
+Player collider unchanged: the art increase expands the upper silhouette, not the feet.
+FULL GENERATION PROMPT
+Production transparent RGBA sprite atlas for a top-down backyard survival game. EXACTLY 3 columns x 4 rows, 12 separated sprites on equal cells with wide empty gutters. Camera STRICT overhead looking straight down, all creatures face RIGHT with head at right and abdomen at left, so game can rotate them freely. No perspective side views. Layout:
+row1: column1 russet red garden ant, column2 tawny brown wolf spider, column3 slate olive pill bug/woodlouse with overlapping armored segments.
+row2: SAME three creatures SAME scale/position as row1, alternate walking leg pose, opposite legs stepping; body identity unchanged.
+row3: column1 dark reddish chestnut stag beetle with unmistakable forward mandibles; column2 moss green bombardier-style beetle with pale yellow abdomen markings, recognizably an insect not a frog; column3 imposing female garden orb-weaver spider, broad deep-brown abdomen with cream leaf-shaped markings and rust-orange leg bands.
+row4: SAME three creatures SAME scale/position as row3, alternate walking leg pose, opposite legs stepping.
+Insect ant and both beetles EXACTLY six legs, two antennae; spiders EXACTLY eight jointed legs and no antennae; pill bug short multiple legs tucked along segmented oval carapace. Clearly recognizable animal anatomy, distinct body silhouettes, purposeful large forms readable at 35-50px in-game. Boss spider can be broader but stays wholly within its cell. No human faces, no oversized cartoon eyeballs, no mechanical parts, neon or geometric placeholders. Attractive modern Japanese chibi fantasy RPG illustration with bold dark prominent clean silhouette outlines mandatory; crisp 2-3 tone cel shading, thinner restrained internal lines, controlled natural earthy palette; match illustrated brown dirt/olive grass backyard and red-jacket chibi scout. Bodies shaded consistently from straight overhead. No ground shadows, scenery, text, grid lines, labels, glow, motion effects, blur, gradients. All 12 sprites wholly contained with transparent margins. Real transparent background.
+
