@@ -34,6 +34,7 @@ var roll_regions: Array[Rect2] = []
 const HomeGarden = preload("res://home_garden.gd")
 var home_garden = HomeGarden.new()
 const StageArt = preload("res://stage_art.gd")
+const Chapter = preload("res://garden_chapter.gd")
 const StagePreviewMotion = preload("res://stage_preview_motion.gd")
 var stage_art = StageArt.new()
 var locked_preview: SubViewport
@@ -417,6 +418,7 @@ func start_run() -> void:
 	damage_dealt = 0
 	damage_taken = 0
 	banner = "WAVE 01 / CRAWLERS"
+	if Chapter.active(run_stage): banner = Chapter.BRIEFS[run_stage-1]
 	banner_timer = 2.5
 	controller_choice = 0
 	shield = 0
@@ -760,7 +762,10 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 		for kind in range(Tuning.START_WAVES.size()):
 			if Tuning.START_WAVES[kind] == wave:
 				banner += " / " + Tuning.ENEMY_NAMES[kind].to_upper()
+		if Chapter.active(run_stage):
+			banner = ["FIND YOUR FOOTING", "NEW BUGS IN THE GARDEN", "HOLD YOUR GROUND"][mini(2,int(elapsed/60))]
 		banner_timer = 2.5
+		if Chapter.active(run_stage) and wave not in [4,7]: banner_timer = 0
 	if elapsed >= Tuning.BOSS_ARRIVAL and elapsed < SPAWN_DURATION and not boss_spawned:
 		spawn_boss()
 	update_elite_schedule()
@@ -798,6 +803,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	if spawn_timer <= 0 and elapsed < SPAWN_DURATION:
 		spawn_enemy()
 		spawn_timer = maxf(0.17, 0.85 - wave * 0.065) * 1.15 * (1.5 if boss_spawned else 1.0) / Tuning.stage_density(run_stage) * Tuning.closing_spawn_delay(elapsed)
+		if Chapter.active(run_stage): spawn_timer *= Chapter.spawn_pace(run_stage,elapsed) * (1.7 if run_stage==5 and boss_spawned else 1.0)
 	for e in enemies:
 		var previous_position: Vector2 = e.p
 		update_enemy(e, dt)
@@ -960,8 +966,22 @@ func spawn_boss() -> void:
 	if elapsed >= SPAWN_DURATION or boss_spawned: return
 	boss_spawned = true
 	var p = camera_center + Vector2(0, -world_view().size.y / 2 - 85)
-	enemies.append(make_enemy(p, 5))
-	banner = "BROODMOTHER / FINAL THREAT"
+	var kind: int = Chapter.FINALES[run_stage-1] if Chapter.active(run_stage) else 5
+	var finale = make_enemy(p,kind)
+	finale.finale = true
+	if Chapter.active(run_stage):
+		finale.hp = Chapter.finale_health(run_stage) * Tuning.stage_health(run_stage,true)
+		finale.max_hp = finale.hp
+		finale.trail_hp = finale.hp
+		finale.display_hp = finale.hp
+		finale.title = Chapter.GUARDIANS[run_stage-1]
+		if run_stage == 5:
+			finale.chapter_boss = true
+			finale.phase = 1
+			finale.cycle = 0
+			finale.attack = "fan"
+	enemies.append(finale)
+	banner = finale.get("title","BROODMOTHER").to_upper() + " / FINAL THREAT"
 	banner_timer = 3.0
 	tone(150, 0.3)
 
@@ -974,6 +994,7 @@ func update_elite_schedule() -> void:
 		if Tuning.is_elite(e.kind):
 			return
 	var kind: int = ELITE_KINDS[elite_spawn_index]
+	if Chapter.active(run_stage): kind = Chapter.ELITES[run_stage-1][elite_spawn_index]
 	elite_spawn_index += 1
 	var spawn_point = camera_center + Vector2((world_view().size.x / 2 + 85) * (-1 if elite_spawn_index % 2 == 0 else 1), 0)
 	enemies.append(make_enemy(spawn_point, kind))
@@ -1038,6 +1059,9 @@ func update_enemy(e: Dictionary, dt: float) -> void:
 		return
 	if e.kind>=9:
 		update_garden_bug(e,dt)
+		return
+	if e.get("chapter_boss",false):
+		Chapter.update_boss(self,e,dt)
 		return
 	if Tuning.is_elite(e.kind):
 		update_elite(e, dt)
@@ -1208,6 +1232,9 @@ func spawn_enemy() -> void:
 	if wave>=2 and roll>=0.80 and roll<0.88: kind=9
 	elif wave>=3 and roll>=0.88 and roll<0.95: kind=10
 	elif wave>=4 and roll>=0.95: kind=11
+	if Chapter.active(run_stage):
+		var pool = Chapter.pool(run_stage,elapsed)
+		kind = pool[mini(pool.size()-1,int(roll*pool.size()))]
 	enemies.append(make_enemy(p, kind))
 
 func target_direction() -> Vector2:
@@ -1722,7 +1749,7 @@ func _draw() -> void:
 func draw_scout_report() -> void:
 	story_panel(Rect2(30,60,660,1190))
 	center_text(177,"SCOUT REPORT",42,JOURNAL_INK)
-	center_text(223,"Stage %d cleared" % run_stage if state=="won" else "Another adventure awaits",26,LEAF_GREEN)
+	center_text(223,("Chapter One cleared!" if run_stage==5 else "Stage %d cleared" % run_stage) if state=="won" else "Another adventure awaits",26,LEAF_GREEN)
 	draw_texture_rect_region(REPORT_ART,Rect2(91,265,211,250),Rect2(135,10,480,535))
 	set_scene_transform(Vector2(204,485),-0.126)
 	var caption_size=19
@@ -1778,8 +1805,8 @@ func draw_home() -> void:
 	center_text(280,"Small scout. Big adventure.",23,LEAF_GREEN)
 	if home_tab == 1:
 		story_panel(Rect2(35,312,650,626))
-		center_text(376,"%02d / %s" % [selected_stage,stage_theme_name(selected_stage)],33,JOURNAL_INK)
-		center_text(416,"%s / %s" % [stage_patch_name(selected_stage),Tuning.ENEMY_NAMES[preview_enemy]],22,LEAF_GREEN)
+		center_text(376,"%02d / %s" % [selected_stage,Chapter.TITLES[selected_stage-1] if Chapter.active(selected_stage) else stage_theme_name(selected_stage)],30,JOURNAL_INK)
+		center_text(416,"Chapter One / The Garden Gate" if Chapter.active(selected_stage) else "%s / %s" % [stage_patch_name(selected_stage),Tuning.ENEMY_NAMES[preview_enemy]],22,LEAF_GREEN)
 		var bob = sin(Time.get_ticks_msec() / 1400.0) * 3
 		draw_stage_island(bob)
 		if selected_stage<=unlocked_stage:
@@ -1791,7 +1818,7 @@ func draw_home() -> void:
 		draw_stage_arrow(STAGE_PREVIOUS,-1,selected_stage > 1)
 		draw_stage_arrow(STAGE_NEXT,1,selected_stage < STAGE_COUNT)
 		draw_garden_button(HOME_PLAY,"PLAY" if selected_stage <= unlocked_stage else "LOCKED",false,39,selected_stage <= unlocked_stage)
-		center_text(1130,"3 minutes / Clear the stage to unlock the next",21,JOURNAL_INK)
+		center_text(1130,Chapter.BRIEFS[selected_stage-1] if Chapter.active(selected_stage) else "3 minutes / Clear the stage to unlock the next",20,JOURNAL_INK)
 	elif home_tab == 0 and not scout_handbook:
 		draw_scout_growth()
 	elif home_tab == 0:
@@ -2155,12 +2182,23 @@ func draw_bug_deaths() -> void:
 func draw_enemy(e: Dictionary) -> void:
 	var p: Vector2 = e.p
 	var angle: float = (player - p).angle()
-	if e.kind in [3, 6, 7, 8] and e.mode in ["windup", "rush", "recover"]:
+	if (e.kind in [3, 6, 7, 8] or e.get("chapter_boss",false)) and e.mode in ["windup", "rush", "recover"]:
 		angle = e.aim.angle()
 	var r: float = e.radius
 	if e.mode == "windup":
 		var warning_color: Color = Tuning.ENEMY_COLORS[e.kind]
-		if e.kind in [3, 6, 7]:
+		if e.get("chapter_boss",false):
+			if e.attack == "lunge":
+				var end: Vector2 = p + e.aim * 198
+				draw_line(p,end,Color(0.9,0.55,0.2,0.22),r*2,true)
+				draw_line(p,end,Color("f1bd69"),3,true)
+			elif e.attack == "fan":
+				for edge in [-0.6,0.6]: draw_line(p,p+e.aim.rotated(edge)*260,Color("f1bd69"),3,true)
+				draw_arc(p,100,e.aim.angle()-0.6,e.aim.angle()+0.6,16,Color("f1bd69"),3,true)
+			else:
+				draw_arc(p,r+25,e.aim.angle()+0.5,e.aim.angle()+TAU-0.5,40,Color("f1bd69"),3,true)
+				for edge in [-0.5,0.5]: draw_line(p,p+e.aim.rotated(edge)*210,Color("b5de9b"),3,true)
+		elif e.kind in [3, 6, 7]:
 			var end: Vector2 = p + e.aim * (210.0 if e.kind == 6 else (144.0 if e.kind == 7 else Tuning.CHARGE_SPEED * Tuning.CHARGE_SECONDS))
 			draw_line(p, end, Color(warning_color, 0.18), r * 2, true)
 			draw_line(p, end, warning_color, 2, true)
@@ -2195,7 +2233,7 @@ func draw_enemy(e: Dictionary) -> void:
 	draw_texture_rect_region(texture, Rect2(-size / 2, size), region, tint)
 	set_scene_transform(Vector2.ZERO)
 	if Tuning.is_elite(e.kind):
-		text_at(p + Vector2(-42, -r - 19), Tuning.ENEMY_NAMES[e.kind], 11, PAPER)
+		text_at(p + Vector2(-42, -r - 19), e.get("title",Tuning.ENEMY_NAMES[e.kind]), 11, PAPER)
 	if (e.hp < e.max_hp or Tuning.is_elite(e.kind)) and e.kind != 5:
 		var width = 76.0 if Tuning.is_elite(e.kind) else clampf(r*2,38,68)
 		var bar = Rect2(p.x-width/2,p.y-r-12,width,12 if Tuning.is_elite(e.kind) else 10)
@@ -2239,9 +2277,13 @@ func draw_hud() -> void:
 		card_text(column, 181, values[i], 28)
 	draw_garden_button(PAUSE_BUTTON,"II",false,25)
 	for e in enemies:
-		if e.kind == 5:
-			text_at(Vector2(28, 237), "BROODMOTHER", 17, PAPER)
-			draw_combat_health(Rect2(210,227,474,18),maxf(0,float(e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,true)
+		if e.kind == 5 or e.get("finale",false):
+			text_at(Vector2(28, 237), e.get("title","BROODMOTHER").to_upper(), 17, PAPER)
+			draw_combat_health(Rect2(310,227,374,18),maxf(0,float(e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,true)
+			if e.get("chapter_boss",false):
+				var cue = "RECOVERING / STRIKE NOW" if e.mode=="recover" else "KEEP MOVING"
+				if e.mode=="windup": cue = {"lunge":"CHARGE / STEP ASIDE","fan":"VOLLEY / LEAVE THE CONE","ring":"SEED RING / FIND THE GREEN GAP"}[e.attack]
+				text_at(Vector2(28,262),"PHASE %d / %s" % [e.phase,cue],16,PAPER)
 
 	set_scene_transform(Vector2.ZERO)
 
@@ -2281,6 +2323,10 @@ func refresh_terrain() -> void:
 			terrain_rng.seed = hash("garden:%d:%d" % [x, y]) if run_stage == 1 else hash("stage:%d:%d:%d" % [run_stage,x,y])
 			var rock = Vector2(x * 600, y * 600) + Vector2(terrain_rng.randf_range(130,470), terrain_rng.randf_range(130,470))
 			var rocks = [rock]
+			if run_stage in [2,3,4,5]:
+				rocks = []
+				for offset in Chapter.rock_offsets(run_stage):
+					rocks.append(Vector2(x*600,y*600)+offset)
 			if stage_theme(run_stage) == 1:
 				rocks.append(rock + Vector2(150,55))
 			elif stage_theme(run_stage) == 2:
@@ -2316,6 +2362,7 @@ func draw_enemy_directions() -> void:
 
 func test_new_encounters() -> void:
 	start_run()
+	run_stage = 6 # Preserve coverage of the later chapters' original schedule.
 	elapsed = 45
 	update_elite_schedule()
 	assert(enemies.size() == 1 and enemies[0].kind == 7)
@@ -2696,6 +2743,7 @@ func test_enemy_behaviors() -> void:
 	assert(shield == 0 and hp == 7 and guard_break_time > 0)
 	start_run()
 	elapsed = Tuning.BOSS_ARRIVAL - 0.01
+	run_stage = 6 # Legacy boss pattern is still used beyond chapter one.
 	simulate(0.02, Vector2.ZERO)
 	assert(boss_spawned)
 	var bosses = enemies.filter(func(e): return e.kind == 5)
@@ -2716,6 +2764,7 @@ func test_enemy_behaviors() -> void:
 	assert(elapsed == frozen_elapsed and bosses[0].p == frozen_boss_position)
 	toggle_pause()
 	assert(state == "playing")
+	run_stage = 1
 	assert(Combat.hit_fraction(Vector2.ZERO, Vector2(100, 0), Vector2(50, 0), 5) < 0.5)
 	assert(Combat.hit_fraction(Vector2.ZERO, Vector2(100, 0), Vector2(50, 20), 5) == INF)
 	var blocked = move_actor(Vector2(150, 270), Vector2(220, 0), 17)
@@ -3166,8 +3215,10 @@ func roll_preview_enemy() -> void:
 	# Separate randomness: opening the homepage never affects combat rolls.
 	var pools = [[0,1,2,3,4,5,6,7,8,9,10,11],[1,2,4,5,8,9,10],[0,2,3,6,7,9,11]]
 	var pool: Array = pools[stage_theme(selected_stage)]
+	if Chapter.active(selected_stage): pool = Chapter.pool(selected_stage,120).duplicate()
 	pool = pool.filter(func(kind): return kind != preview_enemy)
 	preview_enemy = pool[preview_rng.randi_range(0,pool.size()-1)]
+	if selected_stage==5: preview_enemy = 5
 	preview_motion.reset(selected_stage)
 
 func select_stage(stage: int) -> void:
