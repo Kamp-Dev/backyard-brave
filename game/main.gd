@@ -99,7 +99,6 @@ var completed_runs = 0
 var cleared_runs = 0
 var longest_run = 0.0
 
-const HEALTH_WOOD_FRAME = preload("res://assets/ui/health-wood-frame.png")
 const CAMP_CACTUS = preload("res://assets/ui/camp-cactus.png")
 const TOGGLE_LEAF = preload("res://assets/ui/toggle-leaf.png")
 const WOOD_TAB_GREEN = preload("res://assets/ui/wood-tab-green.png")
@@ -224,6 +223,7 @@ var garden_audio = GardenAudio.new()
 var mute = false
 var screenshot_mode = false
 var boss_spawned = false
+var boss_warning = 0.0
 var banner = ""
 var banner_timer = 0.0
 var damage_dealt = 0.0
@@ -369,6 +369,7 @@ func start_run() -> void:
 	player = stage_start(run_stage)
 	camera_center = player
 	clear_touch()
+	boss_spawned = false
 	terrain_cell = Vector2i(2147483647, 2147483647)
 	refresh_terrain()
 	facing = Vector2.UP
@@ -415,6 +416,7 @@ func start_run() -> void:
 	encounter_rewards = 0
 	pending_encounter_rewards = 0
 	boss_spawned = false
+	boss_warning = 0.0
 	damage_dealt = 0
 	damage_taken = 0
 	banner = "WAVE 01 / CRAWLERS"
@@ -748,6 +750,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	update_bug_deaths(dt)
 	update_upgrade_fx(dt)
 	elapsed += dt
+	boss_warning = maxf(0,boss_warning-dt)
 	guard_hit_time = maxf(0, guard_hit_time - dt)
 	guard_break_time = maxf(0, guard_break_time - dt)
 	var last_wave = wave
@@ -766,6 +769,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			banner = ["FIND YOUR FOOTING", "NEW BUGS IN THE GARDEN", "HOLD YOUR GROUND"][mini(2,int(elapsed/60))]
 		banner_timer = 2.5
 		if Chapter.active(run_stage) and wave not in [4,7]: banner_timer = 0
+		if boss_spawned: banner_timer = 0
 	if elapsed >= (135.0 if run_stage==5 else Tuning.BOSS_ARRIVAL) and elapsed < SPAWN_DURATION and not boss_spawned:
 		spawn_boss()
 	update_elite_schedule()
@@ -814,7 +818,15 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			if state == "dead":
 				return
 	resolve_bramble()
+	if state=="won":
+		enemies.clear()
+		hostile_bullets.clear()
+		return
 	update_player_bullets(dt)
+	if state=="won":
+		enemies.clear()
+		hostile_bullets.clear()
+		return
 	update_hostile_bullets(dt)
 	if state == "dead":
 		return
@@ -944,6 +956,7 @@ func update_player_bullets(dt: float) -> void:
 				e.p = move_actor(e.p, b.v.normalized() * (6 + upgrade_ranks[8] * 6), e.radius, ENEMY_SIZES[e.kind] / 2)
 			if e.hp <= 0:
 				kill_enemy(enemy_index)
+				if state=="won": return
 			if b.get("pierce", 0) <= 0:
 				consumed = true
 				break
@@ -965,6 +978,12 @@ func make_enemy(p: Vector2, kind: int) -> Dictionary:
 func spawn_boss() -> void:
 	if elapsed >= SPAWN_DURATION or boss_spawned: return
 	boss_spawned = true
+	boss_warning = 2.4
+	enemies.clear()
+	hostile_bullets.clear()
+	for rock in obstacles:
+		if world_view().has_point(rock): burst(rock,Color("b7a581"),8)
+	obstacles.clear()
 	var p = nearby_spawn_point(340,380)
 	var kind: int = Chapter.FINALES[run_stage-1] if Chapter.active(run_stage) else 5
 	var finale = make_enemy(p,kind)
@@ -980,13 +999,21 @@ func spawn_boss() -> void:
 			finale.phase = 1
 			finale.cycle = 0
 			finale.attack = "fan"
+	finale.hp *= 1.65
+	finale.max_hp = finale.hp
+	finale.trail_hp = finale.hp
+	finale.display_hp = finale.hp
+	finale.visual_scale = minf(1.8,1.45+run_stage*0.012)
+	finale.radius *= finale.visual_scale
+	finale.arrival = 2.4
+	finale.speed *= 1.08
 	enemies.append(finale)
 	banner = finale.get("title","BROODMOTHER").to_upper() + " / FINAL THREAT"
-	banner_timer = 3.0
+	banner_timer = 0.0
 	tone(150, 0.3)
 
 func update_elite_schedule() -> void:
-	if elapsed >= 145 or elite_spawn_index >= ELITE_TIMES.size():
+	if boss_spawned or elapsed >= 145 or elite_spawn_index >= ELITE_TIMES.size():
 		return
 	var encounter_time: float = [40.0,80.0,110.0][elite_spawn_index] if run_stage==5 else ELITE_TIMES[elite_spawn_index]
 	if elapsed < encounter_time:
@@ -1195,6 +1222,9 @@ func kill_enemy(index: int) -> void:
 	burst(e.p, Color("cbb78b"), 6)
 	enemies.remove_at(index)
 	kills += 1
+	if e.get("finale",false):
+		finish_run("won")
+		return
 	if run_growth[10]>0 and kills%5==0:
 		gems.append(e.p+Vector2(0,12))
 	if kills % (30 + (run_stage-1)/5*6) == 0 or Tuning.is_major(e.kind):
@@ -1220,7 +1250,7 @@ func nearby_spawn_point(minimum: float, maximum: float) -> Vector2:
 	return constrain_actor(candidate,62)
 
 func spawn_enemy() -> void:
-	if elapsed >= SPAWN_DURATION or enemies.size() >= 70:
+	if boss_spawned or elapsed >= SPAWN_DURATION or enemies.size() >= 70:
 		return
 	var p=nearby_spawn_point(260,320)
 	var kind = 0
@@ -1734,6 +1764,10 @@ func _draw() -> void:
 	if state == "playing":
 		draw_touch_controls()
 		draw_enemy_directions()
+		if boss_warning>0:
+			var warning_alpha=1.0 if settings.values.reduced_flashes else 0.65+0.35*sin(boss_warning*TAU)
+			center_text(370,"WARNING",58,Color(0.9,0.18,0.1,warning_alpha))
+			center_text(410,"FINAL BOSS APPROACHING",24,PAPER)
 		if banner_timer > 0:
 			center_text(280, banner, 21, PAPER)
 	if state == "upgrade":
@@ -2175,7 +2209,7 @@ func draw_bug_deaths() -> void:
 		var art=enemy_art(e.kind,int(age*12)%2 if age<0.3 else 1)
 		var texture: Texture2D=art.texture
 		var region: Rect2=art.region
-		var size: Vector2=art.size
+		var size: Vector2=art.size*float(e.get("visual_scale",1.0))
 		var p: Vector2 = e.p + e.hit_dir * settle * (10 if e.kind in [5, 6] else 19)
 		var hop = sin(tumble * PI) * (5 if e.kind in [5, 6] else 11)
 		set_scene_transform(p + Vector2(0, 4), 0, Vector2(1, 0.5))
@@ -2220,7 +2254,7 @@ func draw_enemy(e: Dictionary) -> void:
 	var art=enemy_art(e.kind,int(e.walk_distance/9.0)%2)
 	var texture: Texture2D=art.texture
 	var region: Rect2=art.region
-	var size: Vector2=art.size
+	var size: Vector2=art.size*float(e.get("visual_scale",1.0))
 	if e.kind>=9:
 		if e.mode=="hop": p.y-=sin((1.0-e.timer/0.5)*PI)*22
 		elif e.mode in ["dig","emerge"]: size*=0.75
@@ -2276,8 +2310,8 @@ func draw_hud() -> void:
 		for charge in range(shield): draw_pickup(Vector2(86+charge*26,106),2,23)
 	else:
 		text_at(Vector2(73,112),"STAGE %02d" % run_stage,17,LEAF_GREEN)
-	var labels = ["BUGS", "WAVE", "TIME", "REMAINING" if elapsed >= SPAWN_DURATION else "SURVIVE"]
-	var values = [str(kills), "%02d" % wave, "%02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60], str(enemies.size()) if elapsed >= SPAWN_DURATION else "03:00"]
+	var labels = ["BUGS", "WAVE", "TIME", "FINALE" if boss_spawned else "SURVIVE"]
+	var values = [str(kills), "%02d" % wave, "%02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60], "BOSS" if boss_spawned else "03:00"]
 	for i in range(4):
 		var column = Rect2(64 + i * 147, 126, 147, 66)
 		card_text(column, 148, labels[i], 17, LEAF_GREEN)
@@ -2316,11 +2350,14 @@ func world_view() -> Rect2:
 	return Rect2(camera_center - get_viewport_rect().size / GAMEPLAY_ZOOM / 2, get_viewport_rect().size / GAMEPLAY_ZOOM)
 
 func refresh_terrain() -> void:
+	if boss_spawned:
+		obstacles.clear()
+		return
 	var cell = Vector2i(floori(player.x / 600), floori(player.y / 600))
 	if cell == terrain_cell:
 		return
 	terrain_cell = cell
-	obstacles = [Vector2(260,270), Vector2(1020,270), Vector2(260,535), Vector2(1020,535)] if run_stage == 1 else []
+	obstacles = [Vector2(260,270), Vector2(1020,535)] if run_stage == 1 else []
 	# Stateless per-cell seeds make backtracking stable without retaining a map.
 	for y in range(cell.y - 2, cell.y + 3):
 		for x in range(cell.x - 2, cell.x + 3):
@@ -2329,18 +2366,8 @@ func refresh_terrain() -> void:
 			var terrain_rng = RandomNumberGenerator.new()
 			terrain_rng.seed = hash("garden:%d:%d" % [x, y]) if run_stage == 1 else hash("stage:%d:%d:%d" % [run_stage,x,y])
 			var rock = Vector2(x * 600, y * 600) + Vector2(terrain_rng.randf_range(130,470), terrain_rng.randf_range(130,470))
+			if posmod(x+y+run_stage,2)!=0: continue
 			var rocks = [rock]
-			if run_stage in [2,3,4,5]:
-				rocks = []
-				for offset in Chapter.rock_offsets(run_stage):
-					rocks.append(Vector2(x*600,y*600)+offset)
-			if stage_theme(run_stage) == 1:
-				rocks.append(rock + Vector2(150,55))
-			elif stage_theme(run_stage) == 2:
-				# Rocks frame a roomy central clearing with broad exits.
-				var center = Vector2(x * 600 + 300, y * 600 + 300)
-				var angle = terrain_rng.randf_range(0,TAU)
-				rocks = [center + Vector2.from_angle(angle) * 190, center - Vector2.from_angle(angle) * 190]
 			for point in rocks:
 				if point.distance_to(stage_start(run_stage)) > 130:
 					obstacles.append(point)
@@ -2726,6 +2753,7 @@ func test_enemy_behaviors() -> void:
 	update_enemy(charger, 1.0)
 	assert(charger.mode == "seek")
 	charger.p = Vector2(960, 270)
+	obstacles.append(Vector2(1020,270)) # Explicit collision fixture, independent of scenery.
 	charger.mode = "rush"
 	charger.aim = Vector2.RIGHT
 	charger.timer = 0.4
@@ -2777,6 +2805,7 @@ func test_enemy_behaviors() -> void:
 	run_stage = 1
 	assert(Combat.hit_fraction(Vector2.ZERO, Vector2(100, 0), Vector2(50, 0), 5) < 0.5)
 	assert(Combat.hit_fraction(Vector2.ZERO, Vector2(100, 0), Vector2(50, 20), 5) == INF)
+	obstacles = [Vector2(260,270)]
 	var blocked = move_actor(Vector2(150, 270), Vector2(220, 0), 17)
 	assert(blocked.x < 210, "Fast movement must not tunnel through a pillar")
 	start_run()
@@ -3530,8 +3559,9 @@ func draw_garden_button(rect: Rect2, label: String, selected: bool = false, size
 			var glow=bar_style(Color(0.72,0.82,0.35,0.10))
 			glow.set_corner_radius_all(17)
 			draw_style_box(glow,visual.grow(spread))
-	illustrated_wood(visual,active and not "CAMP" in label)
+	if rect!=PAUSE_BUTTON: illustrated_wood(visual,active and not "CAMP" in label)
 	if rect==PAUSE_BUTTON:
+		garden_wood(visual,active)
 		# Draw a real pause symbol, independent of font serifs and text metrics.
 		var center=visual.get_center()
 		var ink=Color("fff4d5") if active else Color("493522")
@@ -3687,18 +3717,13 @@ func draw_health_fill(track: Rect2, amount: float, color: Color) -> void:
 
 func draw_combat_health(rect: Rect2, health: float, trail: float, elite: bool = false, hit: float = 0.0) -> void:
 	var frame=rect.grow(4)
-	var source=Rect2(235,220,1700,274)
-	var scale_factor=frame.size.y/source.size.y
-	var cap=200.0*scale_factor
-	var dx=frame.position.x
-	var sx=source.position.x
-	var widths=[cap,frame.size.x-cap*2,cap]
-	var source_widths=[200.0,1300.0,200.0]
-	for i in range(3):
-		draw_texture_rect_region(HEALTH_WOOD_FRAME,Rect2(dx,frame.position.y,widths[i],frame.size.y),Rect2(sx,source.position.y,source_widths[i],source.size.y))
-		dx+=widths[i]
-		sx+=source_widths[i]
-	var track=Rect2(frame.position+Vector2(66,72)*scale_factor,Vector2(frame.size.x-132*scale_factor,128*scale_factor))
+	var wood=bar_style(Color("b77c38"))
+	wood.set_corner_radius_all(int(frame.size.y/2))
+	wood.set_border_width_all(2)
+	wood.border_color=Color("563820")
+	draw_style_box(wood,frame)
+	var track=frame.grow(-3)
+	draw_health_fill(track,1.0,Color("f1dfb0"))
 	# Clip one continuous capsule at the health boundary, rather than nesting
 	# rounded mini-bars/highlights inside the illustrated track.
 	draw_health_fill(track,trail,Color("cf5544"))
@@ -3720,6 +3745,7 @@ func enemy_art(kind: int, phase: int = 0) -> Dictionary:
 	return {"texture":ELITE_TEXTURE if Tuning.is_elite(kind) else ENEMY_TEXTURE,"region":region,"size":region.size*ENEMY_SIZES[kind]/largest}
 
 func enemy_targetable(e: Dictionary) -> bool:
+	if e.get("finale",false) and e.get("arrival",0.0)>0: return false
 	return not (e.kind==11 and e.mode=="burrow")
 
 func enemy_contact(e: Dictionary, previous: Vector2) -> bool:

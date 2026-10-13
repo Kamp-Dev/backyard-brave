@@ -21,13 +21,20 @@ func run_checks() -> void:
 		g.elapsed = 150
 		g.spawn_boss()
 		assert(g.enemies.size()==1 and g.enemies[0].kind==g.Chapter.FINALES[stage-1])
+		assert(g.boss_warning>0 and g.obstacles.is_empty())
+		g.spawn_enemy()
+		g.update_elite_schedule()
+		assert(g.enemies.size()==1, "Only the finale may remain after its entrance")
 		g.spawn_boss()
 		assert(g.enemies.size()==1)
 		g.elapsed = 180
 		g.spawn_enemy()
 		g.update_elite_schedule()
 		assert(g.enemies.size()==1)
+		g.elapsed = 151
+		g.enemies.append(g.make_enemy(g.player+Vector2(100,0),0))
 		g.kill_enemy(0)
+		assert(g.state=="won", "Final boss death must win immediately, before 3:00 and despite surviving bugs")
 		g.pending_levels = 0
 		g.simulate(1.0/30,Vector2.ZERO)
 		assert(g.state=="won")
@@ -36,6 +43,7 @@ func run_checks() -> void:
 	g.obstacles.clear()
 	g.spawn_boss()
 	var boss = g.enemies[0]
+	boss.arrival = 0
 	boss.p = g.player + Vector2(150,0)
 	boss.timer = 0
 	g.update_enemy(boss,0.01)
@@ -89,6 +97,6 @@ func run_checks() -> void:
 			results.append(record)
 			print("CHAPTER BALANCE ",JSON.stringify(record))
 	for record in results:
-		assert(record.result == 'won' and record.seconds <= 210, 'Chapter reference run must finish without stalled cleanup')
+		assert(record.result == 'won' and record.seconds <= 230, 'Chapter reference run must finish without stalled cleanup')
 	print('CHAPTER BALANCE PASSED: 21 complete runs, including three boss builds')
 	quit()
