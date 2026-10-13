@@ -3473,7 +3473,9 @@ func illustrated_wood(rect: Rect2, active: bool) -> void:
 	var left=260.0
 	var right=480.0 if active else 260.0
 	var target=Rect2(rect.position+Vector2(0,-224*scale_factor if active else 0),Vector2(rect.size.x+(140*scale_factor if active else 0),source.size.y*scale_factor))
-	var widths=[left*scale_factor,target.size.x-(left+right)*scale_factor,right*scale_factor]
+	# Small square controls need room for the grain between their end caps.
+	var cap_scale=minf(scale_factor,target.size.x*0.24/maxf(left,right))
+	var widths=[left*cap_scale,target.size.x-(left+right)*cap_scale,right*cap_scale]
 	var source_widths=[left,source.size.x-left-right,right]
 	var dx=target.position.x
 	var sx=source.position.x
@@ -3515,6 +3517,13 @@ func draw_garden_button(rect: Rect2, label: String, selected: bool = false, size
 			glow.set_corner_radius_all(17)
 			draw_style_box(glow,visual.grow(spread))
 	illustrated_wood(visual,active and not "CAMP" in label)
+	if rect==PAUSE_BUTTON:
+		# Draw a real pause symbol, independent of font serifs and text metrics.
+		var center=visual.get_center()
+		var ink=Color("fff4d5") if active else Color("493522")
+		for offset in [-7.0,2.0]:
+			draw_rect(Rect2(center+Vector2(offset,-10),Vector2(5,20)),ink)
+		return
 	var camp="CAMP" in label
 	if camp:
 		var height=visual.size.y*1.45
