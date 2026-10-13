@@ -2183,7 +2183,7 @@ func draw_enemy(e: Dictionary) -> void:
 	if (e.hp < e.max_hp or Tuning.is_elite(e.kind)) and e.kind != 5:
 		var width = 76.0 if Tuning.is_elite(e.kind) else clampf(r*2,38,68)
 		var bar = Rect2(p.x-width/2,p.y-r-12,width,12 if Tuning.is_elite(e.kind) else 10)
-		draw_combat_health(bar,float(e.get("display_hp",e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,Tuning.is_elite(e.kind),float(e.get("bar_delay",0))/0.18)
+		draw_combat_health(bar,maxf(0,float(e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,Tuning.is_elite(e.kind),float(e.get("bar_delay",0))/0.18)
 
 # Stretch only the quiet paper center; preserve the illustrated end-cap proportions.
 func draw_story_header(rect: Rect2) -> void:
@@ -2225,7 +2225,7 @@ func draw_hud() -> void:
 	for e in enemies:
 		if e.kind == 5:
 			text_at(Vector2(28, 237), "BROODMOTHER", 17, PAPER)
-			draw_combat_health(Rect2(210,227,474,18),float(e.get("display_hp",e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,true)
+			draw_combat_health(Rect2(210,227,474,18),maxf(0,float(e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,true)
 
 	set_scene_transform(Vector2.ZERO)
 
@@ -3517,7 +3517,7 @@ func update_enemy_health_feedback(enemy: Dictionary, dt: float) -> void:
 	if enemy.bar_delay<=0:
 		previous=move_toward(previous,maxf(0,enemy.hp),float(enemy.max_hp)*1.5*dt)
 	enemy.trail_hp=clampf(previous,maxf(0,enemy.hp),enemy.max_hp)
-	enemy.display_hp=move_toward(float(enemy.get("display_hp",enemy.hp)),maxf(0,enemy.hp),float(enemy.max_hp)*3.0*dt)
+	enemy.display_hp=clampf(float(enemy.hp),0,float(enemy.max_hp))
 
 func draw_health_fill(track: Rect2, amount: float, color: Color) -> void:
 	amount=clampf(amount,0,1)
@@ -3560,7 +3560,7 @@ func draw_combat_health(rect: Rect2, health: float, trail: float, elite: bool = 
 	var track=Rect2(frame.position+Vector2(66,72)*scale_factor,Vector2(frame.size.x-132*scale_factor,128*scale_factor))
 	# Clip one continuous capsule at the health boundary, rather than nesting
 	# rounded mini-bars/highlights inside the illustrated track.
-	draw_health_fill(track,trail,Color("b8cf83"))
+	draw_health_fill(track,trail,Color("cf5544"))
 	draw_health_fill(track,health,Color("70b746"))
 	var sway=0.0 if settings.values.reduced_vfx else sin(elapsed*2.3+rect.position.x*0.02)*0.65+sin(hit*PI)*1.4
 	var leaf_extent=frame.size.y*(1.55 if elite else 1.4)
