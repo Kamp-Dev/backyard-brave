@@ -72,14 +72,15 @@ func run_checks() -> void:
 	print("CHAPTER CHECKS PASSED: pools, finales, cutoff, victory, locked warnings, three phases, ring gap and charge recovery")
 	var results = []
 	for stage in range(1,6):
-		for seed_value in [17,42,93]:
+		for scenario in range(9 if stage==5 else 3):
+			var seed_value: int = [17,42,93][scenario%3]
 			g.selected_stage = stage
 			g.rng.seed = seed_value
-			g.test_build = 0
+			g.test_build = scenario / 3
 			g.start_run()
 			var boss_attacks = {}
 			for frame in range(10500):
-				if g.state=="upgrade": g.bot_upgrade()
+				while g.state=="upgrade": g.bot_upgrade()
 				if g.state!="playing": break
 				g.simulate(1.0/30,g.bot_direction())
 				for enemy in g.enemies:
@@ -89,5 +90,5 @@ func run_checks() -> void:
 			print("CHAPTER BALANCE ",JSON.stringify(record))
 	for record in results:
 		assert(record.result == 'won' and record.seconds <= 210, 'Chapter reference run must finish without stalled cleanup')
-	print('CHAPTER BALANCE PASSED: 15 complete runs')
+	print('CHAPTER BALANCE PASSED: 21 complete runs, including three boss builds')
 	quit()

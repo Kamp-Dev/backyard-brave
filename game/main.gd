@@ -766,7 +766,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			banner = ["FIND YOUR FOOTING", "NEW BUGS IN THE GARDEN", "HOLD YOUR GROUND"][mini(2,int(elapsed/60))]
 		banner_timer = 2.5
 		if Chapter.active(run_stage) and wave not in [4,7]: banner_timer = 0
-	if elapsed >= Tuning.BOSS_ARRIVAL and elapsed < SPAWN_DURATION and not boss_spawned:
+	if elapsed >= (135.0 if run_stage==5 else Tuning.BOSS_ARRIVAL) and elapsed < SPAWN_DURATION and not boss_spawned:
 		spawn_boss()
 	update_elite_schedule()
 	hurt_timer = maxf(0, hurt_timer - dt)
@@ -803,7 +803,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	if spawn_timer <= 0 and elapsed < SPAWN_DURATION:
 		spawn_enemy()
 		spawn_timer = maxf(0.17, 0.85 - wave * 0.065) * 1.15 * (1.5 if boss_spawned else 1.0) / Tuning.stage_density(run_stage) * Tuning.closing_spawn_delay(elapsed)
-		if Chapter.active(run_stage): spawn_timer *= Chapter.spawn_pace(run_stage,elapsed) * (1.7 if run_stage==5 and boss_spawned else 1.0)
+		if Chapter.active(run_stage): spawn_timer *= Chapter.spawn_pace(run_stage,elapsed) * (3.5 if run_stage==5 and boss_spawned else 1.0)
 	for e in enemies:
 		var previous_position: Vector2 = e.p
 		update_enemy(e, dt)
@@ -988,7 +988,8 @@ func spawn_boss() -> void:
 func update_elite_schedule() -> void:
 	if elapsed >= 145 or elite_spawn_index >= ELITE_TIMES.size():
 		return
-	if elapsed < ELITE_TIMES[elite_spawn_index]:
+	var encounter_time: float = [40.0,80.0,110.0][elite_spawn_index] if run_stage==5 else ELITE_TIMES[elite_spawn_index]
+	if elapsed < encounter_time:
 		return
 	for e in enemies:
 		if Tuning.is_elite(e.kind):

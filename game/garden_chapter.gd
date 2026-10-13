@@ -25,7 +25,7 @@ static func spawn_pace(stage: int, seconds: float) -> float:
 	return [1.45,1.3,1.2,1.15,1.1][stage-1] * pause
 
 static func finale_health(stage: int) -> float:
-	return [48.0,85.0,85.0,100.0,225.0][stage-1]
+	return [48.0,85.0,85.0,100.0,190.0][stage-1]
 
 static func rock_offsets(stage: int) -> Array[Vector2]:
 	match stage:
@@ -86,4 +86,4 @@ static func update_boss(host, e: Dictionary, dt: float) -> void:
 		e.mode = "windup"
 		e.timer = 1.15 if e.attack == "lunge" else 1.0
 		return
-	host.walk_enemy(e,direction,e.speed if e.p.distance_to(host.player) < 230 else 185.0,dt)
+	host.walk_enemy(e,direction,e.speed if e.p.distance_to(host.player) < 230 else 255.0,dt)
