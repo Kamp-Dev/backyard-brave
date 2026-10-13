@@ -216,6 +216,7 @@ var sound_cache: Dictionary = {}
 var audio_cursor = 0
 const GardenSettings = preload("res://garden_settings.gd")
 var settings = GardenSettings.new()
+var browser_touch = preload("res://browser_touch.gd").new()
 const GardenAudio = preload("res://garden_audio.gd")
 var garden_audio = GardenAudio.new()
 var mute = false
@@ -233,6 +234,7 @@ var guard_hit_time = 0.0
 var guard_break_time = 0.0
 
 func _ready() -> void:
+	browser_touch.setup()
 	locked_preview = SubViewport.new()
 	locked_preview.size = Vector2i(532,532)
 	locked_preview.transparent_bg = true
@@ -563,6 +565,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if browser_touch.suppress(event): return
 	# Drawn menus use a centered 720x1280 layout; pointers share that transform.
 	if event is InputEventScreenTouch or event is InputEventScreenDrag or event is InputEventMouse:
 		event = event.duplicate()
@@ -712,6 +715,7 @@ func _notification(what: int) -> void:
 		toggle_pause()
 
 func _process(delta: float) -> void:
+	browser_touch.drain(self)
 	settings.advance(delta)
 	if state=="title" and not screenshot_mode and not settings.values.low_graphics:
 		home_garden.advance(delta)

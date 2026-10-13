@@ -43,9 +43,10 @@ jobs:
       - name: Import and export
         run: |
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --editor --import --quit
-          Godot_v4.7.2-stable_linux.x86_64 --headless --path game --export-release Web ../web/index.html
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path game --export-release Web ../web/backyard-${GITHUB_SHA}.html
+          mv web/backyard-${GITHUB_SHA}.html web/index.html
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --export-debug Android ../android/Backyard-Brave.apk
-          test -s web/index.wasm
+          test -s web/backyard-${GITHUB_SHA}.wasm
           test -s android/Backyard-Brave.apk
           touch web/.nojekyll
           cp android/Backyard-Brave.apk web/
