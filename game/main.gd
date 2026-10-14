@@ -1283,10 +1283,22 @@ func nearby_spawn_point(minimum: float, maximum: float) -> Vector2:
 		if constrain_actor(candidate,62).is_equal_approx(candidate): return candidate
 	return constrain_actor(candidate,62)
 
-func spawn_enemy() -> void:
+func wave_spawn_point() -> Vector2:
+	var angle: float = waves.next_spawn_angle(self)
+	# Search within the chosen approach first; rocks must not redirect every
+	# enemy to the same fallback point or push spawns inside the safe radius.
+	for offset in [0,1,-1,2,-2,3,-3,4]:
+		for attempt in range(10):
+			var direction = angle+offset*TAU/8+rng.randf_range(-0.22,0.22)
+			var candidate = player+Vector2.from_angle(direction)*rng.randf_range(260,320)
+			if constrain_actor(candidate,62).is_equal_approx(candidate): return candidate
+	return Vector2.INF
+
+func spawn_enemy() -> bool:
 	if boss_spawned or wave >= 10 or enemies.size() >= 70:
-		return
-	var p=nearby_spawn_point(260,320)
+		return false
+	var p=wave_spawn_point()
+	if not p.is_finite(): return false
 	var kind = 0
 	var roll = rng.randf()
 	if wave >= 4 and roll < 0.18:
@@ -1306,6 +1318,7 @@ func spawn_enemy() -> void:
 		kind = pool[mini(pool.size()-1,int(roll*pool.size()))]
 	enemies.append(make_enemy(p, kind))
 	enemies[-1].arrival=0.55
+	return true
 
 func target_direction() -> Vector2:
 	var target = player + facing
