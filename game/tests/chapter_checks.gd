@@ -79,10 +79,64 @@ func run_checks() -> void:
 	g.record_stage_result("won")
 	g.elapsed=200
 	g.record_stage_result("won")
-	assert(g.stage_records[str(g.run_stage)].ten_wave_best==172.5)
+	assert(g.stage_records[str(g.run_stage)].ten_wave_v2_best==172.5)
 	g.elapsed=150
 	g.record_stage_result("won")
-	assert(g.stage_records[str(g.run_stage)].ten_wave_best==150)
+	assert(g.stage_records[str(g.run_stage)].ten_wave_v2_best==150)
+	# Boss attack randomness changes order, never warning geometry or dodge rules.
+	g.selected_stage=5
+	g.start_run()
+	g.waves.begin(g,10)
+	var guardian=g.enemies[0]
+	guardian.arrival=0
+	guardian.phase=1
+	for seed_value in range(40):
+		g.rng.seed=seed_value
+		guardian.attack_bag=[]
+		guardian.last_attack=""
+		var seen=[]
+		var previous=""
+		for i in range(10):
+			var attack=g.Chapter.choose_attack(g,guardian)
+			assert(attack!=previous)
+			previous=attack
+			if i<5: seen.append(attack)
+		assert(seen.has("slam") and seen.has("eruption") and seen.has("ring") and seen.has("fan") and seen.has("lunge"))
+	g.player=g.arena_center
+	g.Chapter.begin_attack(g,guardian,"eruption")
+	var zones=guardian.zones.duplicate()
+	g.player+=Vector2(100,100)
+	var original_hp=g.hp
+	g.Chapter.update_boss(g,guardian,0.5)
+	assert(guardian.zones==zones and g.hp==original_hp, "Ground warnings lock their positions and do not deal early damage")
+	g.Chapter.update_boss(g,guardian,0.66)
+	g.player=zones[0]
+	g.roll_time=0.2
+	g.Chapter.update_boss(g,guardian,0.01)
+	assert(g.hp==original_hp, "Rolling dodges erupting soil")
+	g.roll_time=0
+	g.hurt_timer=0
+	g.Chapter.update_boss(g,guardian,0.01)
+	assert(g.hp==original_hp-1)
+	g.Chapter.update_boss(g,guardian,0.01)
+	assert(g.hp==original_hp-1, "Overlapping circles respect hit grace")
+	g.Chapter.begin_attack(g,guardian,"slam")
+	g.Chapter.update_boss(g,guardian,1.16)
+	g.player=guardian.origin+Vector2(40,0)
+	g.hurt_timer=0
+	g.roll_time=0.2
+	g.Chapter.update_boss(g,guardian,0.01)
+	assert(g.hp==original_hp-1, "Roll crosses shockwave safely")
+	g.roll_time=0
+	g.Chapter.update_boss(g,guardian,0.01)
+	assert(g.hp==original_hp-2, "Shockwave damages its expanding ring, not an invisible whole disc")
+	guardian.hp=guardian.max_hp*0.6
+	g.Chapter.update_boss(g,guardian,0.01)
+	assert(guardian.phase==2 and guardian.mode=="recover")
+	g.Chapter.begin_attack(g,guardian,"lunge")
+	g.Chapter.update_boss(g,guardian,0.86)
+	g.Chapter.update_boss(g,guardian,0.56)
+	assert(guardian.mode=="windup" and guardian.charges==1 and guardian.timer>=0.8, "Second charge gets a fresh, full warning")
 	print("CHAPTER CHECKS PASSED: ten finite waves, no waiting shortcut, two minibosses, solid arena, warning, victory delay, skill fairness and clear records")
 	var results=[]
 	for stage in range(1,6):

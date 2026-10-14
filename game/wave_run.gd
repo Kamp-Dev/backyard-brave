@@ -1,6 +1,6 @@
 extends RefCounted
 ## Finite encounters: time is a score, never a condition for advancing.
-const COUNTS = [12,16,20,24,28,32,36,40,44,0]
+const COUNTS = [14,20,24,30,34,38,44,50,56,0]
 var remaining = 0
 var spawned = 0
 var miniboss_spawned = false
@@ -18,7 +18,7 @@ func begin(host, number: int) -> void:
 	if number>1:
 		if host.upgrade_ranks[6]>0: host.shield = mini(host.guard_capacity(),host.shield+1)
 		if host.run_growth[13]>0 and number%3==0: host.shield = mini(host.guard_capacity(),host.shield+1)
-	host.banner = "WAVE %d / 10" % number
+	host.banner = "WAVE %d / 10" % number + (" / LAST STAND" if number==9 else " / SWARM SURGE" if number==7 else "")
 	host.banner_timer = 1.6
 	if number==10:
 		host.spawn_boss()
@@ -35,7 +35,7 @@ func advance(host, dt: float) -> void:
 		cleared = host.wave
 		intermission = 1.2
 		host.hostile_bullets.clear()
-		host.banner = "WAVE %d CLEARED" % host.wave
+		host.banner = ("MINIBOSS DEFEATED / WAVE %d" if host.wave in [3,6] else "WAVE %d CLEARED") % host.wave
 		host.banner_timer = 1.2
 		# Sweep XP only on a true clear: no tedious backtracking before the next wave.
 		var seeds = host.gems.size()

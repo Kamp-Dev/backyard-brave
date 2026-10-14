@@ -160,7 +160,7 @@ const UPGRADE_NAMES = ["QUICK DRAW", "SCATTER SEEDS", "HARD SEEDS", "FORAGER POU
 const UPGRADE_CAPS = [5, 5, 5, 5, 5, 5, 5, 5, 5]
 const MAX_LEVEL = 7
 const LEVEL_SEED_POWER = 0.55
-const RUN_XP_STEPS = [8,20,35,50,70,100]
+const RUN_XP_STEPS = [10,24,42,60,82,118]
 const SCATTER_POWER = [1.0, 0.85, 0.70, 0.62, 0.55, 0.50]
 const UPGRADE_FAMILIES = ["SHARPSHOOTER", "CROWD CONTROL", "SHARPSHOOTER", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "SHARPSHOOTER", "CROWD CONTROL"]
 var upgrade_ranks: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -806,6 +806,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	for e in enemies:
 		var previous_position: Vector2 = e.p
 		update_enemy(e, dt)
+		if state=="dead": return
 		e.walk_distance += e.p.distance_to(previous_position)
 		if enemy_contact(e,previous_position) and hurt_timer <= 0 and roll_time <= 0:
 			hurt_player()
@@ -946,7 +947,7 @@ func update_player_bullets(dt: float) -> void:
 			if not visual.is_empty() and visual[8] > 0:
 				add_upgrade_fx(e.p, "thump", visual[8], b.v.normalized(), 0.22)
 			b.hit_ids.append(e.uid)
-			if e.kind not in [5, 6] and e.mode != "rush":
+			if e.kind not in [5, 6] and not e.get("finale",false) and e.mode != "rush":
 				e.p = move_actor(e.p, b.v.normalized() * (6 + upgrade_ranks[8] * 6), e.radius, ENEMY_SIZES[e.kind] / 2)
 			if e.hp <= 0:
 				kill_enemy(enemy_index)
@@ -1015,7 +1016,7 @@ func spawn_boss() -> void:
 	finale.attack = "fan"
 	finale.mode = "seek"
 	finale.timer = 0.7
-	finale.hp *= 5.0
+	finale.hp *= 9.0 if run_stage==1 else 7.5 if run_stage<=4 else 6.25
 	finale.max_hp = finale.hp
 	finale.trail_hp = finale.hp
 	finale.display_hp = finale.hp
@@ -1830,7 +1831,7 @@ func draw_scout_report() -> void:
 	draw_string(heading_font,Vector2(-79,0),scout_name,HORIZONTAL_ALIGNMENT_CENTER,158,caption_size,JOURNAL_INK)
 	set_scene_transform(Vector2.ZERO)
 	draw_texture_rect_region(REPORT_ART,Rect2(309,282,312,220),Rect2(770,88,700,415))
-	var stats = [["Bugs defeated",str(kills)],["Clear time" if state=="won" else "Time","%.1fs" % elapsed],["Run level",str(level)],["Best clear","%.1fs" % float(stage_records.get(str(run_stage),{}).get("ten_wave_best",elapsed)) if state=="won" else "--"],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
+	var stats = [["Bugs defeated",str(kills)],["Clear time" if state=="won" else "Time","%.1fs" % elapsed],["Run level",str(level)],["Best clear","%.1fs" % float(stage_records.get(str(run_stage),{}).get("ten_wave_v2_best",elapsed)) if state=="won" else "--"],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
 	for i in range(stats.size()):
 		text_at(Vector2(330,317+i*30),stats[i][0],20,JOURNAL_INK)
 		draw_string(heading_font,Vector2(522,317+i*30),stats[i][1],HORIZONTAL_ALIGNMENT_RIGHT,76,20,JOURNAL_INK)
@@ -2265,16 +2266,22 @@ func draw_enemy(e: Dictionary) -> void:
 	if e.mode == "windup":
 		var warning_color: Color = Tuning.ENEMY_COLORS[e.kind]
 		if e.get("chapter_boss",false):
-			if e.attack == "lunge":
-				var end: Vector2 = p + e.aim * 198
+			if e.attack=="lunge":
+				var end: Vector2=constrain_actor(p+e.aim*247.5,r)
 				draw_line(p,end,Color(0.9,0.55,0.2,0.22),r*2,true)
 				draw_line(p,end,Color("f1bd69"),3,true)
-			elif e.attack == "fan":
-				for edge in [-0.6,0.6]: draw_line(p,p+e.aim.rotated(edge)*260,Color("f1bd69"),3,true)
-				draw_arc(p,100,e.aim.angle()-0.6,e.aim.angle()+0.6,16,Color("f1bd69"),3,true)
-			else:
-				draw_arc(p,r+25,e.aim.angle()+0.5,e.aim.angle()+TAU-0.5,40,Color("f1bd69"),3,true)
-				for edge in [-0.5,0.5]: draw_line(p,p+e.aim.rotated(edge)*210,Color("b5de9b"),3,true)
+			elif e.attack=="fan":
+				for edge in [-0.85,0.85]: draw_line(p,p+e.aim.rotated(edge)*280,Color("f1bd69"),3,true)
+				draw_arc(p,110,e.aim.angle()-0.85,e.aim.angle()+0.85,24,Color("f1bd69"),3,true)
+			elif e.attack=="ring":
+				draw_arc(p,r+25,e.aim.angle()+0.48,e.aim.angle()+TAU-0.48,40,Color("f1bd69"),3,true)
+				for edge in [-0.48,0.48]: draw_line(p,p+e.aim.rotated(edge)*230,Color("b5de9b"),3,true)
+			elif e.attack=="slam":
+				draw_circle(e.origin,65,Color(0.9,0.48,0.12,0.18))
+				draw_arc(e.origin,65,0,TAU,40,Color("f1bd69"),4,true)
+				for i in range(8):
+					var direction=Vector2.from_angle(i*TAU/8)
+					draw_line(e.origin+direction*76,e.origin+direction*105,Color("f1bd69"),3,true)
 		elif e.kind in [3, 6, 7]:
 			var end: Vector2 = p + e.aim * (210.0 if e.kind == 6 else (144.0 if e.kind == 7 else Tuning.CHARGE_SPEED * Tuning.CHARGE_SECONDS))
 			draw_line(p, end, Color(warning_color, 0.18), r * 2, true)
@@ -2285,6 +2292,19 @@ func draw_enemy(e: Dictionary) -> void:
 			draw_line(p, p + e.aim * 160, warning_color, 2, true)
 		else:
 			draw_arc(p, r + 15, 0, TAU, 32, warning_color, 3, true)
+	if e.get("chapter_boss",false):
+		if e.mode=="shockwave":
+			draw_arc(e.origin,e.front,0,TAU,72,Color(0.68,0.36,0.14,0.7),26,true)
+			draw_arc(e.origin,e.front,0,TAU,72,Color("efba67"),4,true)
+		if e.attack=="eruption" and e.mode in ["windup","eruption"]:
+			for point in e.get("zones",[]):
+				var active=e.mode=="eruption"
+				draw_circle(point,e.zone_radius,Color(0.75,0.32,0.13,0.45 if active else 0.16))
+				draw_arc(point,e.zone_radius,0,TAU,40,Color("f3b477"),3,true)
+				if active:
+					for i in range(8):
+						var root=point+Vector2.from_angle(i*TAU/8)*e.zone_radius*0.6
+						draw_line(root,root+Vector2(0,-24),Color("bc8849"),6,true)
 	if e.kind>=9:
 		draw_garden_bug_warning(e)
 		if e.mode=="burrow": return
@@ -2362,7 +2382,7 @@ func draw_hud() -> void:
 			draw_combat_health(Rect2(310,227,374,18),maxf(0,float(e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,true)
 			if e.get("chapter_boss",false):
 				var cue = "EXPOSED / +35% DAMAGE" if e.mode=="recover" else "KEEP MOVING"
-				if e.mode=="windup": cue = {"lunge":"CHARGE / STEP ASIDE","fan":"VOLLEY / LEAVE THE CONE","ring":"SEED RING / FIND THE GREEN GAP"}[e.attack]
+				if e.mode in ["windup","shockwave","eruption","rush"]: cue = {"lunge":"CHARGE / STEP ASIDE","fan":"VOLLEY / LEAVE THE CONE","ring":"SEED RING / FIND THE GREEN GAP","slam":"SHOCKWAVE / ROLL THROUGH","eruption":"ERUPTION / LEAVE THE CIRCLES"}[e.attack]
 				text_at(Vector2(28,262),"PHASE %d / %s" % [e.phase,cue],16,PAPER)
 
 	set_scene_transform(Vector2.ZERO)
@@ -2965,6 +2985,18 @@ func bot_direction() -> Vector2:
 			var closest = Geometry2D.get_closest_point_to_segment(player, e.p, e.p + e.aim * 320)
 			if player.distance_to(closest) < 65:
 				move += (player - closest).normalized() * 2
+		if e.get("finale",false):
+			if e.attack=="eruption" and e.mode in ["windup","eruption"]:
+				for point in e.get("zones",[]):
+					var away: Vector2=player-point
+					if away.length()<e.zone_radius+40:
+						move+=(away.normalized() if away.length()>1 else Vector2.RIGHT)*4
+						if e.mode=="eruption" or e.timer<0.15: danger=true
+			if e.mode=="shockwave":
+				var away: Vector2=player-e.origin
+				if absf(away.length()-e.front)<65:
+					move-=away.normalized()*3
+					if absf(away.length()-e.front)<45: danger=true
 	for b in hostile_bullets:
 		var closest = Geometry2D.get_closest_point_to_segment(player, b.p, b.p + b.v * 0.5)
 		if player.distance_to(closest) < 60:
@@ -3322,8 +3354,8 @@ func stage_status() -> String:
 	var record: Dictionary = stage_records.get(str(selected_stage),{})
 	if record.is_empty():
 		return "Stage %02d / %d  -  Ready to explore" % [selected_stage,STAGE_COUNT]
-	if float(record.get("ten_wave_best",0))>0:
-		return "10 waves / Best clear: %.1fs" % float(record.ten_wave_best)
+	if float(record.get("ten_wave_v2_best",0))>0:
+		return "10 waves / Best clear: %.1fs" % float(record.ten_wave_v2_best)
 	return "%s / Best: %d bugs" % ["CLEARED" if record.get("cleared",false) else "READY",record.get("best",0)]
 
 func record_stage_result(result: String) -> void:
@@ -3333,8 +3365,8 @@ func record_stage_result(result: String) -> void:
 	record["cleared"] = bool(record.get("cleared",false)) or result == "won"
 	stage_records[str(run_stage)] = record
 	if result == "won":
-		var best_clear = float(record.get("ten_wave_best",0))
-		record["ten_wave_best"] = elapsed if best_clear<=0 else minf(best_clear,elapsed)
+		var best_clear = float(record.get("ten_wave_v2_best",0))
+		record["ten_wave_v2_best"] = elapsed if best_clear<=0 else minf(best_clear,elapsed)
 		unlocked_stage = maxi(unlocked_stage,mini(run_stage+1,STAGE_COUNT))
 
 func draw_stage_island(bob: float) -> void:
