@@ -1,7 +1,7 @@
 extends RefCounted
 ## Gameplay knobs. Keep art changes out of these values.
-const RUN_SECONDS = 180.0
-const BOSS_ARRIVAL = 150.0
+const RUN_SECONDS = 300.0
+const BOSS_ARRIVAL = 300.0
 const CHARGE_WARNING = 0.8
 const CHARGE_SECONDS = 0.48
 const CHARGE_RECOVERY = 0.9

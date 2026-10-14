@@ -13,8 +13,8 @@ func run() -> void:
 		for seed_value in [17,42,93]:
 			g.start_run()
 			g.rng.seed=seed_value
-			g.level=7
-			for kind in [2,2,2,0,0,0,7,7,5]:
+			g.level=10
+			for kind in [2,2,2,2,0,0,0,0,7,7,5,4]:
 				g.upgrades.assign([kind])
 				g.pending_levels=1
 				g.choose_upgrade(0)

@@ -13,33 +13,31 @@ func run_checks() -> void:
 	g.damage=0
 	g.hp=10000
 	for frame in range(6000): g.simulate(1.0/30,Vector2.RIGHT)
-	assert(g.wave==1 and not g.boss_spawned and g.waves.remaining==0 and not g.enemies.is_empty(), "Waiting beyond 3 minutes cannot clear a wave")
-	g.start_run()
-	for number in range(1,10):
-		assert(g.wave==number)
-		var total=g.waves.remaining
-		while g.waves.remaining>0:
-			g.spawn_timer=0
-			g.waves.advance(g,0.01)
-			for i in range(g.enemies.size()-1,-1,-1): g.kill_enemy(i)
-		assert(total>0)
-		g.waves.advance(g,0.01)
-		assert(g.waves.cleared==number and g.wave==number)
-		while g.state=="upgrade": g.bot_upgrade()
-		g.waves.advance(g,1.3)
-	assert(g.wave==10 and g.elite_spawn_index==2 and g.encounter_rewards==3)
-	assert(g.arena_active and g.boss_warning==3.0 and g.enemies.size()==1)
+	assert(g.wave>=6 and not g.boss_spawned and g.waves.remaining>0 and not g.enemies.is_empty(), "Reinforcements continue during the five-minute buildup")
+	assert(g.waves.redirected>0, "Running away at the cap must not leave all pressure behind")
+	var frozen: float=g.elapsed
+	g.state="upgrade"
+	g.simulate(1.0,Vector2.ZERO)
+	assert(g.elapsed==frozen, "Skill decisions do not consume survival time")
+	g.state="playing"
+	g.elapsed=300
+	g.enemies.assign(g.enemies.filter(func(e): return e.get("miniboss",false)))
+	g.waves.advance(g,0.01)
+	assert(g.waves.waiting_for_elites and not g.boss_spawned and g.elite_spawn_index==2)
+	for i in range(g.enemies.size()-1,-1,-1): g.kill_enemy(i)
+	g.waves.advance(g,0.01)
+	assert(g.waves.final_prep and g.state=="upgrade" and not g.boss_spawned)
+	while g.state=="upgrade": g.bot_upgrade()
+	g.waves.advance(g,0.01)
+	assert(g.wave==10 and g.encounter_rewards==3 and g.arena_active and g.boss_warning==3.0 and g.enemies.size()==1)
 	assert(g.repairs.size()<=2 and g.bonus_drops.size()<=1)
 	var boss=g.enemies[0]
 	for i in range(16):
 		var direction=Vector2.from_angle(i*TAU/16)
 		var start=g.arena_center+direction*150
-		var destination=g.move_actor(start,direction*2000,17)
-		assert(destination.distance_to(g.arena_center)<=g.BOSS_ARENA_RADIUS-17+0.01, "Rolls cannot cross any part of the rim")
+		assert(g.move_actor(start,direction*2000,17).distance_to(g.arena_center)<=g.BOSS_ARENA_RADIUS-17+0.01)
 		assert(g.move_actor(start,direction*2000,boss.radius).distance_to(g.arena_center)<=g.BOSS_ARENA_RADIUS-boss.radius+0.01)
 	assert(not g.enemy_targetable(boss) and not g.enemy_contact(boss,boss.p))
-	g.state="playing"
-	g.pending_levels=0
 	g.simulate(1.5,Vector2.ZERO)
 	assert(g.boss_warning==1.5)
 	g.simulate(1.5,Vector2.ZERO)
@@ -52,7 +50,6 @@ func run_checks() -> void:
 	assert(g.state=="won")
 	g.start_run()
 	assert(not g.arena_active and g.wave==1 and g.waves.remaining>0)
-	# Offers are distinct, uncapped, useful at the finale, and preserve three families.
 	for seed_value in range(100):
 		g.rng.seed=seed_value
 		g.pending_levels=1
@@ -64,7 +61,7 @@ func run_checks() -> void:
 		g.waves.final_prep=true
 		g.show_upgrades()
 		assert(g.upgrades.size()==3)
-		for kind in g.upgrades: assert(kind != 3)
+		for kind in g.upgrades: assert(kind!=3)
 		assert(g.upgrades[0]!=g.upgrades[1] and g.upgrades[1]!=g.upgrades[2] and g.upgrades[0]!=g.upgrades[2])
 		g.waves.final_prep=false
 	g.start_run()
@@ -79,10 +76,10 @@ func run_checks() -> void:
 	g.record_stage_result("won")
 	g.elapsed=200
 	g.record_stage_result("won")
-	assert(g.stage_records[str(g.run_stage)].ten_wave_skills_v3_best==172.5)
+	assert(g.stage_records[str(g.run_stage)].five_minute_v1_best==172.5)
 	g.elapsed=150
 	g.record_stage_result("won")
-	assert(g.stage_records[str(g.run_stage)].ten_wave_skills_v3_best==150)
+	assert(g.stage_records[str(g.run_stage)].five_minute_v1_best==150)
 	# Boss attack randomness changes order, never warning geometry or dodge rules.
 	g.selected_stage=5
 	g.start_run()
@@ -137,7 +134,7 @@ func run_checks() -> void:
 	g.Chapter.update_boss(g,guardian,0.86)
 	g.Chapter.update_boss(g,guardian,0.56)
 	assert(guardian.mode=="windup" and guardian.charges==1 and guardian.timer>=0.8, "Second charge gets a fresh, full warning")
-	print("CHAPTER CHECKS PASSED: ten finite waves, no waiting shortcut, two minibosses, solid arena, warning, victory delay, skill fairness and clear records")
+	print("CHAPTER CHECKS PASSED: five-minute pressure, required minibosses, two minibosses, solid arena, warning, victory delay, skill fairness and clear records")
 	var results=[]
 	for stage in range(1,6):
 		for build in range(4):
@@ -150,7 +147,7 @@ func run_checks() -> void:
 				var choices=[]
 				var last_wave=1
 				var peak=0
-				for frame in range(18000):
+				for frame in range(27000):
 					while g.state=="upgrade":
 						choices.append({"wave":g.wave,"time":snappedf(g.elapsed,0.1)})
 						g.bot_upgrade()
@@ -165,8 +162,18 @@ func run_checks() -> void:
 				results.append(record)
 				print("CHAPTER BALANCE ",JSON.stringify(record))
 	for record in results:
-		assert(record.result=="won" and record.seconds<540, "Reference build must finish without stalled waves")
-		assert(record.choices.size()==9 and record.level==7, "Fresh builds receive six XP choices, two miniboss rewards and final preparation")
-		assert(record.peak<=70 and record.wave==10)
-	print("CHAPTER BALANCE PASSED: 60 complete runs, five stages, four builds, three seeds")
+		assert(record.result in ["won","dead"] and record.seconds<720, "Every run must end without stalled encounters")
+		assert(record.peak<=70)
+		if record.result=="won":
+			assert(record.seconds>=303 and record.wave==10, "No early timer or skipped guardian victory")
+			assert(record.choices.size()==record.level+2 and record.level>=8 and record.level<=10, "Choices match earned levels plus both minibosses and final prep")
+	# Sustained survival can punish a build/seed. Require every archetype to
+	# succeed on at least two of three seeds, rather than guaranteeing victory.
+	for stage in range(1,6):
+		for build in range(4):
+			var wins=0
+			for record in results:
+				if record.stage==stage and record.build==build and record.result=="won": wins+=1
+			assert(wins>=2, "Every build must remain viable in every chapter stage")
+	print("CHAPTER BALANCE PASSED: 60 complete simulations, five stages, four viable builds, three seeds")
 	quit()

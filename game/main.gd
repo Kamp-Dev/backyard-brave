@@ -160,9 +160,9 @@ const RunSkills = preload("res://run_skills.gd")
 var run_skills = RunSkills.new()
 const UPGRADE_NAMES = ["BURST SEEDS", "SCATTER SEEDS", "ACORN CANNON", "FORAGER POUCH", "ROLLING ACORN", "BRAMBLE BOOTS", "DEW COUNTER", "NEEDLE SEEDS", "THUMP SHOT"]
 const UPGRADE_CAPS = [5, 5, 5, 5, 5, 5, 5, 5, 5]
-const MAX_LEVEL = 7
+const MAX_LEVEL = 10
 const LEVEL_SEED_POWER = 0.55
-const RUN_XP_STEPS = [10,24,42,60,82,118]
+const RUN_XP_STEPS = [12,28,50,80,115,150,180,210,240]
 const SCATTER_POWER = [1.0, 0.85, 0.70, 0.62, 0.55, 0.50]
 const UPGRADE_FAMILIES = ["SHARPSHOOTER", "CROWD CONTROL", "SHARPSHOOTER", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "SHARPSHOOTER", "CROWD CONTROL"]
 var upgrade_ranks: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -777,6 +777,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	guard_break_time = maxf(0, guard_break_time - dt)
 	banner_timer = maxf(0,banner_timer-dt)
 	waves.advance(self,dt)
+	if state!="playing": return
 	hurt_timer = maxf(0, hurt_timer - dt)
 	attack_pose_timer = maxf(0, attack_pose_timer - dt)
 	roll_timer = maxf(0, roll_timer - dt)
@@ -1025,6 +1026,7 @@ func spawn_boss() -> void:
 	finale.mode = "seek"
 	finale.timer = 0.7
 	finale.hp *= 9.0 if run_stage==1 else 7.5 if run_stage<=4 else 6.25
+	finale.hp *= 1.3
 	finale.max_hp = finale.hp
 	finale.trail_hp = finale.hp
 	finale.display_hp = finale.hp
@@ -1261,7 +1263,7 @@ func kill_enemy(index: int) -> void:
 		return
 	if run_growth[10]>0 and reward_kills%5==0:
 		gems.append(e.p+Vector2(0,12))
-	if reward_kills % (30 + (run_stage-1)/5*6) == 0 or Tuning.is_major(e.kind):
+	if reward_kills % (60 + (run_stage-1)/5*10) == 0 or Tuning.is_major(e.kind):
 		repairs.append(constrain_actor(e.p + Vector2(15, 0), 12))
 	if Tuning.is_major(e.kind):
 		bonus_drops.append({"p": constrain_actor(e.p - Vector2(18, 0), 12), "kind": 2 if e.kind in [5, 6] else 3})
@@ -1295,7 +1297,7 @@ func wave_spawn_point() -> Vector2:
 	return Vector2.INF
 
 func spawn_enemy() -> bool:
-	if boss_spawned or wave >= 10 or enemies.size() >= 70:
+	if boss_spawned or wave >= 10 or elapsed>=WaveRun.DURATION or enemies.size() >= WaveRun.REGULAR_LIMIT:
 		return false
 	var p=wave_spawn_point()
 	if not p.is_finite(): return false
@@ -1318,6 +1320,7 @@ func spawn_enemy() -> bool:
 		kind = pool[mini(pool.size()-1,int(roll*pool.size()))]
 	enemies.append(make_enemy(p, kind))
 	enemies[-1].arrival=0.55
+	enemies[-1].spawned_at=elapsed
 	return true
 
 func target_direction() -> Vector2:
@@ -1719,7 +1722,7 @@ func draw_paused_skills() -> void:
 			if star<rank: draw_polyline(points+PackedVector2Array([points[0]]),Color("6e613c"),1.2,true)
 		card_text(Rect2(origin,Vector2(180,130)),origin.y+131,"Rank %d / 5" % rank if rank>0 else "Not learned",17,LEAF_GREEN)
 	center_text(812,"Level %d / %d  -  %d skill ranks learned" % [level,MAX_LEVEL,learned_skill_ranks()],21,JOURNAL_INK)
-	center_text(841,"6 level choices + 2 miniboss + 1 final prep",19,LEAF_GREEN)
+	center_text(841,"9 level choices + 2 miniboss + 1 final prep",19,LEAF_GREEN)
 
 func bonus_pickup_reach() -> float:
 	return clampf(magnet*0.65,60,100)
@@ -1840,7 +1843,7 @@ func _draw() -> void:
 		for i in range(upgrades.size()):
 			draw_story_card(i)
 		center_text(1137, "Tap a card to continue", 29, PAPER)
-		center_text(1183, "6 level choices + 2 miniboss + 1 final prep", 22, PAPER)
+		center_text(1183, "9 level choices + 2 miniboss + 1 final prep", 22, PAPER)
 		center_text(1217, "Bright star = next rank / Merits add bonuses", 20, PAPER)
 	elif state == "paused":
 		draw_pause_menu()
@@ -1859,7 +1862,7 @@ func draw_scout_report() -> void:
 	draw_string(heading_font,Vector2(-79,0),scout_name,HORIZONTAL_ALIGNMENT_CENTER,158,caption_size,JOURNAL_INK)
 	set_scene_transform(Vector2.ZERO)
 	draw_texture_rect_region(REPORT_ART,Rect2(309,282,312,220),Rect2(770,88,700,415))
-	var stats = [["Bugs defeated",str(kills)],["Clear time" if state=="won" else "Time","%.1fs" % elapsed],["Run level",str(level)],["Best clear","%.1fs" % float(stage_records.get(str(run_stage),{}).get("ten_wave_skills_v3_best",elapsed)) if state=="won" else "--"],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
+	var stats = [["Bugs defeated",str(kills)],["Clear time" if state=="won" else "Time","%.1fs" % elapsed],["Run level",str(level)],["Best clear","%.1fs" % float(stage_records.get(str(run_stage),{}).get("five_minute_v1_best",elapsed)) if state=="won" else "--"],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
 	for i in range(stats.size()):
 		text_at(Vector2(330,317+i*30),stats[i][0],20,JOURNAL_INK)
 		draw_string(heading_font,Vector2(522,317+i*30),stats[i][1],HORIZONTAL_ALIGNMENT_RIGHT,76,20,JOURNAL_INK)
@@ -1920,13 +1923,13 @@ func draw_home() -> void:
 		draw_stage_arrow(STAGE_PREVIOUS,-1,selected_stage > 1)
 		draw_stage_arrow(STAGE_NEXT,1,selected_stage < STAGE_COUNT)
 		draw_garden_button(HOME_PLAY,"PLAY" if selected_stage <= unlocked_stage else "LOCKED",false,39,selected_stage <= unlocked_stage)
-		center_text(1130,Chapter.BRIEFS[selected_stage-1] if Chapter.active(selected_stage) else "10 waves / Clear each wave to advance",20,JOURNAL_INK)
+		center_text(1130,"5 minutes of waves / Then the guardian",20,JOURNAL_INK)
 	elif home_tab == 0 and not scout_handbook:
 		draw_scout_growth()
 	elif home_tab == 0:
 		story_panel(Rect2(35,312,650,810))
 		center_text(383,"GROWTH   /   SKILLS",30,JOURNAL_INK)
-		center_text(425,"9 skills / 5 ranks each / Level cap 7",22,LEAF_GREEN)
+		center_text(425,"9 skills / 5 ranks each / Level cap 10",22,LEAF_GREEN)
 		for i in range(9):
 			var y = 475+i*62
 			var region: Rect2 = STORY_ICONS[i]
@@ -2397,8 +2400,8 @@ func draw_hud() -> void:
 		for charge in range(shield): draw_pickup(Vector2(86+charge*26,106),2,23)
 	else:
 		text_at(Vector2(73,112),"STAGE %02d" % run_stage,17,LEAF_GREEN)
-	var labels = ["BUGS", "WAVE", "TIME", "FINALE" if boss_spawned else "LEFT"]
-	var values = [str(kills), "%d/10" % wave, "%02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60], "BOSS" if boss_spawned else str(waves.remaining+enemies.size())]
+	var labels = ["BUGS", "WAVE", "TIME", "FINALE" if boss_spawned else ("CLEAR" if waves.waiting_for_elites else "BOSS AT")]
+	var values = [str(kills), "%d/10" % wave, "%02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60], "BOSS" if boss_spawned else ("ELITES" if waves.waiting_for_elites else "05:00")]
 	for i in range(4):
 		var column = Rect2(64 + i * 147, 126, 147, 66)
 		card_text(column, 148, labels[i], 17, LEAF_GREEN)
@@ -2962,13 +2965,13 @@ func test_scout_progression() -> void:
 	update_player_bullets(0.01)
 	assert(is_equal_approx(enemies[0].hp,enemies[0].max_hp-1), "A lingering pierced seed cannot hit the same bug again")
 	start_run()
-	for i in range(1000):
+	for i in range(2000):
 		gain_xp()
-	assert(level == MAX_LEVEL and pending_levels == 6 and is_equal_approx(damage, 6.3))
+	assert(level == MAX_LEVEL and pending_levels == 9 and is_equal_approx(damage, 7.95))
 	enemies.append(make_enemy(Vector2(700, 390), 6))
 	enemies[-1].miniboss = true
 	kill_enemy(0)
-	assert(pending_levels == 7 and encounter_rewards == 1 and pending_encounter_rewards == 1)
+	assert(pending_levels == 10 and encounter_rewards == 1 and pending_encounter_rewards == 1)
 	while pending_levels > 0:
 		choose_upgrade(0)
 	assert(state == "playing")
@@ -3233,19 +3236,19 @@ func test_mobile_world() -> void:
 	hp = 10000
 	damage = 0 # This fixture measures uninterrupted world traversal, not boss victory.
 	spawn_timer = 0
-	for frame in range(5500):
+	for frame in range(9100):
 		if elapsed >= SPAWN_DURATION:
 			break
 		if state == "upgrade":
 			choose_upgrade(0)
 		simulate(1.0 / 30.0, Vector2.LEFT)
 		assert(obstacles.size() <= 29 and enemies.size() <= 101)
-	assert(elapsed >= SPAWN_DURATION and player.x < -30000, "A full three-minute walk must cross terrain cells without hitting a world edge")
+	assert(elapsed >= SPAWN_DURATION and player.x < -30000, "Five minutes of movement must traverse the endless map")
 	var count_at_cutoff = enemies.size()
 	spawn_enemy()
-	assert(enemies.size() == count_at_cutoff+1, "Slow builds can still spawn their finite wave beyond three minutes")
+	assert(enemies.size() == count_at_cutoff, "Regular spawning stops at five minutes")
 	start_run()
-	print("MOBILE WORLD PASSED: multitouch, pause, upgrade taps, three-minute travel, stable terrain, nearby safe spawns and final cleanup")
+	print("MOBILE WORLD PASSED: multitouch, pause, upgrade taps, five-minute travel, stable terrain, nearby safe spawns and final cleanup")
 
 func test_mouse_drag() -> void:
 	start_run()
@@ -3382,8 +3385,8 @@ func stage_status() -> String:
 	var record: Dictionary = stage_records.get(str(selected_stage),{})
 	if record.is_empty():
 		return "Stage %02d / %d  -  Ready to explore" % [selected_stage,STAGE_COUNT]
-	if float(record.get("ten_wave_skills_v3_best",0))>0:
-		return "10 waves / Best clear: %.1fs" % float(record.ten_wave_skills_v3_best)
+	if float(record.get("five_minute_v1_best",0))>0:
+		return "5 min + boss / Best: %.1fs" % float(record.five_minute_v1_best)
 	return "%s / Best: %d bugs" % ["CLEARED" if record.get("cleared",false) else "READY",record.get("best",0)]
 
 func record_stage_result(result: String) -> void:
@@ -3393,8 +3396,8 @@ func record_stage_result(result: String) -> void:
 	record["cleared"] = bool(record.get("cleared",false)) or result == "won"
 	stage_records[str(run_stage)] = record
 	if result == "won":
-		var best_clear = float(record.get("ten_wave_skills_v3_best",0))
-		record["ten_wave_skills_v3_best"] = elapsed if best_clear<=0 else minf(best_clear,elapsed)
+		var best_clear = float(record.get("five_minute_v1_best",0))
+		record["five_minute_v1_best"] = elapsed if best_clear<=0 else minf(best_clear,elapsed)
 		unlocked_stage = maxi(unlocked_stage,mini(run_stage+1,STAGE_COUNT))
 
 func draw_stage_island(bob: float) -> void:
