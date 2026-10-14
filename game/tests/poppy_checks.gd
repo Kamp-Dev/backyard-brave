@@ -24,6 +24,24 @@ func run() -> void:
 	g.unlocked_stage=30
 	fresh(g)
 	assert(g.poppy.regions.size()==4)
+	# Locomotion remains continuous through attack poses and is driven by travel.
+	g.enemies.clear()
+	g.facing=Vector2.RIGHT
+	g.player_aim=Vector2.RIGHT
+	g.locomotion_direction=Vector2.RIGHT
+	g.player_moving=true
+	g.walk_distance=g.WALK_STRIDE*0.25
+	g.attack_phase="idle"
+	var stride=g.poppy.gait(g)
+	g.attack_phase="release"
+	assert(g.poppy.gait(g).is_equal_approx(stride),"Throwing must not reset or replace the walk cycle")
+	g.walk_distance+=g.WALK_STRIDE*0.5
+	assert(is_equal_approx(g.poppy.gait(g).x,-stride.x),"Opposite half-strides alternate feet")
+	g.locomotion_direction=Vector2.LEFT
+	assert(is_equal_approx(g.poppy.gait(g).x,stride.x),"Retreat reverses the stride")
+	g.update_locomotion(Vector2.ZERO)
+	assert(g.poppy.gait(g)==Vector2.ZERO,"Blocked or idle movement plants both feet")
+	fresh(g)
 	for kind in range(9):
 		var lines=g.story_description(kind)
 		assert(g.ui_font(23).get_string_size(lines[0],HORIZONTAL_ALIGNMENT_LEFT,-1,23).x<=394)
