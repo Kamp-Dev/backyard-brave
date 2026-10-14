@@ -34,10 +34,35 @@ func run_checks() -> void:
 		g.elapsed = 151
 		g.enemies.append(g.make_enemy(g.player+Vector2(100,0),0))
 		g.kill_enemy(0)
-		assert(g.state=="won", "Final boss death must win immediately, before 3:00 and despite surviving bugs")
+		assert(g.state=="playing" and g.boss_defeat_timer==1.0, "Final hit starts the victory beat")
+		var health = g.hp
+		g.simulate(0.5,Vector2.ZERO)
+		assert(g.state=="playing" and g.hp==health)
+		g.simulate(0.5,Vector2.ZERO)
+		assert(g.state=="won", "Victory must follow exactly one second after the final hit")
 		g.pending_levels = 0
 		g.simulate(1.0/30,Vector2.ZERO)
 		assert(g.state=="won")
+	g.selected_stage = 1
+	g.start_run()
+	g.enemies.append(g.make_enemy(g.player,0))
+	var retiring = g.enemies[0]
+	g.spawn_boss()
+	assert(g.boss_warning==3.0 and retiring.retreat)
+	assert(not g.enemy_targetable(retiring) and not g.enemy_contact(retiring,g.player))
+	var health_before = g.hp
+	g.simulate(1.5,Vector2.ZERO)
+	assert(g.enemies.has(retiring) and g.boss_warning==1.5 and g.hp==health_before)
+	g.simulate(1.5,Vector2.ZERO)
+	assert(not g.enemies.has(retiring) and g.enemies.size()==1 and g.kills==0 and g.gems.is_empty())
+	g.start_run()
+	g.elapsed=21
+	g.simulate(0.01,Vector2.ZERO)
+	assert(g.enemies.size()==2 and g.enemies[1].swarm_extra)
+	g.kill_enemy(1)
+	assert(g.gems.is_empty() and g.kills==1 and g.reward_kills==0)
+	g.kill_enemy(0)
+	assert(g.gems.size()==1 and g.kills==2 and g.reward_kills==1)
 	g.selected_stage = 5
 	g.start_run()
 	g.obstacles.clear()
@@ -97,6 +122,6 @@ func run_checks() -> void:
 			results.append(record)
 			print("CHAPTER BALANCE ",JSON.stringify(record))
 	for record in results:
-		assert(record.result == 'won' and record.seconds <= 230, 'Chapter reference run must finish without stalled cleanup')
+		assert(record.result == 'won' and record.seconds <= 280, 'Chapter reference run must finish without stalled cleanup')
 	print('CHAPTER BALANCE PASSED: 21 complete runs, including three boss builds')
 	quit()

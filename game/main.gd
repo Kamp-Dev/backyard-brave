@@ -196,6 +196,7 @@ var hp = 8
 var xp = 0
 var level = 1
 var kills = 0
+var reward_kills = 0
 var elapsed = 0.0
 var wave = 1
 var fire_timer = 0.0
@@ -224,6 +225,7 @@ var mute = false
 var screenshot_mode = false
 var boss_spawned = false
 var boss_warning = 0.0
+var boss_defeat_timer = 0.0
 var banner = ""
 var banner_timer = 0.0
 var damage_dealt = 0.0
@@ -393,6 +395,7 @@ func start_run() -> void:
 	xp = 0
 	level = 1
 	kills = 0
+	reward_kills = 0
 	elapsed = 0.0
 	wave = 1
 	fire_timer = 0.0
@@ -417,6 +420,7 @@ func start_run() -> void:
 	pending_encounter_rewards = 0
 	boss_spawned = false
 	boss_warning = 0.0
+	boss_defeat_timer = 0.0
 	damage_dealt = 0
 	damage_taken = 0
 	banner = "WAVE 01 / CRAWLERS"
@@ -748,9 +752,15 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	if state != "playing":
 		return
 	update_bug_deaths(dt)
+	if boss_defeat_timer > 0:
+		boss_defeat_timer = maxf(0,boss_defeat_timer-dt)
+		if boss_defeat_timer <= 0: finish_run("won")
+		return
 	update_upgrade_fx(dt)
 	elapsed += dt
 	boss_warning = maxf(0,boss_warning-dt)
+	for i in range(enemies.size()-1,-1,-1):
+		if enemies[i].get("retreat",false) and boss_warning <= 0: enemies.remove_at(i)
 	guard_hit_time = maxf(0, guard_hit_time - dt)
 	guard_break_time = maxf(0, guard_break_time - dt)
 	var last_wave = wave
@@ -806,6 +816,15 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	spawn_timer -= dt
 	if spawn_timer <= 0 and elapsed < SPAWN_DURATION:
 		spawn_enemy()
+		# Extra swarm members add pressure without adding XP or reward milestones.
+		if elapsed >= 20 and not boss_spawned and enemies.size() < 70:
+			var before = enemies.size()
+			spawn_enemy()
+			if enemies.size() > before:
+				enemies[-1].swarm_extra = true
+				enemies[-1].hp *= 0.65
+				enemies[-1].max_hp = enemies[-1].hp
+				enemies[-1].trail_hp = enemies[-1].hp
 		spawn_timer = maxf(0.17, 0.85 - wave * 0.065) * 1.15 * (1.5 if boss_spawned else 1.0) / Tuning.stage_density(run_stage) * Tuning.closing_spawn_delay(elapsed)
 		if Chapter.active(run_stage): spawn_timer *= Chapter.spawn_pace(run_stage,elapsed) * (3.5 if run_stage==5 and boss_spawned else 1.0)
 	for e in enemies:
@@ -818,12 +837,12 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			if state == "dead":
 				return
 	resolve_bramble()
-	if state=="won":
+	if state=="won" or boss_defeat_timer>0:
 		enemies.clear()
 		hostile_bullets.clear()
 		return
 	update_player_bullets(dt)
-	if state=="won":
+	if state=="won" or boss_defeat_timer>0:
 		enemies.clear()
 		hostile_bullets.clear()
 		return
@@ -939,6 +958,7 @@ func update_player_bullets(dt: float) -> void:
 				break
 			var e = enemies[enemy_index]
 			var power: float = b.get("power", damage) * (0.7 if e.kind==9 and e.mode=="brace" else 1.0) * (1.2 if run_growth[14]>0 and Tuning.is_major(e.kind) else 1.0)
+			if e.get("finale",false) and e.mode=="recover": power *= 1.35
 			damage_dealt += minf(power, e.hp)
 			mark_enemy_hit(e,minf(power,e.hp))
 			e.hp -= power
@@ -956,7 +976,7 @@ func update_player_bullets(dt: float) -> void:
 				e.p = move_actor(e.p, b.v.normalized() * (6 + upgrade_ranks[8] * 6), e.radius, ENEMY_SIZES[e.kind] / 2)
 			if e.hp <= 0:
 				kill_enemy(enemy_index)
-				if state=="won": return
+				if state=="won" or boss_defeat_timer>0: return
 			if b.get("pierce", 0) <= 0:
 				consumed = true
 				break
@@ -978,8 +998,10 @@ func make_enemy(p: Vector2, kind: int) -> Dictionary:
 func spawn_boss() -> void:
 	if elapsed >= SPAWN_DURATION or boss_spawned: return
 	boss_spawned = true
-	boss_warning = 2.4
-	enemies.clear()
+	boss_warning = 3.0
+	for enemy in enemies:
+		enemy.retreat = true
+		enemy.mode = "seek"
 	hostile_bullets.clear()
 	for rock in obstacles:
 		if world_view().has_point(rock): burst(rock,Color("b7a581"),8)
@@ -999,13 +1021,19 @@ func spawn_boss() -> void:
 			finale.phase = 1
 			finale.cycle = 0
 			finale.attack = "fan"
-	finale.hp *= 1.65
+	finale.chapter_boss = true
+	finale.phase = 1
+	finale.cycle = 0
+	finale.attack = "fan"
+	finale.mode = "seek"
+	finale.timer = 0.7
+	finale.hp *= 5.0
 	finale.max_hp = finale.hp
 	finale.trail_hp = finale.hp
 	finale.display_hp = finale.hp
 	finale.visual_scale = minf(1.8,1.45+run_stage*0.012)
 	finale.radius *= finale.visual_scale
-	finale.arrival = 2.4
+	finale.arrival = 3.0
 	finale.speed *= 1.08
 	enemies.append(finale)
 	banner = finale.get("title","BROODMOTHER").to_upper() + " / FINAL THREAT"
@@ -1077,6 +1105,9 @@ func update_elite(e: Dictionary, dt: float) -> void:
 	walk_enemy(e,direction,pursuit_speed,dt)
 
 func update_enemy(e: Dictionary, dt: float) -> void:
+	if e.get("retreat",false):
+		e.p += (e.p-player).normalized()*45*dt
+		return
 	if e.get("arrival",0.0)>0:
 		e.arrival=maxf(0,float(e.arrival)-dt)
 		return
@@ -1208,7 +1239,7 @@ func hurt_player() -> void:
 func kill_enemy(index: int) -> void:
 	var e = enemies[index]
 	var death = e.duplicate(true)
-	death.life = 0.8 if Tuning.is_major(e.kind) else 0.55
+	death.life = 1.0 if e.get("finale",false) else (0.8 if Tuning.is_major(e.kind) else 0.55)
 	death.duration = death.life
 	death.angle = e.aim.angle() if e.mode in ["windup", "rush", "recover"] else (player - e.p).angle()
 	if death.hit_dir == Vector2.ZERO:
@@ -1217,21 +1248,28 @@ func kill_enemy(index: int) -> void:
 	if bug_deaths.size() > 64:
 		bug_deaths.pop_front()
 	var core_count = 14 if e.kind == 6 else (8 if Tuning.is_major(e.kind) else (2 if e.kind in [2, 3, 4, 9, 10, 11] else 1))
+	if e.get("swarm_extra",false): core_count = 0
 	for i in range(core_count):
 		gems.append(constrain_actor(e.p + Vector2.from_angle(i * TAU / core_count) * (14 if core_count > 1 else 0), 8))
 	burst(e.p, Color("cbb78b"), 6)
 	enemies.remove_at(index)
 	kills += 1
+	if e.get("swarm_extra",false): return
+	reward_kills += 1
 	if e.get("finale",false):
-		finish_run("won")
+		boss_defeat_timer = 1.0
+		hostile_bullets.clear()
+		bullets.clear()
+		banner = "GARDEN GUARDIAN DEFEATED"
+		banner_timer = 1.0
 		return
-	if run_growth[10]>0 and kills%5==0:
+	if run_growth[10]>0 and reward_kills%5==0:
 		gems.append(e.p+Vector2(0,12))
-	if kills % (30 + (run_stage-1)/5*6) == 0 or Tuning.is_major(e.kind):
+	if reward_kills % (30 + (run_stage-1)/5*6) == 0 or Tuning.is_major(e.kind):
 		repairs.append(constrain_actor(e.p + Vector2(15, 0), 12))
 	if Tuning.is_major(e.kind):
 		bonus_drops.append({"p": constrain_actor(e.p - Vector2(18, 0), 12), "kind": 2 if e.kind in [5, 6] else 3})
-	elif kills % 50 == 0:
+	elif reward_kills % 50 == 0:
 		bonus_drops.append({"p": e.p, "kind": 3})
 	if Tuning.is_elite(e.kind) and encounter_rewards < 3:
 		encounter_rewards += 1
@@ -1765,7 +1803,7 @@ func _draw() -> void:
 		draw_touch_controls()
 		draw_enemy_directions()
 		if boss_warning>0:
-			var warning_alpha=1.0 if settings.values.reduced_flashes else 0.65+0.35*sin(boss_warning*TAU)
+			var warning_alpha=1.0 if settings.values.reduced_flashes else 0.3+0.7*absf(sin(boss_warning*PI*2))
 			center_text(370,"WARNING",58,Color(0.9,0.18,0.1,warning_alpha))
 			center_text(410,"FINAL BOSS APPROACHING",24,PAPER)
 		if banner_timer > 0:
@@ -2261,7 +2299,7 @@ func draw_enemy(e: Dictionary) -> void:
 		elif e.mode=="brace": size*=Vector2(0.92,1.08)
 		else: angle+=sin(e.walk_distance/6.0)*0.045
 	set_scene_transform(p + Vector2(0, 3), 0, Vector2(1, 0.65))
-	draw_circle(Vector2.ZERO, r, Color(0.08, 0.09, 0.04, 0.25))
+	draw_circle(Vector2.ZERO, r, Color(0.08, 0.09, 0.04, 0.25*(clampf(boss_warning/3.0,0,1) if e.get("retreat",false) else 1.0)))
 	var impact: float = e.get("recoil", 0.0) / 0.18
 	var kick = sin(impact * PI)
 	var strength = 0.45 if e.kind in [5, 6] else 1.0
@@ -2271,8 +2309,10 @@ func draw_enemy(e: Dictionary) -> void:
 	if e.get("arrival",0.0)>0: tint.a=clampf(1.0-float(e.arrival)/0.55,0.15,1.0)
 	if e.flash <= 0 and e.mode == "windup" and int(e.timer * 6) % 2 == 0:
 		tint = Color(1.25, 1.2, 1.05)
+	if e.get("retreat",false): tint.a = clampf(boss_warning/3.0,0,1)
 	draw_texture_rect_region(texture, Rect2(-size / 2, size), region, tint)
 	set_scene_transform(Vector2.ZERO)
+	if e.get("retreat",false): return
 	if Tuning.is_elite(e.kind):
 		text_at(p + Vector2(-42, -r - 19), e.get("title",Tuning.ENEMY_NAMES[e.kind]), 11, PAPER)
 	if (e.hp < e.max_hp or Tuning.is_elite(e.kind)) and e.kind != 5:
@@ -2322,7 +2362,7 @@ func draw_hud() -> void:
 			text_at(Vector2(28, 237), e.get("title","BROODMOTHER").to_upper(), 17, PAPER)
 			draw_combat_health(Rect2(310,227,374,18),maxf(0,float(e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,true)
 			if e.get("chapter_boss",false):
-				var cue = "RECOVERING / STRIKE NOW" if e.mode=="recover" else "KEEP MOVING"
+				var cue = "EXPOSED / +35% DAMAGE" if e.mode=="recover" else "KEEP MOVING"
 				if e.mode=="windup": cue = {"lunge":"CHARGE / STEP ASIDE","fan":"VOLLEY / LEAVE THE CONE","ring":"SEED RING / FIND THE GREEN GAP"}[e.attack]
 				text_at(Vector2(28,262),"PHASE %d / %s" % [e.phase,cue],16,PAPER)
 
@@ -3124,6 +3164,7 @@ func test_mobile_world() -> void:
 	player = Vector2(0, 40)
 	camera_center = player
 	hp = 10000
+	damage = 0 # This fixture measures uninterrupted world traversal, not boss victory.
 	spawn_timer = 0
 	for frame in range(5500):
 		if elapsed >= SPAWN_DURATION:
@@ -3494,6 +3535,7 @@ func resolve_bramble() -> void:
 		var enemy = enemies[i]
 		if enemy.p.distance_to(player)>120 or not enemy_targetable(enemy): continue
 		var power = damage*2*(1.2 if run_growth[14]>0 and Tuning.is_major(enemy.kind) else 1.0)
+		if enemy.get("finale",false) and enemy.mode=="recover": power *= 1.35
 		damage_dealt += minf(power,enemy.hp)
 		mark_enemy_hit(enemy,minf(power,enemy.hp))
 		enemy.hp -= power
@@ -3745,10 +3787,12 @@ func enemy_art(kind: int, phase: int = 0) -> Dictionary:
 	return {"texture":ELITE_TEXTURE if Tuning.is_elite(kind) else ENEMY_TEXTURE,"region":region,"size":region.size*ENEMY_SIZES[kind]/largest}
 
 func enemy_targetable(e: Dictionary) -> bool:
+	if e.get("retreat",false): return false
 	if e.get("finale",false) and e.get("arrival",0.0)>0: return false
 	return not (e.kind==11 and e.mode=="burrow")
 
 func enemy_contact(e: Dictionary, previous: Vector2) -> bool:
+	if e.get("retreat",false): return false
 	if e.get("arrival",0.0)>0: return false
 	if e.kind==11 and e.mode in ["dig","burrow","emerge"]: return false
 	if e.kind==10:

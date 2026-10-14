@@ -39,10 +39,10 @@ static func update_boss(host, e: Dictionary, dt: float) -> void:
 	var phase = 3 if e.hp / e.max_hp <= 0.3 else 2 if e.hp / e.max_hp <= 0.65 else 1
 	if phase > e.get("phase",1):
 		e.phase = phase
-		e.cycle = 2 if phase == 2 else 0
+		if host.run_stage >= 5: e.cycle = 2 if phase == 2 else 0
 		e.mode = "recover"
 		e.timer = 1.5
-		host.banner = "BROODMOTHER / PHASE %d" % phase
+		host.banner = "GUARDIAN / PHASE %d" % phase
 		host.banner_timer = 2.0
 		host.hostile_bullets.clear()
 	e.timer -= dt
@@ -63,14 +63,14 @@ static func update_boss(host, e: Dictionary, dt: float) -> void:
 					if absf(wrapf(angle,-PI,PI)) < 0.5: continue
 					host.add_hostile_shot(e.p,e.aim.rotated(angle),155,6)
 			e.mode = "recover"
-			e.timer = 1.35
+			e.timer = 1.8
 		return
 	if e.mode == "rush":
 		var destination: Vector2 = e.p + e.aim * 360 * dt
 		e.p = host.move_actor(e.p,e.aim * 360 * dt,e.radius)
 		if e.timer <= 0 or e.p.distance_to(destination) > 2:
 			e.mode = "recover"
-			e.timer = 1.6
+			e.timer = 1.9
 		return
 	if e.mode == "recover":
 		if e.timer <= 0:
@@ -80,6 +80,11 @@ static func update_boss(host, e: Dictionary, dt: float) -> void:
 	var direction: Vector2 = (host.player-e.p).normalized()
 	if e.timer <= 0 and e.p.distance_to(host.player) < 340:
 		var patterns = ["fan","lunge"] if phase == 1 else ["fan","lunge","ring"] if phase == 2 else ["lunge","fan","ring","lunge"]
+		# Species teach different patterns before the Broodmother combines them.
+		if host.run_stage == 1: patterns = ["lunge","fan"] if phase < 3 else ["lunge","fan","lunge"]
+		elif host.run_stage == 2: patterns = ["lunge","lunge","ring"]
+		elif host.run_stage == 3: patterns = ["fan","lunge","ring"]
+		elif host.run_stage == 4: patterns = ["fan","ring","fan","lunge"]
 		e.attack = patterns[e.get("cycle",0) % patterns.size()]
 		e.cycle = e.get("cycle",0) + 1
 		e.aim = direction
