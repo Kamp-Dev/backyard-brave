@@ -64,7 +64,7 @@ func run_checks() -> void:
 		g.waves.final_prep=true
 		g.show_upgrades()
 		assert(g.upgrades.size()==3)
-		for kind in g.upgrades: assert(kind not in [3,7,8])
+		for kind in g.upgrades: assert(kind != 3)
 		assert(g.upgrades[0]!=g.upgrades[1] and g.upgrades[1]!=g.upgrades[2] and g.upgrades[0]!=g.upgrades[2])
 		g.waves.final_prep=false
 	g.start_run()
@@ -79,10 +79,10 @@ func run_checks() -> void:
 	g.record_stage_result("won")
 	g.elapsed=200
 	g.record_stage_result("won")
-	assert(g.stage_records[str(g.run_stage)].ten_wave_v2_best==172.5)
+	assert(g.stage_records[str(g.run_stage)].ten_wave_skills_v3_best==172.5)
 	g.elapsed=150
 	g.record_stage_result("won")
-	assert(g.stage_records[str(g.run_stage)].ten_wave_v2_best==150)
+	assert(g.stage_records[str(g.run_stage)].ten_wave_skills_v3_best==150)
 	# Boss attack randomness changes order, never warning geometry or dodge rules.
 	g.selected_stage=5
 	g.start_run()

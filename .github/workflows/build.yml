@@ -52,6 +52,9 @@ jobs:
           timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/boss_pressure_checks.gd 2>&1 | tee /tmp/boss-pressure.log
           grep -q 'BOSS PRESSURE PASSED' /tmp/boss-pressure.log
           ! grep -q 'SCRIPT ERROR' /tmp/boss-pressure.log
+          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/skill_behavior_checks.gd 2>&1 | tee /tmp/skills.log
+          grep -q 'SKILL BEHAVIORS PASSED' /tmp/skills.log
+          ! grep -q 'SCRIPT ERROR' /tmp/skills.log
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --export-release Web ../web/backyard-${GITHUB_SHA}.html
           mv web/backyard-${GITHUB_SHA}.html web/index.html
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --export-debug Android ../android/Backyard-Brave.apk

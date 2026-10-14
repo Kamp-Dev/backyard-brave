@@ -156,7 +156,9 @@ const SCREEN_ARENA = Rect2(0, 0, 720, 1280)
 const ARENA = Rect2(Vector2(640, 390) - SCREEN_ARENA.size / GAMEPLAY_ZOOM / 2, SCREEN_ARENA.size / GAMEPLAY_ZOOM)
 var drawing_world = false
 const SPAWN_DURATION = Tuning.RUN_SECONDS
-const UPGRADE_NAMES = ["QUICK DRAW", "SCATTER SEEDS", "HARD SEEDS", "FORAGER POUCH", "TUCK AND ROLL", "TRAIL BOOTS", "DEW BARRIER", "NEEDLE SEEDS", "THUMP SHOT"]
+const RunSkills = preload("res://run_skills.gd")
+var run_skills = RunSkills.new()
+const UPGRADE_NAMES = ["BURST SEEDS", "SCATTER SEEDS", "ACORN CANNON", "FORAGER POUCH", "ROLLING ACORN", "BRAMBLE BOOTS", "DEW COUNTER", "NEEDLE SEEDS", "THUMP SHOT"]
 const UPGRADE_CAPS = [5, 5, 5, 5, 5, 5, 5, 5, 5]
 const MAX_LEVEL = 7
 const LEVEL_SEED_POWER = 0.55
@@ -379,6 +381,7 @@ func start_run() -> void:
 	boss_spawned = false
 	arena_active = false
 	waves = WaveRun.new()
+	run_skills = RunSkills.new()
 	terrain_cell = Vector2i(2147483647, 2147483647)
 	refresh_terrain()
 	facing = Vector2.UP
@@ -715,6 +718,7 @@ func start_roll() -> void:
 		return
 	roll_time = ROLL_DURATION
 	roll_timer = roll_cooldown()
+	run_skills.on_roll(self)
 	merit_rolls += 1
 	if run_growth[12]>0 and merit_rolls%4==0 and hp<ceili(scout_max_hp()/2.0):
 		hp += 1
@@ -797,6 +801,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	camera_center = arena_center if arena_active else player
 	refresh_terrain()
 	update_locomotion(player - previous_player_position)
+	run_skills.after_move(self,previous_player_position)
 	record_movement_fx(dt, previous_player_position)
 	update_attack(dt)
 	fire_timer -= dt
@@ -823,6 +828,8 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 		enemies.clear()
 		hostile_bullets.clear()
 		return
+	run_skills.advance(self,dt)
+	if boss_defeat_timer>0: return
 	update_hostile_bullets(dt)
 	if state == "dead":
 		return
@@ -837,6 +844,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			if upgrade_ranks[3] > 0:
 				add_upgrade_fx(player + Vector2(0, 7), "gather", upgrade_ranks[3], Vector2.UP, 0.28)
 			gems.remove_at(i)
+			run_skills.on_pickup(self)
 			gain_xp()
 	for i in range(repairs.size() - 1, -1, -1):
 		if hp < scout_max_hp() and repairs[i].distance_to(player) < bonus_pickup_reach():
@@ -932,7 +940,7 @@ func update_player_bullets(dt: float) -> void:
 			if enemy_index < 0:
 				break
 			var e = enemies[enemy_index]
-			var power: float = b.get("power", damage) * (0.7 if e.kind==9 and e.mode=="brace" else 1.0) * (1.2 if run_growth[14]>0 and Tuning.is_major(e.kind) else 1.0)
+			var power: float = run_skills.projectile_power(self,b,e) * (0.7 if e.kind==9 and e.mode=="brace" else 1.0) * (1.2 if run_growth[14]>0 and Tuning.is_major(e.kind) else 1.0)
 			if e.get("finale",false) and e.mode=="recover": power *= 1.35
 			damage_dealt += minf(power, e.hp)
 			mark_enemy_hit(e,minf(power,e.hp))
@@ -1200,6 +1208,7 @@ func hurt_player() -> void:
 	settings.scout_hit(guard_absorbed_hit)
 	if shield > 0:
 		shield -= 1
+		run_skills.on_guard(self)
 		guard_hit_time = 0.32
 		if shield == 0:
 			bramble_pending = run_growth[9]>0
@@ -1342,10 +1351,24 @@ func shoot(locked_direction: Vector2 = Vector2.ZERO) -> void:
 	attack_pose_timer = 0.2
 	attack_phase = "release"
 	attack_clock = minf(0.1, fire_rate * 0.3)
+	run_skills.volleys += 1
+	var charged: bool = upgrade_ranks[2]>0 and run_skills.volleys%4==0
+	var volley: Array = []
 	for i in range(shots):
-		var angle = (i - (shots - 1) / 2.0) * 0.16
+		var angle = (i - (shots - 1) / 2.0) * 0.20
 		var v = dir.rotated(angle)
-		bullets.append({"p": scout_muzzle(dir), "v": v * 720, "life": 1.4, "power": damage * (SCATTER_POWER[upgrade_ranks[1]]), "pierce": upgrade_ranks[7], "hit_ids": [], "visual": upgrade_ranks.duplicate()})
+		var power = damage * SCATTER_POWER[upgrade_ranks[1]]
+		if charged: power *= 2.0+upgrade_ranks[2]*0.25
+		var b = {"p":scout_muzzle(dir),"origin":player,"v":v*720,"life":0.65 if shots>1 else 1.4,"power":power,"pierce":upgrade_ranks[7]+(1 if charged else 0),"hit_ids":[],"visual":upgrade_ranks.duplicate(),"charged":charged,"scatter":shots>1,"needle":upgrade_ranks[7],"thump":upgrade_ranks[8] if i==shots/2 and run_skills.volleys%3==0 else 0}
+		bullets.append(b)
+		if upgrade_ranks[0]>0:
+			var followup = b.duplicate(true)
+			followup.power = damage*SCATTER_POWER[upgrade_ranks[1]]*(0.2+upgrade_ranks[0]*0.03)
+			followup.charged = false
+			followup.thump = 0
+			followup.pierce = upgrade_ranks[7]
+			volley.append(followup)
+	if upgrade_ranks[0]>0: run_skills.echo = {"delay":0.12,"shots":volley}
 	merit_volleys += 1
 	if run_growth[11]>0 and merit_volleys%6==0:
 		for angle in [-0.30,0.30]:
@@ -1374,7 +1397,7 @@ func gain_xp() -> void:
 			pending_levels += 1
 			banner = "FINAL BLOOM / BONUS SKILL"
 			banner_timer = 2.0
-		damage = 3.0 + (level - 1) * LEVEL_SEED_POWER + upgrade_ranks[2] + run_growth[0]*0.15 + run_growth[17]*0.45
+		damage = 3.0 + (level - 1) * LEVEL_SEED_POWER + run_growth[0]*0.15 + run_growth[17]*0.45
 		pending_levels += 1
 	if level >= MAX_LEVEL:
 		xp = 0
@@ -1382,24 +1405,14 @@ func gain_xp() -> void:
 		show_upgrades()
 
 func upgrade_description(kind: int) -> String:
-	match kind:
-		0: return "Shot delay %.2fs > %.2fs" % [fire_rate, fire_rate / 1.15]
-		1: return "%d > %d seeds; %d%% power each" % [shots, shots + 1, int(SCATTER_POWER[mini(upgrade_ranks[1] + 1, 5)] * 100)]
-		2: return "Seed power %.1f > %.1f" % [damage, damage + 1]
-		3: return "Pickup reach %.0f > %.0f" % [magnet, magnet + 40]
-		4: return "Roll ready %.2fs > %.2fs" % [roll_cooldown(), roll_cooldown() - 0.25]
-		5: return "Run speed %.0f > %.0f" % [speed, speed + 15]
-		6: return "Guard %d > %d; +1 each wave" % [guard_capacity(), guard_capacity() + 1]
-		7: return "Pierce %d > %d extra bugs" % [upgrade_ranks[7], upgrade_ranks[7] + 1]
-		8: return "Knockback %d > %d" % [6 + upgrade_ranks[8] * 6, 12 + upgrade_ranks[8] * 6]
-	return ""
+	return " / ".join(story_description(kind))
 
 func skill_available(kind: int) -> bool:
 	if upgrade_ranks[kind]>=UPGRADE_CAPS[kind]: return false
 	# A first weapon choice must increase direct damage, not only piercing.
 	if kind==7 and level<=2 and learned_skill_ranks()==0: return false
-	# The final prep is for a lone guardian: no pickup, pierce or knockback traps.
-	if waves.final_prep and kind in [3,7,8]: return false
+	# Forager needs pickups; needle marks and thump now work on a lone boss.
+	if waves.final_prep and kind==3: return false
 	return true
 
 func show_upgrades() -> void:
@@ -1439,9 +1452,9 @@ func choose_upgrade(index: int) -> void:
 	upgrade_ranks[kind] += 1
 	add_upgrade_fx(player + Vector2(0, -15), "upgrade", upgrade_ranks[kind], Vector2.UP, 0.6)
 	match kind:
-		0: fire_rate = scout_fire_rate() / pow(1.15, upgrade_ranks[0])
+		0: fire_rate = scout_fire_rate() / pow(1.04, upgrade_ranks[0])
 		1: shots = 1 + upgrade_ranks[1]
-		2: damage = 3.0 + (level - 1) * LEVEL_SEED_POWER + upgrade_ranks[2] + run_growth[0]*0.15 + run_growth[17]*0.45
+		2: damage = 3.0 + (level - 1) * LEVEL_SEED_POWER + run_growth[0]*0.15 + run_growth[17]*0.45
 		3: magnet = 90.0 + upgrade_ranks[3] * 40 + run_growth[2]*7 + run_growth[18]*25
 		4: roll_timer = minf(roll_timer, roll_cooldown())
 		5: speed = 230.0 + upgrade_ranks[5] * 15 + run_growth[3]*3 + run_growth[19]*8
@@ -1579,16 +1592,17 @@ func card_text(rect: Rect2, y: float, label: String, size: int, color: Color = J
 	text_at(Vector2(rect.get_center().x - width / 2, y), label, size, color)
 
 func story_description(kind: int) -> Array[String]:
+	var rank: int = mini(5,upgrade_ranks[kind]+1)
 	match kind:
-		0: return ["Shot delay", "%.2fs > %.2fs" % [fire_rate, fire_rate / 1.15]]
-		1: return ["%d > %d seeds" % [shots, shots + 1], "%d%% power per seed" % (int(SCATTER_POWER[mini(upgrade_ranks[1] + 1, 5)] * 100))]
-		2: return ["Seed power", "%.1f > %.1f" % [damage, damage + 1]]
-		3: return ["Pickup reach", "%.0f > %.0f" % [magnet, magnet + 40]]
-		4: return ["Roll recharge", "%.2fs > %.2fs" % [roll_cooldown(), roll_cooldown() - 0.25]]
-		5: return ["Run speed", "%.0f > %.0f" % [speed, speed + 15]]
-		6: return ["Guard %d > %d; refill" % [guard_capacity(), guard_capacity() + 1], "+1 charge each wave"]
-		7: return ["Pierce extra bugs", "%d > %d" % [upgrade_ranks[7], upgrade_ranks[7] + 1]]
-		8: return ["Knockback", "%d > %d" % [6 + upgrade_ranks[8] * 6, 12 + upgrade_ranks[8] * 6]]
+		0: return ["A second burst follows", "%d%% echo; quicker firing" % (20+rank*3)]
+		1: return ["%d seeds / %d%% each" % [1+rank,int(SCATTER_POWER[rank]*100)], "Short range; +20% up close"]
+		2: return ["Every 4th volley charges", "%.2fx power + piercing" % (2.0+rank*0.25)]
+		3: return ["8 pickups fire a seed ring", "%d%% power; +40 reach" % (65+rank*12)]
+		4: return ["Roll leaves an acorn bomb", "%.2fx blast; faster recharge" % (1.2+rank*0.16)]
+		5: return ["Moving leaves brambles", "%d%% / tick; +15 speed" % (16+rank*4)]
+		6: return ["Block: %.1fx counter burst" % (1.0+rank*0.2), "+1 guard/wave; refill now"]
+		7: return ["Pierce %d; mark repeat hits" % rank, "Build up to +%d%% damage" % ((2+rank)*4)]
+		8: return ["Every 3rd volley explodes", "%d%% splash; pushes bugs" % (35+rank*7)]
 	return ["", ""]
 
 # Keep decorative corners at their intended proportions as paper panels resize.
@@ -1769,6 +1783,7 @@ func _draw() -> void:
 	for drop in bonus_drops:
 		if pickup_view.has_point(drop.p):
 			draw_pickup(drop.p, drop.kind, 25)
+	run_skills.draw(self)
 	draw_movement_fx()
 	for b in bullets:
 		draw_seed_projectile(b)
@@ -1831,7 +1846,7 @@ func draw_scout_report() -> void:
 	draw_string(heading_font,Vector2(-79,0),scout_name,HORIZONTAL_ALIGNMENT_CENTER,158,caption_size,JOURNAL_INK)
 	set_scene_transform(Vector2.ZERO)
 	draw_texture_rect_region(REPORT_ART,Rect2(309,282,312,220),Rect2(770,88,700,415))
-	var stats = [["Bugs defeated",str(kills)],["Clear time" if state=="won" else "Time","%.1fs" % elapsed],["Run level",str(level)],["Best clear","%.1fs" % float(stage_records.get(str(run_stage),{}).get("ten_wave_v2_best",elapsed)) if state=="won" else "--"],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
+	var stats = [["Bugs defeated",str(kills)],["Clear time" if state=="won" else "Time","%.1fs" % elapsed],["Run level",str(level)],["Best clear","%.1fs" % float(stage_records.get(str(run_stage),{}).get("ten_wave_skills_v3_best",elapsed)) if state=="won" else "--"],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
 	for i in range(stats.size()):
 		text_at(Vector2(330,317+i*30),stats[i][0],20,JOURNAL_INK)
 		draw_string(heading_font,Vector2(522,317+i*30),stats[i][1],HORIZONTAL_ALIGNMENT_RIGHT,76,20,JOURNAL_INK)
@@ -2173,7 +2188,7 @@ func draw_seed_projectile(b: Dictionary) -> void:
 	var tail: float = 7 + ranks[0] * 3 + ranks[7] * 5
 	draw_line(b.p - direction * tail, b.p, Color(color, 0.42), 2.0, true)
 	set_scene_transform(b.p, direction.angle())
-	var size: float = 3.0 + ranks[2] * 0.35 - ranks[1] * 0.2
+	var size: float = (6.5 if b.get("charged",false) else 3.0) - ranks[1] * 0.2
 	if ranks[7] > 0:
 		var points = PackedVector2Array([Vector2(7 + ranks[7], 0), Vector2(-3, -size), Vector2(-6, 0), Vector2(-3, size)])
 		draw_colored_polygon(points, color)
@@ -2670,7 +2685,7 @@ func smoke_test() -> void:
 		upgrades = [choice]
 		pending_levels = 1
 		choose_upgrade(0)
-	assert(shots == 2 and damage == 4 and magnet == 130 and speed == 245)
+	assert(shots == 2 and damage == 3 and magnet == 130 and speed == 245)
 	assert(constrain_actor(obstacles[0], 17).distance_to(obstacles[0]) >= 54.9)
 	start_run()
 	spawn_enemy()
@@ -3354,8 +3369,8 @@ func stage_status() -> String:
 	var record: Dictionary = stage_records.get(str(selected_stage),{})
 	if record.is_empty():
 		return "Stage %02d / %d  -  Ready to explore" % [selected_stage,STAGE_COUNT]
-	if float(record.get("ten_wave_v2_best",0))>0:
-		return "10 waves / Best clear: %.1fs" % float(record.ten_wave_v2_best)
+	if float(record.get("ten_wave_skills_v3_best",0))>0:
+		return "10 waves / Best clear: %.1fs" % float(record.ten_wave_skills_v3_best)
 	return "%s / Best: %d bugs" % ["CLEARED" if record.get("cleared",false) else "READY",record.get("best",0)]
 
 func record_stage_result(result: String) -> void:
@@ -3365,8 +3380,8 @@ func record_stage_result(result: String) -> void:
 	record["cleared"] = bool(record.get("cleared",false)) or result == "won"
 	stage_records[str(run_stage)] = record
 	if result == "won":
-		var best_clear = float(record.get("ten_wave_v2_best",0))
-		record["ten_wave_v2_best"] = elapsed if best_clear<=0 else minf(best_clear,elapsed)
+		var best_clear = float(record.get("ten_wave_skills_v3_best",0))
+		record["ten_wave_skills_v3_best"] = elapsed if best_clear<=0 else minf(best_clear,elapsed)
 		unlocked_stage = maxi(unlocked_stage,mini(run_stage+1,STAGE_COUNT))
 
 func draw_stage_island(bob: float) -> void:
