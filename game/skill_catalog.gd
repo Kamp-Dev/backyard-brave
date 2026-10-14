@@ -3,13 +3,15 @@ var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://ch
 const ICONS = preload("res://assets/ui/character-skill-icons.png")
 var icon_regions: Array[Rect2]=[]
 func _init():
-	var image=ICONS.get_image()
-	var cell=Vector2i(image.get_width()/3,image.get_height()/6)
-	for row in range(6):
-		for col in range(3):
-			var origin=Vector2i(col,row)*cell
-			var bounds=image.get_region(Rect2i(origin,cell)).get_used_rect()
-			icon_regions.append(Rect2(bounds.position+origin,bounds.size))
+	# The painted rows are not perfectly uniform. Explicit source bounds prevent
+	# a neighboring icon from entering a card when it crosses a nominal grid line.
+	icon_regions.assign([
+		Rect2(84,20,246,244),Rect2(386,18,235,246),Rect2(690,38,275,226),
+		Rect2(72,264,246,240),Rect2(386,269,240,235),Rect2(704,272,253,232),
+		Rect2(74,505,240,250),Rect2(396,518,220,237),Rect2(697,506,251,250),
+		Rect2(76,761,240,235),Rect2(409,760,210,236),Rect2(731,762,206,234),
+		Rect2(76,997,237,214),Rect2(358,997,292,235),Rect2(688,1002,287,240),
+		Rect2(75,1219,246,270),Rect2(369,1255,269,234),Rect2(687,1256,289,234)])
 func draw_icon(g,character:int,kind:int,rect:Rect2,tint:Color=Color.WHITE):
 	var region=icon_regions[kind+(9 if character==0 else 0)]
 	var size=region.size*minf(rect.size.x/region.size.x,rect.size.y/region.size.y)
@@ -42,7 +44,7 @@ func combo_index(g,kind:int) -> int:
 			var other=int(c[1] if kind==int(c[0]) else c[0])
 			if g.upgrade_ranks[other]>0: return i
 	for i in range(options.size()):
-		if kind in options[i].slice(0,2): return i
+		if kind==int(options[i][0]) or kind==int(options[i][1]): return i
 	return 0
 func status(g,kind:int) -> String:
 	var index=combo_index(g,kind)

@@ -25,6 +25,9 @@ func run():
  for character in [0,1]:
   fresh(g,character)
   for kind in range(9):
+   var combination=g.skill_catalog.kit(g).combos[g.skill_catalog.combo_index(g,kind)]
+   assert(kind==int(combination[0]) or kind==int(combination[1]),"Every unowned card names its own compatible partner")
+  for kind in range(9):
    for n in range(3):
     g.upgrade_ranks[kind]=n
     var lines=g.story_description(kind)
