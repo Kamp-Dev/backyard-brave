@@ -14,7 +14,8 @@ func run() -> void:
 			g.start_run()
 			g.rng.seed=seed_value
 			g.level=10
-			for kind in [2,2,2,2,0,0,0,0,7,7,5,4]:
+			g.damage=3.0+9*g.LEVEL_SEED_POWER
+			for kind in [0,0,3,3,3,5,5,5,6,6,7,7]:
 				g.upgrades.assign([kind])
 				g.pending_levels=1
 				g.choose_upgrade(0)

@@ -38,6 +38,7 @@ func step(g, b: Dictionary, dt: float) -> bool:
 	if not b.returning and b.age>=b.turn_time:
 		b.returning = true
 		b.hit_ids.clear() # Each target can be struck once going out and once back.
+		g.run_skills.on_turn(g,b)
 	if b.returning:
 		b.v = b.p.direction_to(g.player)*620.0
 		var next: Vector2 = b.p+b.v*dt
@@ -47,6 +48,7 @@ func step(g, b: Dictionary, dt: float) -> bool:
 				catch_notice = 0.9
 				catches += 1
 				g.tone(660,0.045)
+			g.run_skills.on_catch(g,b,b.catchable and g.roll_time>0 and b.age>0.35)
 			return true
 	return false
 
@@ -57,59 +59,9 @@ func portrait(g, rect: Rect2) -> void:
 	g.draw_texture_rect_region(ART,Rect2(Vector2(rect.get_center().x-size.x/2,rect.position.y),size),region)
 
 func gait(g) -> Vector2:
-	# Distance, not time or attack state: blocked/idle feet stop immediately.
-	if not g.player_moving: return Vector2.ZERO
-	var phase: float = g.walk_distance / g.WALK_STRIDE * TAU
-	if g.scout_backpedaling(): phase = -phase
-	return Vector2(sin(phase),cos(phase))
-
-func leg_art(g, source: Rect2, anchor: Vector2, scale_factor: float, step: float, tint: Color) -> void:
-	# Six-vertex leg strip. Hips stay fixed; knees and boots follow opposite steps.
-	var a = source.position
-	var b = source.end
-	var knee = lerpf(a.y,b.y,0.48)
-	var uv = PackedVector2Array([a,Vector2(b.x,a.y),Vector2(b.x,knee),b,Vector2(a.x,b.y),Vector2(a.x,knee)])
-	var points = PackedVector2Array()
-	var stride_scale = scale_factor*10.0
-	for i in range(6):
-		var point = (uv[i]-anchor)*scale_factor
-		if i in [2,5]: point += Vector2(step*0.95,-absf(step)*0.4)*stride_scale
-		if i in [3,4]: point += Vector2(step*3.8,-maxf(0,step)*3.2)*stride_scale
-		points.append(point)
-		uv[i] /= Vector2(ART.get_size())
-	g.draw_polygon(points,PackedColorArray([tint]),uv,ART)
-
+	return g.character_art[1].gait(g)
 func player_art(g, origin: Vector2, rolling: bool, tint: Color = Color.WHITE) -> void:
-	setup()
-	var direction: Vector2 = g.roll_direction if rolling else g.scout_upper_direction()
-	var frame = 2 if direction.y< -0.25 else 0
-	var height: float = g.player_display_height
-	var scale_factor: float = height/560.0
-	var stride = gait(g) if not rolling else Vector2.ZERO
-	var bob: float = absf(stride.x)*0.65
-	var rotation: float = (1-g.roll_time/g.ROLL_DURATION)*TAU*(1 if direction.x>=0 else -1) if rolling else 0
-	g.set_scene_transform(origin+Vector2(0,12),0,Vector2(1,0.35))
-	g.draw_circle(Vector2.ZERO,12,Color(0,0,0,0.25))
-	g.set_scene_transform(origin+Vector2(0,-bob),rotation,Vector2(-1 if direction.x<0 else 1,1))
-	var rear = frame==2
-	var anchor = Vector2(350,1208) if rear else Vector2(320,617)
-	anchor.y -= 16/scale_factor
-	var left_leg = Rect2(224,1038,127,170) if rear else Rect2(189,459,128,158)
-	var right_leg = Rect2(351,1038,161,170) if rear else Rect2(317,459,165,158)
-	leg_art(g,left_leg,anchor,scale_factor,stride.x,tint)
-	leg_art(g,right_leg,anchor,scale_factor,-stride.x,tint)
-	# Only the torso changes on release; neither the gait nor body scale resets.
-	var release: bool = g.attack_phase=="release" and not rolling
-	if release: frame+=1
-	var region = regions[frame]
-	var torso_anchor = anchor
-	var cut: float = 1042 if rear else 463
-	if release:
-		torso_anchor += Vector2(588,4) if rear else Vector2(618,9)
-		cut += 4 if rear else 9
-	region.size.y = cut-region.position.y
-	g.draw_texture_rect_region(ART,Rect2((region.position-torso_anchor)*scale_factor,region.size*scale_factor),region,tint)
-	g.set_scene_transform(Vector2.ZERO)
+	g.character_art[1].player_art(g,origin,rolling,tint)
 
 func projectile_art(g, b: Dictionary) -> void:
 	g.set_scene_transform(b.p,b.age*17)

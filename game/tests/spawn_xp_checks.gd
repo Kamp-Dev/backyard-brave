@@ -78,7 +78,7 @@ func run() -> void:
 	g.waves.remaining=99
 	g.spawn_timer=99
 	g.gems.assign([g.player])
-	g.upgrade_ranks[3]=1
+	g.upgrade_ranks[8]=1
 	g.simulate(0.01,Vector2.ZERO)
 	assert(g.gems.is_empty() and g.xp==1 and g.run_skills.gathered==1)
 	# The final sweep awards all leftover XP before arena creation, exactly once.
@@ -86,7 +86,7 @@ func run() -> void:
 	g.wave=9
 	g.elapsed=300
 	g.waves.remaining=0
-	for i in range(40): g.gems.append(g.player+Vector2(600+i,0))
+	for i in range(g.RUN_XP_STEPS[0]+g.RUN_XP_STEPS[1]): g.gems.append(g.player+Vector2(600+i,0))
 	g.waves.advance(g,0.01)
 	assert(g.gems.is_empty() and g.level==3 and g.xp==0 and g.pending_levels==3)
 	assert(not g.arena_active and not g.boss_spawned and g.state=="upgrade")

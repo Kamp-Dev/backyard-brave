@@ -2,12 +2,8 @@ extends Node2D
 
 const Tuning = preload("res://tuning.gd")
 const Combat = preload("res://combat.gd")
-const PLAYER_TEXTURES = [preload("res://assets/player/scout-draw.png"), preload("res://assets/player/scout-release.png"), preload("res://assets/player/scout-walk-a.png"), preload("res://assets/player/scout-walk-b.png")]
 
-const WALK_LEGS = preload("res://assets/player/scout-walk-legs.png")
 const WALK_STRIDE = 84.0
-var walk_regions: Array[Rect2] = []
-const WALK_HIPS = [104.5, 93.0, 92.5, 79.5, 70.0, 74.0, 89.5, 78.5, 74.0, 83.0, 72.0, 74.0, 56.5, 58.0, 60.0, 57.5, 57.5, 56.5, 86.0, 76.0, 53.5, 79.5, 77.0, 53.0, 62.5, 60.5, 61.5, 61.5, 60.0, 60.5]
 var locomotion_direction = Vector2.UP
 
 const ELITE_TEXTURE = preload("res://assets/enemies/backyard-elites.png")
@@ -27,9 +23,7 @@ var enemy_regions: Array[Rect2] = []
 
 const GROUND_TEXTURE = preload("res://assets/environment/backyard-endless.png")
 
-const ROLL_TEXTURE = preload("res://assets/player/scout-roll.png")
 const ROLL_DURATION = 0.32
-var roll_regions: Array[Rect2] = []
 
 const HomeGarden = preload("res://home_garden.gd")
 var home_garden = HomeGarden.new()
@@ -115,15 +109,15 @@ const WOOD_TAB_NATURAL = preload("res://assets/ui/wood-tab-natural.png")
 const WORKBENCH = preload("res://assets/ui/gardener-workbench.png")
 const REPORT_ART = preload("res://assets/ui/scout-report-pieces.png")
 const CAMP_HEADER = preload("res://assets/ui/campsite-header-name.png")
+const STORY_SKILLS = preload("res://assets/ui/storybook-skills.png")
+const STORY_ICONS = [Rect2(50,80,425,315), Rect2(525,80,350,315), Rect2(925,100,350,290), Rect2(55,450,385,315), Rect2(490,450,380,330), Rect2(890,455,395,315), Rect2(65,810,380,325), Rect2(490,822,365,310), Rect2(915,835,365,295)]
 const STORY_PAUSE = preload("res://assets/ui/storybook-pause.png")
 const STORY_PIECES = preload("res://assets/ui/storybook-pieces.png")
-const STORY_SKILLS = preload("res://assets/ui/storybook-skills.png")
 const STORY_CARD = Rect2(20, 16, 610, 720)
 const STORY_TITLE = Rect2(650, 240, 875, 235)
 const STORY_NAVIGATION = preload("res://assets/ui/storybook-navigation.png")
 const STORY_BUTTON = Rect2(25, 780, 650, 185)
 const STORY_LEGEND = Rect2(725, 811, 795, 145)
-const STORY_ICONS = [Rect2(50,80,425,315), Rect2(525,80,350,315), Rect2(925,100,350,290), Rect2(55,450,385,315), Rect2(490,450,380,330), Rect2(890,455,395,315), Rect2(65,810,380,325), Rect2(490,822,365,310), Rect2(915,835,365,295)]
 
 const PAPER = Color("ead9b2")
 const JOURNAL_INK = Color("352e23")
@@ -160,15 +154,19 @@ const SCREEN_ARENA = Rect2(0, 0, 720, 1280)
 const ARENA = Rect2(Vector2(640, 390) - SCREEN_ARENA.size / GAMEPLAY_ZOOM / 2, SCREEN_ARENA.size / GAMEPLAY_ZOOM)
 var drawing_world = false
 const SPAWN_DURATION = Tuning.RUN_SECONDS
+const CharacterArt = preload("res://character_art.gd")
+var character_art = [CharacterArt.new(preload("res://assets/player/scout-storybook.png"),true),CharacterArt.new(preload("res://assets/player/poppy.png"))]
+const SkillCatalog = preload("res://skill_catalog.gd")
+var skill_catalog = SkillCatalog.new()
+var rerolls = 2
+const REROLL_BUTTON = Rect2(155,1100,410,64)
 const RunSkills = preload("res://run_skills.gd")
 var run_skills = RunSkills.new()
-const UPGRADE_NAMES = ["BURST SEEDS", "SCATTER SEEDS", "ACORN CANNON", "FORAGER POUCH", "ROLLING ACORN", "BRAMBLE BOOTS", "DEW COUNTER", "NEEDLE SEEDS", "THUMP SHOT"]
-const UPGRADE_CAPS = [5, 5, 5, 5, 5, 5, 5, 5, 5]
+const UPGRADE_CAPS = [3, 3, 3, 3, 3, 3, 3, 3, 3]
 const MAX_LEVEL = 10
 const LEVEL_SEED_POWER = 0.55
-const RUN_XP_STEPS = [12,28,50,80,115,150,180,210,240]
+const RUN_XP_STEPS = [12,26,44,66,92,120,150,180,210]
 const SCATTER_POWER = [1.0, 0.85, 0.70, 0.62, 0.55, 0.50]
-const UPGRADE_FAMILIES = ["SHARPSHOOTER", "CROWD CONTROL", "SHARPSHOOTER", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "SHARPSHOOTER", "CROWD CONTROL"]
 var upgrade_ranks: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 var bug_deaths: Array[Dictionary] = []
 var roll_echoes: Array[Dictionary] = []
@@ -183,7 +181,6 @@ var test_build = 0
 var player = Vector2(640, 390)
 var facing = Vector2.UP
 var player_aim = Vector2.UP
-var player_regions: Array = []
 var player_moving = false
 var attack_pose_timer = 0.0
 var attack_phase = "idle"
@@ -275,22 +272,9 @@ func _ready() -> void:
 	body_font.variation_opentype = {2003265652: 600.0}
 	font = body_font
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	for texture in PLAYER_TEXTURES:
-		var sprite_image = texture.get_image()
-		var cell_size = sprite_image.get_size() / Vector2i(4, 2)
-		var regions: Array[Rect2] = []
-		for row in range(2):
-			for column in range(4):
-				var cell_position = Vector2i(column, row) * cell_size
-				var bounds = sprite_image.get_region(Rect2i(cell_position, cell_size)).get_used_rect()
-				assert(bounds.has_area(), "Each Scout direction must contain a sprite")
-				regions.append(Rect2(bounds.position + cell_position, bounds.size))
-		player_regions.append(regions)
-	walk_regions.assign([Rect2(18,45,206,161), Rect2(253,45,186,162), Rect2(485,44,196,156), Rect2(724,45,185,161), Rect2(962,45,142,161), Rect2(1190,43,161,164), Rect2(31,251,182,168), Rect2(277,251,155,172), Rect2(506,250,154,166), Rect2(725,248,175,170), Rect2(969,251,142,172), Rect2(1194,250,148,169), Rect2(65,462,113,179), Rect2(294,462,116,177), Rect2(521,461,115,172), Rect2(755,462,115,178), Rect2(980,461,118,180), Rect2(1212,462,117,172), Rect2(40,679,168,183), Rect2(277,679,158,175), Rect2(528,679,113,184), Rect2(728,678,163,178), Rect2(964,679,159,175), Rect2(1215,679,107,187), Rect2(59,902,122,197), Rect2(293,901,120,192), Rect2(521,901,122,198), Rect2(749,901,121,198), Rect2(980,901,120,194), Rect2(1210,901,121,189)])
 	enemy_regions.assign([Rect2(49, 43, 356, 244), Rect2(454, 8, 365, 298), Rect2(883, 74, 318, 180), Rect2(49, 344, 359, 245), Rect2(455, 324, 371, 289), Rect2(883, 377, 318, 180), Rect2(26, 634, 387, 284), Rect2(446, 647, 414, 257), Rect2(860, 604, 350, 325), Rect2(25, 951, 391, 298), Rect2(446, 958, 414, 275), Rect2(860, 944, 352, 317)])
 	elite_regions.assign([Rect2(34, 80, 452, 385), Rect2(519, 144, 505, 271), Rect2(1024, 101, 490, 351), Rect2(31, 553, 461, 401), Rect2(532, 637, 492, 261), Rect2(1024, 569, 491, 391)])
 	drop_regions.assign([Rect2(89,137,365,444), Rect2(569,130,475,453), Rect2(1124,130,450,450), Rect2(1669,112,426,484)])
-	roll_regions.assign([Rect2(51, 102, 217, 203), Rect2(342, 101, 192, 209), Rect2(619, 105, 168, 206), Rect2(878, 94, 200, 219), Rect2(1160, 93, 175, 219), Rect2(65, 394, 231, 180), Rect2(364, 360, 191, 213), Rect2(618, 365, 169, 207), Rect2(886, 358, 206, 214), Rect2(1159, 359, 180, 210), Rect2(68, 614, 188, 209), Rect2(350, 616, 170, 206), Rect2(627, 616, 147, 211), Rect2(892, 606, 170, 219), Rect2(1179, 615, 152, 205), Rect2(62, 854, 207, 217), Rect2(341, 860, 204, 222), Rect2(616, 863, 174, 213), Rect2(890, 853, 196, 223), Rect2(1165, 857, 187, 221)])
 	rng.randomize()
 	for i in range(75):
 		stars.append(Vector2(rng.randf_range(45, 1235), rng.randf_range(112, 659)))
@@ -390,6 +374,7 @@ func start_run() -> void:
 	arena_active = false
 	waves = WaveRun.new()
 	run_skills = RunSkills.new()
+	rerolls = 2
 	terrain_cell = Vector2i(2147483647, 2147483647)
 	refresh_terrain()
 	facing = Vector2.UP
@@ -582,6 +567,9 @@ func activate_pointer(position: Vector2) -> void:
 	elif state in ["title", "dead", "won"] and START_BUTTON.has_point(position):
 		continue_adventure()
 	elif state == "upgrade":
+		if REROLL_BUTTON.has_point(position):
+			reroll_skills()
+			return
 		for i in range(upgrades.size()):
 			if upgrade_card_rect(i).has_point(position):
 				choose_upgrade(i)
@@ -669,6 +657,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_pause()
 		elif event.keycode == KEY_SPACE and state == "playing" and roll_timer <= 0:
 			start_roll()
+		elif state == "upgrade" and event.keycode==KEY_R:
+			reroll_skills()
 		elif state == "upgrade" and event.keycode in [KEY_1, KEY_2, KEY_3]:
 			choose_upgrade(event.keycode - KEY_1)
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -702,6 +692,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				choose_upgrade(controller_choice)
 			elif state == "playing":
 				start_roll()
+		elif state=="upgrade" and event.button_index==JOY_BUTTON_X:
+			reroll_skills()
 		elif state == "upgrade" and event.button_index in [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT, JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN]:
 			controller_choice = posmod(controller_choice + (-1 if event.button_index in [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_UP] else 1), upgrades.size())
 		elif event.button_index == JOY_BUTTON_START:
@@ -823,6 +815,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 		update_enemy(e, dt)
 		if state=="dead": return
 		e.walk_distance += e.p.distance_to(previous_position)
+		if roll_time>0 and enemy_targetable(e) and e.p.distance_to(player)<e.radius+32: run_skills.on_near_miss(self)
 		if enemy_contact(e,previous_position) and hurt_timer <= 0 and roll_time <= 0:
 			hurt_player()
 			e.p = constrain_actor(e.p + (e.p - player).normalized() * 40, e.radius, ENEMY_SIZES[e.kind] / 2)
@@ -851,8 +844,8 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 		if gems[i].distance_to(player) < magnet:
 			gems[i] = gems[i].move_toward(player, 430 * dt)
 		if gems[i].distance_to(player) < 20:
-			if upgrade_ranks[3] > 0:
-				add_upgrade_fx(player + Vector2(0, 7), "gather", upgrade_ranks[3], Vector2.UP, 0.28)
+			if run_character==0 and upgrade_ranks[8] > 0:
+				add_upgrade_fx(player + Vector2(0, 7), "gather", upgrade_ranks[8], Vector2.UP, 0.28)
 			gems.remove_at(i)
 			run_skills.on_pickup(self)
 			gain_xp()
@@ -927,6 +920,7 @@ func update_player_bullets(dt: float) -> void:
 			continue
 		var start: Vector2 = b.p
 		b.p += b.v * dt
+		run_skills.on_projectile_move(self,b,start)
 		b.life -= dt
 		if not b.has("hit_ids"):
 			b.hit_ids = []
@@ -969,9 +963,9 @@ func update_player_bullets(dt: float) -> void:
 				add_upgrade_fx(e.p, "thump", visual[8], b.v.normalized(), 0.22)
 			b.hit_ids.append(e.uid)
 			if e.kind not in [5, 6] and not e.get("finale",false) and e.mode != "rush":
-				e.p = move_actor(e.p, b.v.normalized() * (6 + upgrade_ranks[8] * 6), e.radius, ENEMY_SIZES[e.kind] / 2)
+				e.p = move_actor(e.p, b.v.normalized() * 6, e.radius, ENEMY_SIZES[e.kind] / 2)
 			if e.hp <= 0:
-				kill_enemy(enemy_index)
+				kill_enemy(enemy_index,not b.get("secondary",false) or b.get("counter",false))
 				if state=="won" or boss_defeat_timer>0: return
 			if b.get("pierce", 0) <= 0:
 				consumed = true
@@ -1211,6 +1205,7 @@ func update_hostile_bullets(dt: float) -> void:
 			wall_hit = minf(wall_hit, Combat.hit_fraction(start, b.p, o, 38 + b.radius))
 		var player_hit = Combat.hit_fraction(start, b.p, player, 15 + b.radius)
 		if player_hit < wall_hit:
+			if roll_time>0: run_skills.on_near_miss(self)
 			if roll_time <= 0 and hurt_timer <= 0:
 				hurt_player()
 		if player_hit != INF or wall_hit != INF or b.life <= 0 or not world_view().grow(220).has_point(b.p):
@@ -1218,6 +1213,7 @@ func update_hostile_bullets(dt: float) -> void:
 
 func hurt_player() -> void:
 	settings.vibrate()
+	run_skills.on_hurt(self)
 	guard_absorbed_hit = shield > 0
 	settings.scout_hit(guard_absorbed_hit)
 	if shield > 0:
@@ -1246,8 +1242,9 @@ func hurt_player() -> void:
 		else:
 			finish_run("dead")
 
-func kill_enemy(index: int) -> void:
+func kill_enemy(index: int, allow_skill_procs: bool = true) -> void:
 	var e = enemies[index]
+	if allow_skill_procs: run_skills.on_kill(self,e)
 	var death = e.duplicate(true)
 	death.life = 1.0 if e.get("finale",false) else (0.8 if Tuning.is_major(e.kind) else 0.55)
 	death.duration = death.life
@@ -1372,54 +1369,27 @@ func update_attack(dt: float) -> void:
 
 func shoot(locked_direction: Vector2 = Vector2.ZERO) -> void:
 	var dir = locked_direction if locked_direction != Vector2.ZERO else target_direction()
-	if dir == Vector2.ZERO:
-		return
+	if dir == Vector2.ZERO: return
 	garden_audio.play(self,"seed-release")
-	player_aim = dir
-	attack_pose_timer = 0.2
-	attack_phase = "release"
-	attack_clock = minf(0.1, fire_rate * 0.3)
-	run_skills.volleys += 1
-	var charged: bool = upgrade_ranks[2]>0 and run_skills.volleys%4==0
-	var volley: Array = []
-	var powered = run_character==1 and poppy.empowered
-	if run_character==1: poppy.empowered = false
-	for i in range(shots):
-		var angle = (i - (shots - 1) / 2.0) * 0.20
-		var v = dir.rotated(angle)
-		var power = damage * SCATTER_POWER[upgrade_ranks[1]]
-		if charged: power *= 2.0+upgrade_ranks[2]*0.25
-		var b = {"p":scout_muzzle(dir),"origin":player,"v":v*720,"life":0.65 if shots>1 else 1.4,"power":power,"pierce":upgrade_ranks[7]+(1 if charged else 0),"hit_ids":[],"visual":upgrade_ranks.duplicate(),"charged":charged,"scatter":shots>1,"needle":upgrade_ranks[7],"thump":upgrade_ranks[8] if i==shots/2 and run_skills.volleys%3==0 else 0}
-		if run_character==1: poppy.prepare(self,b,i==shots/2,powered)
-		bullets.append(b)
-		if upgrade_ranks[0]>0:
-			var followup = b.duplicate(true)
-			followup.power = damage*SCATTER_POWER[upgrade_ranks[1]]*(0.2+upgrade_ranks[0]*0.03)
-			followup.charged = false
-			followup.thump = 0
-			followup.pierce = upgrade_ranks[7]
-			if run_character==1:
-				followup.power *= 0.95
-				followup.catchable = false
-				followup.empowered = false
-				followup.pierce = 99
-			volley.append(followup)
-	if upgrade_ranks[0]>0: run_skills.echo = {"delay":0.12,"shots":volley}
-	merit_volleys += 1
+	player_aim=dir
+	attack_pose_timer=0.2
+	attack_phase="release"
+	attack_clock=minf(0.1,fire_rate*0.3)
+	for b in run_skills.make_volley(self,dir):
+		if bullets.size()<run_skills.MAX_SHOTS: bullets.append(b)
+	merit_volleys+=1
 	if run_growth[11]>0 and merit_volleys%6==0:
-		for angle in [-0.30,0.30]:
-			bullets.append({"p":scout_muzzle(dir),"v":dir.rotated(angle)*720,"life":1.4,"power":damage*0.6,"pierce":0,"hit_ids":[],"visual":upgrade_ranks.duplicate()})
-		add_upgrade_fx(player,"upgrade",1,dir,0.25)
-	tone(880, 0.035)
+		for angle in [-0.3,0.3]: run_skills.shot(self,scout_muzzle(dir),dir.rotated(angle),damage*0.6)
+	tone(880,0.035)
 
 func xp_required() -> int:
 	return RUN_XP_STEPS[clampi(level-1,0,RUN_XP_STEPS.size()-1)]
 
 func roll_cooldown() -> float:
-	return maxf(0.75,2.5 - upgrade_ranks[4] * 0.25 - run_growth[4]*0.04 - run_growth[20]*0.12)
+	return maxf(0.75,2.5-run_growth[4]*0.04-run_growth[20]*0.12)
 
 func guard_capacity() -> int:
-	return 2 + upgrade_ranks[6]
+	return 3
 
 func gain_xp() -> void:
 	if level >= MAX_LEVEL:
@@ -1444,62 +1414,35 @@ func upgrade_description(kind: int) -> String:
 	return " / ".join(story_description(kind))
 
 func skill_available(kind: int) -> bool:
-	if upgrade_ranks[kind]>=UPGRADE_CAPS[kind]: return false
-	# A first weapon choice must increase direct damage, not only piercing.
-	if kind==7 and level<=2 and learned_skill_ranks()==0: return false
-	# Forager needs pickups; needle marks and thump now work on a lone boss.
-	if waves.final_prep and kind==3: return false
-	return true
+	return upgrade_ranks[kind]<3 and not (run_character==0 and waves.final_prep and kind==8)
 
 func show_upgrades() -> void:
 	clear_touch()
-	upgrades.clear()
-	# One choice from each family prevents rolls of three utility-only cards.
-	for family in ["SHARPSHOOTER", "CROWD CONTROL", "TRAIL SURVIVOR"]:
-		var pool: Array[int] = []
-		for kind in range(UPGRADE_NAMES.size()):
-			if UPGRADE_FAMILIES[kind] == family and skill_available(kind):
-				pool.append(kind)
-		if not pool.is_empty():
-			upgrades.append(pool[rng.randi_range(0, pool.size() - 1)])
-	# A completed family yields its slot to another available upgrade.
-	var remaining: Array[int] = []
-	for kind in range(UPGRADE_NAMES.size()):
-		if skill_available(kind) and not upgrades.has(kind):
-			remaining.append(kind)
-	while upgrades.size() < 3 and not remaining.is_empty():
-		var index = rng.randi_range(0, remaining.size() - 1)
-		upgrades.append(remaining[index])
-		remaining.remove_at(index)
+	upgrades.assign(skill_catalog.offers(self))
 	if upgrades.is_empty():
-		pending_levels = 0
-		state = "playing"
+		pending_levels=0
+		state="playing"
 		return
-	controller_choice = 0
-	state = "upgrade"
-	tone(660, 0.16)
+	controller_choice=0
+	state="upgrade"
+	tone(660,0.16)
+
+func reroll_skills() -> void:
+	if state!="upgrade" or rerolls<=0: return
+	rerolls-=1
+	show_upgrades()
 
 func choose_upgrade(index: int) -> void:
-	if index < 0 or index >= upgrades.size():
-		return
-	var kind = upgrades[index]
-	if upgrade_ranks[kind] >= UPGRADE_CAPS[kind]:
-		return
-	upgrade_ranks[kind] += 1
-	add_upgrade_fx(player + Vector2(0, -15), "upgrade", upgrade_ranks[kind], Vector2.UP, 0.6)
-	match kind:
-		0: fire_rate = scout_fire_rate() / pow(1.04, upgrade_ranks[0])
-		1: shots = 1 + upgrade_ranks[1]
-		2: damage = 3.0 + (level - 1) * LEVEL_SEED_POWER + run_growth[0]*0.15 + run_growth[17]*0.45
-		3: magnet = 90.0 + upgrade_ranks[3] * 40 + run_growth[2]*7 + run_growth[18]*25
-		4: roll_timer = minf(roll_timer, roll_cooldown())
-		5: speed = 230.0 + upgrade_ranks[5] * 15 + run_growth[3]*3 + run_growth[19]*8
-		6: shield = guard_capacity()
-	pending_encounter_rewards = maxi(0, pending_encounter_rewards - 1)
-	pending_levels = maxi(0, pending_levels - 1)
-	state = "playing"
-	if pending_levels > 0:
-		show_upgrades()
+	if index<0 or index>=upgrades.size(): return
+	var kind=upgrades[index]
+	if upgrade_ranks[kind]>=3: return
+	upgrade_ranks[kind]+=1
+	run_skills.learned(self,kind)
+	add_upgrade_fx(player+Vector2(0,-15),"upgrade",upgrade_ranks[kind],Vector2.UP,0.6)
+	pending_encounter_rewards=maxi(0,pending_encounter_rewards-1)
+	pending_levels=maxi(0,pending_levels-1)
+	state="playing"
+	if pending_levels>0: show_upgrades()
 
 func finish_run(result: String) -> void:
 	if state in ["dead", "won"]:
@@ -1629,26 +1572,20 @@ func card_text(rect: Rect2, y: float, label: String, size: int, color: Color = J
 	text_at(Vector2(rect.get_center().x - width / 2, y), label, size, color)
 
 func story_description(kind: int) -> Array[String]:
-	var rank: int = mini(5,upgrade_ranks[kind]+1)
-	if run_character==1:
-		match kind:
-			0: return ["Extra disc; quicker throws", "%d%% power; no catch bonus" % (20+rank*3)]
-			1: return ["%d discs / %d%% each" % [1+rank,int(SCATTER_POWER[rank]*100)], "Shorter arc; +20% up close"]
-			2: return ["Every 4th throw charges", "%.2fx power on both passes" % (2.0+rank*0.25)]
-			7: return ["Both passes mark repeat hits", "Build up to +%d%% damage" % ((2+rank)*4)]
-	match kind:
-		0: return ["A second burst follows", "%d%% echo; quicker firing" % (20+rank*3)]
-		1: return ["%d seeds / %d%% each" % [1+rank,int(SCATTER_POWER[rank]*100)], "Short range; +20% up close"]
-		2: return ["Every 4th volley charges", "%.2fx power + piercing" % (2.0+rank*0.25)]
-		3: return ["8 pickups fire a seed ring", "%d%% power; +40 reach" % (65+rank*12)]
-		4: return ["Roll leaves an acorn bomb", "%.2fx blast; faster recharge" % (1.2+rank*0.16)]
-		5: return ["Moving leaves brambles", "%d%% / tick; +15 speed" % (16+rank*4)]
-		6: return ["Block: %.1fx counter burst" % (1.0+rank*0.2), "+1 guard/wave; refill now"]
-		7: return ["Pierce %d; mark repeat hits" % rank, "Build up to +%d%% damage" % ((2+rank)*4)]
-		8: return ["Every 3rd volley explodes", "%d%% splash; pushes bugs" % (35+rank*7)]
-	return ["", ""]
+	return wrap_skill_text(skill_catalog.description(self,kind),394,21)
 
-# Keep decorative corners at their intended proportions as paper panels resize.
+func wrap_skill_text(label: String, width: float, size: int) -> Array[String]:
+	var lines: Array[String]=[]
+	var line=""
+	for word in label.split(" "):
+		var candidate=line+(" " if not line.is_empty() else "")+word
+		if not line.is_empty() and ui_font(size).get_string_size(candidate,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x>width:
+			lines.append(line)
+			line=word
+		else: line=candidate
+	if not line.is_empty(): lines.append(line)
+	return lines
+
 func story_panel(rect: Rect2, tint: Color = Color.WHITE) -> void:
 	# Draw nine regions explicitly to make the source-to-destination scale fixed.
 	var sx = [0.0, 390.0, STORY_PAUSE.get_width() - 390.0, float(STORY_PAUSE.get_width())]
@@ -1660,26 +1597,29 @@ func story_panel(rect: Rect2, tint: Color = Color.WHITE) -> void:
 			draw_texture_rect_region(STORY_PAUSE, Rect2(dx[x], dy[y], dx[x+1]-dx[x], dy[y+1]-dy[y]), Rect2(sx[x],sy[y],sx[x+1]-sx[x],sy[y+1]-sy[y]), tint)
 
 func draw_story_card(index: int) -> void:
-	var kind = upgrades[index]
-	var rect = upgrade_card_rect(index)
-	story_panel(rect, Color.WHITE if controller_choice == index else Color(0.92, 0.94, 0.87))
-	var region: Rect2 = STORY_ICONS[kind]
-	var icon_size = region.size * (112.0 / maxf(region.size.x, region.size.y))
-	var icon_center = rect.position + Vector2(110, 130)
-	draw_texture_rect_region(STORY_SKILLS, Rect2(icon_center - icon_size / 2, icon_size), region)
-	card_text(Rect2(rect.position + Vector2(62, 0), Vector2(96, 50)), rect.position.y + 57, "%02d" % (index + 1), 24, LEAF_GREEN)
-	var content = Rect2(rect.position + Vector2(182, 0), Vector2(394, rect.size.y))
-	card_text(content, rect.position.y + 58, UPGRADE_FAMILIES[kind], 19, LEAF_GREEN)
-	card_text(content, rect.position.y + 96, UPGRADE_NAMES[kind], 29)
-	var lines = story_description(kind)
-	card_text(content, rect.position.y + 143, lines[0], 23)
-	card_text(content, rect.position.y + 177, lines[1], 24)
-	draw_rank_stars(rect, upgrade_ranks[kind], UPGRADE_CAPS[kind])
+	var kind=upgrades[index]
+	var rect=upgrade_card_rect(index)
+	story_panel(rect,Color.WHITE if controller_choice==index else Color(0.92,0.94,0.87))
+	skill_catalog.draw_icon(self,run_character,kind,Rect2(rect.position+Vector2(54,78),Vector2(104,104)))
+	var content=Rect2(rect.position+Vector2(178,0),Vector2(400,rect.size.y))
+	card_text(content,rect.position.y+43,skill_catalog.tag(self,kind),17,LEAF_GREEN)
+	var size=27
+	var name=skill_catalog.name_for(self,kind)
+	while size>20 and ui_font(size).get_string_size(name,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x>394: size-=1
+	card_text(content,rect.position.y+74,name,size)
+	var lines=story_description(kind)
+	for i in range(lines.size()): card_text(content,rect.position.y+104+i*25,lines[i],21)
+	card_text(content,rect.position.y+201,skill_catalog.status(self,kind),16,LEAF_GREEN)
+	var benefit=skill_catalog.benefit(self,kind)
+	var benefit_size=16
+	while ui_font(benefit_size).get_string_size(benefit,HORIZONTAL_ALIGNMENT_LEFT,-1,benefit_size).x>394 and benefit_size>13: benefit_size-=1
+	card_text(content,rect.position.y+226,benefit,benefit_size,LEAF_GREEN)
+	draw_rank_stars(Rect2(rect.position+Vector2(0,0),Vector2(178,rect.size.y)),upgrade_ranks[kind],3)
 
 func draw_rank_stars(rect: Rect2, earned: int, cap: int) -> void:
 	for rank in range(cap):
 		var upcoming = rank == earned
-		var center = Vector2(rect.get_center().x + (rank - (cap - 1) / 2.0) * 37, rect.end.y - 38)
+		var center = Vector2(rect.get_center().x + (rank - (cap - 1) / 2.0) * 37, rect.end.y - 49)
 		var radius = 15.0 if upcoming else 12.5
 		var points = PackedVector2Array()
 		for vertex in range(10):
@@ -1736,20 +1676,23 @@ func draw_paused_skills() -> void:
 		var origin = Vector2(85+(kind%3)*185,365+(kind/3)*142)
 		var rank = upgrade_ranks[kind]
 		var tint = Color.WHITE if rank>0 else Color(0.65,0.68,0.57,0.5)
-		var region: Rect2 = STORY_ICONS[kind]
-		var icon_size = region.size*(60.0/maxf(region.size.x,region.size.y))
-		draw_texture_rect_region(STORY_SKILLS,Rect2(origin+Vector2(90,33)-icon_size/2,icon_size),region,tint)
-		card_text(Rect2(origin,Vector2(180,130)),origin.y+82,UPGRADE_NAMES[kind],18,JOURNAL_INK if rank>0 else LEAF_GREEN)
-		for star in range(5):
-			var center = origin+Vector2(46+star*22,103)
+		skill_catalog.draw_icon(self,run_character,kind,Rect2(origin+Vector2(60,3),Vector2(60,60)),tint)
+		card_text(Rect2(origin,Vector2(180,130)),origin.y+82,skill_catalog.name_for(self,kind),16,JOURNAL_INK if rank>0 else LEAF_GREEN)
+		for star in range(3):
+			var center = origin+Vector2(57+star*33,103)
 			var points = PackedVector2Array()
 			for vertex in range(10):
 				points.append(center+Vector2.from_angle(-PI/2+vertex*PI/5)*(9.0 if vertex%2==0 else 4.3))
 			draw_colored_polygon(points,Color("dca83a") if star<rank else Color("bbb99a"))
 			if star<rank: draw_polyline(points+PackedVector2Array([points[0]]),Color("6e613c"),1.2,true)
-		card_text(Rect2(origin,Vector2(180,130)),origin.y+131,"Rank %d / 5" % rank if rank>0 else "Not learned",17,LEAF_GREEN)
+		card_text(Rect2(origin,Vector2(180,130)),origin.y+131,"Rank %d / 3" % rank if rank>0 else "Not learned",17,LEAF_GREEN)
 	center_text(812,"Level %d / %d  -  %d skill ranks learned" % [level,MAX_LEVEL,learned_skill_ranks()],21,JOURNAL_INK)
-	center_text(841,"9 level choices + 2 miniboss + 1 final prep",19,LEAF_GREEN)
+	var bonuses: Array[String]=[]
+	for index in range(5):
+		if skill_catalog.combo(self,index): bonuses.append(skill_catalog.kit(self).combos[index][2])
+	var bonus_text="Bonuses: "+", ".join(bonuses) if not bonuses.is_empty() else "Bonuses unlock when both partners reach rank 2"
+	var bonus_lines=wrap_skill_text(bonus_text,540,17)
+	for i in range(mini(2,bonus_lines.size())): center_text(839+i*22,bonus_lines[i],17,LEAF_GREEN)
 
 func bonus_pickup_reach() -> float:
 	return clampf(magnet*0.65,60,100)
@@ -1856,22 +1799,25 @@ func _draw() -> void:
 	if state == "playing":
 		draw_touch_controls()
 		draw_enemy_directions()
+		run_skills.draw_readiness(self)
 		if boss_warning>0:
 			var warning_alpha=1.0 if settings.values.reduced_flashes else 0.3+0.7*absf(sin(boss_warning*PI*2))
 			center_text(370,"WARNING",58,Color(0.9,0.18,0.1,warning_alpha))
 			center_text(410,"FINAL BOSS APPROACHING",24,PAPER)
 		if banner_timer > 0:
 			center_text(280, banner, 21, PAPER)
+	if state=="playing" and run_skills.combo_time>0 and boss_warning<=0:
+		center_text(321,run_skills.combo_notice.to_upper(),23,PAPER)
 	if state == "upgrade":
 		draw_rect(Rect2(-ui_offset(), get_viewport_rect().size), Color(0.08, 0.11, 0.07, 0.86))
 		story_panel(Rect2(60, 66, 600, 160))
-		center_text(143, "FINAL PREPARATION" if waves.final_prep else ("ENCOUNTER REWARD" if pending_encounter_rewards > 0 else "SCOUT UPGRADES"), 34, JOURNAL_INK)
-		center_text(182, "Level %d  /  Choose your next skill" % level, 22, LEAF_GREEN)
+		center_text(143, "POPPY'S SEED BASKET" if run_character==1 else "SCOUT'S FIELD KIT", 34, JOURNAL_INK)
+		center_text(182, ("Final preparation" if waves.final_prep else "Miniboss reward" if pending_encounter_rewards>0 else "Level %d" % level)+" / Choose one", 22, LEAF_GREEN)
 		for i in range(upgrades.size()):
 			draw_story_card(i)
-		center_text(1137, "Tap a card to continue", 29, PAPER)
-		center_text(1183, "9 level choices + 2 miniboss + 1 final prep", 22, PAPER)
-		center_text(1217, "Bright star = next rank / Merits add bonuses", 20, PAPER)
+		draw_garden_button(REROLL_BUTTON,"REROLL / %d LEFT" % rerolls,false,23,rerolls>0)
+		center_text(1183, "Up to 9 level choices + 2 miniboss + 1 prep", 21, PAPER)
+		center_text(1217, "Pair two rank-2 skills to unlock a bonus", 20, PAPER)
 	elif state == "paused":
 		draw_pause_menu()
 	elif state in ["dead", "won"]:
@@ -1882,8 +1828,12 @@ func draw_scout_report() -> void:
 	story_panel(Rect2(30,60,660,1190))
 	center_text(177,"SCOUT REPORT",42,JOURNAL_INK)
 	center_text(223,("Chapter One cleared!" if run_stage==5 else "Stage %d cleared" % run_stage) if state=="won" else "Another adventure awaits",26,LEAF_GREEN)
-	draw_texture_rect_region(REPORT_ART,Rect2(91,265,211,250),Rect2(135,10,480,535))
 	set_scene_transform(Vector2(204,485),-0.126)
+	draw_rect(Rect2(-98,-213,196,240),PAPER)
+	draw_rect(Rect2(-98,-213,196,240),JOURNAL_INK,false,2.0)
+	draw_rect(Rect2(-86,-201,172,181),Color("baca8b"))
+	character_art[run_character].portrait(self,Rect2(-79,-192,158,169))
+	draw_circle(Vector2(-80,-210),7,Color("a96832"))
 	var caption_size=19
 	while heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,caption_size).x>158 and caption_size>11: caption_size-=1
 	draw_string(heading_font,Vector2(-79,0),scout_name,HORIZONTAL_ALIGNMENT_CENTER,158,caption_size,JOURNAL_INK)
@@ -1926,12 +1876,7 @@ func draw_reward_summary() -> void:
 		center_text(978,"Scout Growth complete!",25,LEAF_GREEN)
 
 func home_scout(rect: Rect2) -> void:
-	if selected_character==1:
-		poppy.portrait(self,rect)
-		return
-	var region: Rect2 = player_regions[0][2]
-	var size = region.size * (rect.size.y / region.size.y)
-	draw_texture_rect_region(PLAYER_TEXTURES[0], Rect2(Vector2(rect.get_center().x - size.x / 2, rect.position.y), size), region)
+	character_art[selected_character].portrait(self,rect)
 
 func draw_home() -> void:
 	home_garden.paint(self)
@@ -1958,16 +1903,15 @@ func draw_home() -> void:
 		draw_scout_growth()
 	elif home_tab == 0:
 		story_panel(Rect2(35,312,650,810))
-		center_text(383,"GROWTH   /   SKILLS",30,JOURNAL_INK)
-		center_text(425,"9 skills / 5 ranks each / Level cap 10",22,LEAF_GREEN)
+		center_text(383,"POPPY'S SKILLS" if selected_character==1 else "SCOUT'S SKILLS",30,JOURNAL_INK)
+		center_text(425,"9 unique skills / 3 ranks / 5 combinations",22,LEAF_GREEN)
+		var catalog=skill_catalog.data["Poppy" if selected_character==1 else "Scout"]
 		for i in range(9):
 			var y = 475+i*62
-			var region: Rect2 = STORY_ICONS[i]
-			var size = region.size * (43 / maxf(region.size.x,region.size.y))
-			draw_texture_rect_region(STORY_SKILLS,Rect2(Vector2(115,y)-size/2,size),region)
-			text_at(Vector2(157,y+7),UPGRADE_NAMES[i],23,JOURNAL_INK)
-			text_at(Vector2(505,y+7),"5 ranks",20,LEAF_GREEN)
-		center_text(1085,"Choose skills as you level up during a run.",21,LEAF_GREEN)
+			skill_catalog.draw_icon(self,selected_character,i,Rect2(90,y-24,50,50))
+			text_at(Vector2(157,y+7),catalog.skills[i][0],23,JOURNAL_INK)
+			text_at(Vector2(515,y+7),"3 ranks",20,LEAF_GREEN)
+		center_text(1085,"Pair rank-2 skills for a compatibility bonus.",21,LEAF_GREEN)
 	else:
 		draw_field_journal()
 	for tab in range(3):
@@ -2043,62 +1987,13 @@ func scout_walk_frame() -> int:
 	return posmod(5 - phase, 6) if scout_backpedaling() else phase
 
 func draw_walking_scout() -> void:
-	var scale_factor = player_display_height / 56.0
-	var heading = scout_leg_direction()
-	var row: int = [0, 1, 2, 1, 0, 3, 4, 3][heading]
-	var mirror_legs = heading in [3, 4, 5]
-	var leg_index = row * 6 + scout_walk_frame()
-	var leg_region = walk_regions[leg_index]
-	var row_height = 1.0
-	for phase in range(6):
-		row_height = maxf(row_height, walk_regions[row * 6 + phase].size.y)
-	var leg_size = leg_region.size * (23.0 * scale_factor / row_height)
-	set_scene_transform(player + Vector2(0, 12), 0, Vector2(1, 0.35))
-	draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.3))
-	set_scene_transform(player)
-	draw_texture_rect_region(WALK_LEGS, Rect2(Vector2(-(leg_region.size.x - WALK_HIPS[leg_index] if mirror_legs else WALK_HIPS[leg_index]) * (23.0 * scale_factor / row_height), 16 - 23 * scale_factor), Vector2(-leg_size.x if mirror_legs else leg_size.x, leg_size.y)), leg_region)
-	var direction = scout_upper_direction()
-	var frame = scout_frame(direction)
-	var source: int = [0, 1, 2, 1, 0, 7, 6, 7][frame]
-	var mirrored = frame in [3, 4, 5]
-	var pose = scout_pose()
-	var region: Rect2 = player_regions[pose][source]
-	var full_size = Vector2(player_display_height * region.size.x / region.size.y, player_display_height)
-	# Keep the jacket/waist over the moving hips; attack frames never replace legs.
-	var hip_fraction: float = {0: 0.42, 1: 0.46, 2: 0.50, 6: 0.50, 7: 0.42}[source]
-	var cutoff = 0.69
-	region.size.y *= cutoff
-	var torso_size = Vector2(full_size.x, player_display_height * cutoff)
-	var bob = sin(walk_distance / WALK_STRIDE * TAU * 2) * 0.55 * scale_factor
-	var recoil = -direction * attack_pose_timer * 3 * scale_factor
-	var x = -full_size.x * (1.0 - hip_fraction if mirrored else hip_fraction)
-	set_scene_transform(player + Vector2(0, -bob) + recoil)
-	draw_texture_rect_region(PLAYER_TEXTURES[pose], Rect2(Vector2(x, 16 - player_display_height), Vector2(-torso_size.x if mirrored else torso_size.x, torso_size.y)), region)
-	set_scene_transform(Vector2.ZERO)
+	character_art[0].player_art(self,player,false)
 
 func roll_frame() -> int:
 	return clampi(int((1.0 - roll_time / ROLL_DURATION) * 4), 0, 3)
 
 func draw_roll(origin: Vector2 = player, phase: int = -1, heading: Vector2 = roll_direction, tint: Color = Color.WHITE, shadow: bool = true) -> void:
-	if run_character==1:
-		poppy.player_art(self,origin,true,tint)
-		return
-	var direction = scout_frame(heading)
-	var column: int = [0, 1, 2, 1, 0, 3, 4, 3][direction]
-	var mirrored = direction in [3, 4, 5]
-	var region = roll_regions[(roll_frame() if phase < 0 else phase) * 5 + column]
-	# A shared scale per direction preserves the crouch/tumble compression.
-	var extent = 1.0
-	for frame_index in range(4):
-		var bounds = roll_regions[frame_index * 5 + column].size
-		extent = maxf(extent, maxf(bounds.x, bounds.y))
-	var size = region.size * (player_display_height * 0.95 / extent)
-	if shadow:
-		set_scene_transform(origin + Vector2(0, 12), 0, Vector2(1, 0.35))
-		draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.3))
-	set_scene_transform(origin)
-	draw_texture_rect_region(ROLL_TEXTURE, Rect2(Vector2(-size.x / 2, 16 - size.y), Vector2(-size.x if mirrored else size.x, size.y)), region, tint)
-	set_scene_transform(Vector2.ZERO)
+	character_art[run_character].player_art(self,origin,true,tint)
 
 func attack_ready_fraction() -> float:
 	if roll_time > 0:
@@ -2118,39 +2013,10 @@ func draw_attack_meter() -> void:
 	draw_line(bar.position, bar.position + Vector2(bar.size.x * attack_ready_fraction(), 0), Color("fff0a0"), 1)
 
 func draw_player() -> void:
-	if run_character==1:
-		if hurt_timer > 0 and not guard_absorbed_hit and not settings.values.reduced_flashes and int(hurt_timer * 16) % 2 == 0: return
-		poppy.player_art(self,player,roll_time>0)
-		poppy.draw_cue(self)
-		return
-	if roll_time > 0:
-		draw_roll()
-		return
-	if hurt_timer > 0 and not guard_absorbed_hit and not settings.values.reduced_flashes and int(hurt_timer * 16) % 2 == 0:
-		return
-	if player_moving:
-		draw_walking_scout()
-		return
-	var direction = scout_upper_direction()
-	var pose = scout_pose()
-	var frame = scout_frame(direction)
-	# Mirror the clearer northeast pose for a distinct northwest silhouette.
-	var mirrored = frame == 5
-	var region: Rect2 = player_regions[pose][7 if mirrored else frame]
-	var bob = absf(sin(walk_distance / 52.0 * TAU)) * 1.0 if player_moving else 0.0
-	var lean = facing.x * 0.035 if player_moving else 0.0
-	var recoil = -direction * attack_pose_timer * 5
-	var size = Vector2(player_display_height * region.size.x / region.size.y, player_display_height)
-	# Feet stay at the ground anchor; sprites never rotate with aim direction.
-	set_scene_transform(player + Vector2(0, 12), 0, Vector2(1, 0.35))
-	draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.3))
-	set_scene_transform(player + Vector2(0, -bob) + recoil, lean)
-	var destination = Rect2(Vector2(-size.x / 2, 16 - size.y), Vector2(-size.x if mirrored else size.x, size.y))
-	draw_texture_rect_region(PLAYER_TEXTURES[pose], destination, region)
-	set_scene_transform(Vector2.ZERO)
+	if hurt_timer>0 and not guard_absorbed_hit and not settings.values.reduced_flashes and int(hurt_timer*16)%2==0: return
+	character_art[run_character].player_art(self,player,roll_time>0)
+	if run_character==1: poppy.draw_cue(self)
 
-# Layered geometry keeps the barrier luminous in the Compatibility renderer.
-# The back shell sits behind the scout; only rim highlights cross the front.
 func draw_guard(front: bool) -> void:
 	if shield <= 0 and guard_break_time <= 0:
 		return
@@ -2195,37 +2061,11 @@ func update_upgrade_fx(dt: float) -> void:
 			if collection[i].life <= 0:
 				collection.remove_at(i)
 
-func record_movement_fx(dt: float, previous: Vector2) -> void:
-	var travel = player.distance_to(previous)
-	if roll_time > 0 and upgrade_ranks[4] > 0:
-		echo_clock -= dt
-		if echo_clock <= 0 and travel > 0.1:
-			echo_clock = 0.055 if upgrade_ranks[4] == 1 else 0.035
-			roll_echoes.append({"p": previous, "phase": roll_frame(), "dir": roll_direction, "rank": upgrade_ranks[4], "life": 0.18, "duration": 0.18})
-			if roll_echoes.size() > 6:
-				roll_echoes.pop_front()
-	else:
-		echo_clock = 0.0
-	if roll_time <= 0 and upgrade_ranks[5] > 0:
-		boot_distance += travel
-		if boot_distance >= 19:
-			boot_distance = fmod(boot_distance, 19)
-			add_upgrade_fx(player + Vector2(0, 12), "boots", upgrade_ranks[5], locomotion_direction, 0.3)
+func record_movement_fx(_dt: float, _previous: Vector2) -> void:
+	pass # Character animation and active skill zones communicate movement.
 
 func draw_movement_fx() -> void:
-	if settings.values.reduced_vfx or settings.values.low_graphics: return
-	for echo in roll_echoes:
-		var fade: float = echo.life / echo.duration
-		var tint = Color(0.3, 0.47, 0.7, fade * 0.25) if echo.rank == 1 else Color(0.45, 0.8, 0.95, fade * 0.3)
-		draw_roll(echo.p, echo.phase, echo.dir, tint, false)
-	if roll_time > 0 and upgrade_ranks[4] > 0:
-		set_scene_transform(player + Vector2(0, 5), roll_direction.angle(), Vector2(1, 0.6))
-		draw_arc(Vector2.ZERO, 23, -1.4, 1.4, 20, Color(0.55, 0.85, 1.0, 0.22 + upgrade_ranks[4] * 0.09), 3, true)
-		set_scene_transform(Vector2.ZERO)
-	for g in gems:
-		if upgrade_ranks[3] > 0 and g.distance_to(player) < magnet and g.distance_to(player) > 22:
-			var direction = (player - g).normalized()
-			draw_line(g - direction * (5 + upgrade_ranks[3] * 4), g, Color(0.73, 0.91, 0.4, 0.35), 1.5, true)
+	pass
 
 func seed_color(ranks: Array) -> Color:
 	# Damage color takes priority even when piercing/scatter are also equipped.
@@ -2240,6 +2080,7 @@ func draw_seed_projectile(b: Dictionary) -> void:
 		poppy.projectile_art(self,b)
 		return
 	var ranks: Array = b.get("visual", [0,0,0,0,0,0,0,0,0])
+	if ranks.is_empty(): ranks=[0,0,0,0,0,0,0,0,0]
 	var color = seed_color(ranks)
 	var direction: Vector2 = b.v.normalized()
 	var tail: float = 7 + ranks[0] * 3 + ranks[7] * 5
@@ -2569,7 +2410,7 @@ func test_new_encounters() -> void:
 	bonus_drops.append({"p": player, "kind": 2})
 	update_bonus_drops()
 	assert(shield == 1 and bonus_drops.is_empty())
-	shield = 2
+	shield = guard_capacity()
 	bonus_drops.append({"p": player, "kind": 2})
 	update_bonus_drops()
 	assert(bonus_drops.size() == 1, "Do not waste dew at full protection")
@@ -2699,7 +2540,9 @@ func smoke_test() -> void:
 	test_new_encounters()
 	test_journal_controls()
 	test_storybook_controls()
-	assert(walk_regions.size() == 30)
+	for rig in character_art:
+		assert(rig.regions.size()==4 and rig.legs.size()==4)
+		for region in rig.regions: assert(region.has_area())
 	for direction_index in range(8):
 		facing = Vector2.from_angle(direction_index * PI / 4)
 		locomotion_direction = facing
@@ -2710,13 +2553,9 @@ func smoke_test() -> void:
 				attack_phase = phase
 				assert(scout_walk_frame() == step)
 				assert(scout_leg_direction() == direction_index)
-	assert(roll_regions.size() == 20)
 	for phase in range(4):
 		roll_time = ROLL_DURATION * (1.0 - (phase + 0.1) / 4.0)
 		assert(roll_frame() == phase)
-	assert(player_regions.size() == 4)
-	for regions in player_regions:
-		assert(regions.size() == 8)
 	for i in range(8):
 		assert(scout_frame(Vector2.from_angle(i * PI / 4)) == i)
 	rng.seed = 42
@@ -2742,7 +2581,7 @@ func smoke_test() -> void:
 		upgrades = [choice]
 		pending_levels = 1
 		choose_upgrade(0)
-	assert(shots == 2 and damage == 3 and magnet == 130 and speed == 245)
+	assert(shots == 1 and damage == 3 and magnet == 90 and speed == 230,"Behavior skills must not retain old hidden stat bonuses")
 	assert(constrain_actor(obstacles[0], 17).distance_to(obstacles[0]) >= 54.9)
 	start_run()
 	spawn_enemy()
@@ -2981,9 +2820,7 @@ func test_enemy_behaviors() -> void:
 func test_scout_progression() -> void:
 	start_run()
 	show_upgrades()
-	assert(UPGRADE_FAMILIES[upgrades[0]] == "SHARPSHOOTER")
-	assert(UPGRADE_FAMILIES[upgrades[1]] == "CROWD CONTROL")
-	assert(UPGRADE_FAMILIES[upgrades[2]] == "TRAIL SURVIVOR")
+	assert(upgrades.size()==3 and upgrades[0] in [0,1,4])
 	# A pierced seed hits each bug once, including several in one frame.
 	start_run()
 	for x in [680, 730, 780]:
@@ -3021,12 +2858,12 @@ func test_scout_progression() -> void:
 		upgrades = [kind]
 		pending_levels = 1
 		choose_upgrade(0)
-	assert(is_equal_approx(roll_cooldown(), 2.0) and shield == 4 and speed == 260)
+	assert(is_equal_approx(roll_cooldown(), 2.5) and shield == 1 and speed == 230)
 	shield = 0
 	waves.begin(self,2)
 	spawn_timer = 99
 	simulate(0.02, Vector2.ZERO)
-	assert(shield == 1, "Ranked guard restores one charge at a wave boundary")
+	assert(shield == 0, "A wave boundary cannot bypass Bark Guard recharge")
 	var origin = player
 	facing = Vector2.RIGHT
 	start_roll()
@@ -3092,14 +2929,14 @@ func bot_direction() -> Vector2:
 	return move.normalized()
 
 func bot_upgrade() -> void:
-	var priorities = [[2, 7, 0, 5, 4, 6, 3, 8, 1], [1, 8, 0, 2, 5, 7, 6, 4, 3], [5, 4, 6, 2, 0, 3, 7, 8, 1], [6,4,5,3,2,0,7,8,1]]
-	var priority: Array = priorities[test_build]
-	# Survivor remains a mixed build: invest every third choice in its weapon.
-	var chosen = 0
-	for rank in upgrade_ranks:
-		chosen += rank
-	if test_build == 2 and chosen % 3 == 0:
-		priority = [2, 7, 0, 5, 4, 6, 3, 8, 1]
+	var scout = [[0,3,5,7,6,4,8,2,1],[1,4,2,8,6,5,0,3,7],[6,7,5,2,8,0,3,4,1],[2,8,5,4,1,6,0,3,7]]
+	var poppy_builds = [[0,3,8,4,6,1,7,5,2],[1,4,5,2,0,3,6,7,8],[6,7,1,4,0,3,5,2,8],[2,5,8,3,4,1,0,6,7]]
+	var priority: Array = (poppy_builds if run_character==1 else scout)[test_build]
+	# Establish a compatible pair at rank two before specializing its final rank.
+	for kind in priority.slice(0,2):
+		if upgrade_ranks[kind]<2 and upgrades.has(kind):
+			choose_upgrade(upgrades.find(kind))
+			return
 	for kind in priority:
 		if upgrades.has(kind):
 			choose_upgrade(upgrades.find(kind))
@@ -3336,7 +3173,7 @@ func test_mouse_drag() -> void:
 func test_five_star_progression() -> void:
 	for kind in range(9):
 		start_run()
-		for rank in range(5):
+		for rank in range(3):
 			upgrades.assign([kind])
 			pending_levels = 1
 			state = "upgrade"
@@ -3347,11 +3184,12 @@ func test_five_star_progression() -> void:
 		show_upgrades()
 		assert(not upgrades.has(kind), "Five-star skills must leave the offer pool")
 	start_run()
-	upgrade_ranks[1] = 5
+	upgrade_ranks[4] = 3
+	run_skills.volleys = 5
 	shots = 6
 	enemies.append(make_enemy(player + Vector2(100,0),2))
 	shoot()
-	assert(bullets.size() == 6 and is_equal_approx(bullets[0].power, damage * 0.5))
+	assert(bullets.size() == 5 and is_equal_approx(bullets[0].power, damage * 0.75))
 	attack_phase = "recover"
 	fire_timer = fire_rate - minf(0.11, fire_rate * 0.35)
 	assert(is_zero_approx(attack_ready_fraction()))
@@ -3363,7 +3201,7 @@ func test_five_star_progression() -> void:
 	roll_time = 0.2
 	assert(is_zero_approx(attack_ready_fraction()))
 	start_run()
-	print("FIVE STAR CHECKS PASSED: all 45 skill ranks, cap exclusion, scatter and attack meter")
+	print("SKILL RANK CHECKS PASSED: all 27 character skill ranks, cap exclusion, scatter and attack meter")
 
 
 func test_home_navigation() -> void:
@@ -3516,7 +3354,7 @@ func scout_max_hp() -> int:
 	return 8 + run_growth[1] + run_growth[16]*2
 
 func scout_fire_rate() -> float:
-	return (0.70 if run_character==1 else 0.36) / (1.0 + run_growth[5]*0.02 + run_growth[21]*0.06)
+	return (0.64 if run_character==1 else 0.36) / (1.0 + run_growth[5]*0.02 + run_growth[21]*0.06)
 
 func growth_max_scroll(track: int = -1) -> float:
 	var acorns = merit_track if track<0 else track==1
@@ -3788,9 +3626,8 @@ func draw_campsite_header() -> void:
 	var source = Rect2(20,200,1956,336)
 	var target = Rect2(18,38,684,source.size.y*684.0/source.size.x)
 	draw_texture_rect_region(CAMP_HEADER,target,source)
-	if selected_character==1:
-		draw_garden_button(ScoutProfile.PORTRAIT.grow(4),"",false,12)
-		poppy.portrait(self,ScoutProfile.PORTRAIT.grow(-3))
+	draw_garden_button(ScoutProfile.PORTRAIT.grow(4),"",false,12)
+	character_art[selected_character].portrait(self,ScoutProfile.PORTRAIT.grow(-3))
 	var name_size = 31
 	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>230:
 		name_size -= 1
@@ -3830,6 +3667,8 @@ func bar_style(color: Color) -> StyleBoxFlat:
 	return style
 
 func walk_enemy(e: Dictionary, direction: Vector2, pace: float, dt: float) -> void:
+	direction = run_skills.lure_direction(self,e,direction)
+	if float(e.get("slow_until",0))>elapsed: pace *= float(e.get("slow_factor",0.55))
 	var desired = steering(e,direction)
 	var previous: Vector2 = e.get("walk_velocity",desired*pace)
 	# Turn and accelerate smoothly; special rush/windup/recovery paths stay exact.

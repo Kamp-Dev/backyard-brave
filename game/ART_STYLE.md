@@ -1,0 +1,9 @@
+# Character art and animation rule
+
+All new or revised playable characters must match `assets/player/poppy.png`: soft painted storybook shading, delicate warm brown outlines, matte fabric, warm garden colors, friendly proportions and a readable silhouette at the game's 56-unit character height. `assets/player/scout-storybook.png` is the matching Scout reference. Do not mix pixel art, heavy black cartoon contours, glossy 3D rendering or different head/body proportions into this cast.
+
+Use `character_art.gd` for ready, attack, walk and roll rendering. Walking follows actual distance traveled, alternating the two legs without resetting on fire. Stop when blocked. Keep a fixed body scale, hip anchor and ground baseline; attack swaps only the torso. Use the same stride, foot lift, body bob and roll timing across characters, with per-atlas coordinates only. A new animation system requires migrating and validating the whole playable cast together.
+
+Atlases are RGBA PNG, soft alpha, currently 1280x1280 with four 640x640 cells: front ready, front release, rear ready, rear release. Keep standing legs identical between ready and release. Configure source anchors rather than stretching per-frame trims. Maintain uniform apparent height, enable mipmaps and use smooth filtering. Art generation must use Poppy as the style reference and an existing character reference for identity. Keep generated sources in project assets and record prompts/provenance in MODLOG.md.
+
+Before publishing, inspect both characters side by side at gameplay scale, including idle, walk, firing while walking, retreat and roll. Check no seams, foot sliding from attack changes, scale jumps, halos or visible cell edges. Gameplay skills and existing saves must not be affected by art replacement. Skill icons and effects should use the same warm garden palette and remain subordinate to enemy attack warnings.

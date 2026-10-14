@@ -1,0 +1,204 @@
+{
+  "Poppy": {
+    "title": "Poppy\u2019s seed basket",
+    "identity": "Shape the garden, guide returning throws, and time a roll-catch.",
+    "skills": [
+      [
+        "Seed Turn",
+        "RETURN",
+        "Every fourth boomerang plants a seed where it turns. Seeds pulse at nearby bugs for 5 seconds.",
+        "A returning disc touching a seed triggers one extra pulse.",
+        "A triggered seed fires a small petal fan. Maximum 3 seeds."
+      ],
+      [
+        "Pollen Stamp",
+        "MARK",
+        "Outgoing hits mark bugs for 3 seconds. The return pops each mark once for a small burst.",
+        "Marks spread to one nearby bug when popped.",
+        "Popped marks briefly reveal a weak spot to your next throw."
+      ],
+      [
+        "Mothball Pouch",
+        "CONTROL",
+        "Drop a cluster every 30 seconds. Its scent slows nearby bugs for 6 seconds. First drop in 3 seconds.",
+        "The initial puff briefly pushes ordinary bugs outward.",
+        "The cluster leaves two smaller scent patches. Bosses resist displacement."
+      ],
+      [
+        "Dew Step",
+        "GARDEN",
+        "Rolling leaves a small puddle that slows bugs. Puddles last 6 seconds; 8-second planting cooldown.",
+        "Puddles lengthen the life of seeds they overlap, once per seed.",
+        "Leaving a puddle sends a small ripple toward the nearest enemy."
+      ],
+      [
+        "Bee Companion",
+        "COMPANION",
+        "One bee visits enemies struck by your boomerang, stinging every 2 seconds.",
+        "The bee prioritizes marked targets and returns to you between visits.",
+        "After three visits, the bee makes one piercing trip through its targets."
+      ],
+      [
+        "Pocket Fan",
+        "RETURN",
+        "Every third return pushes small bugs sideways, opening a narrow walking lane.",
+        "The gust also slows enemies that cannot be pushed.",
+        "The gust splits into two short side arcs. No permanent boss stunlock."
+      ],
+      [
+        "Catch Guard",
+        "CATCH",
+        "A successful roll-catch grants one temporary guard for 3 seconds. Cannot stack.",
+        "When that guard blocks a hit, it releases a short petal counter.",
+        "A blocked hit also readies one Seed Turn trigger; 6-second cooldown."
+      ],
+      [
+        "Petal Wake",
+        "ROLL",
+        "Rolling scatters three petals behind you. They damage bugs that cross your path.",
+        "A returning boomerang gathers those petals into its next pass.",
+        "Gathered petals fan outward on the next roll-catch."
+      ],
+      [
+        "Thirsty Roots",
+        "GARDEN",
+        "Every 12 seconds, a short root line grows toward a nearby enemy, briefly slowing it.",
+        "Roots persist briefly and pulse once when crossed by your boomerang.",
+        "Roots fork once on contact. Maximum two root lines."
+      ]
+    ],
+    "combos": [
+      [
+        0,
+        3,
+        "Bloom Patch",
+        "A seed in a puddle blooms into a small petal turret for 4 seconds. Maximum two blooms; one bloom per seed."
+      ],
+      [
+        1,
+        4,
+        "Pollinator Loop",
+        "Your bee links up to three marked enemies with one sweeping pass. One link per visit cycle."
+      ],
+      [
+        2,
+        5,
+        "Scent Sweep",
+        "A return gust crossing a mothball cluster carries its scent forward into a short slowing lane."
+      ],
+      [
+        6,
+        7,
+        "Petal Parry",
+        "A roll-catch gathers your nearby petals into a temporary shield, then releases them on your next throw."
+      ],
+      [
+        3,
+        8,
+        "Root Garden",
+        "Roots crossing a puddle spread into a short curved barrier of slowing roots. It never blocks movement."
+      ]
+    ]
+  },
+  "Scout": {
+    "title": "Scout\u2019s field kit",
+    "identity": "Build firing lanes, lure bugs into traps, and turn dodges into precise shots.",
+    "skills": [
+      [
+        "Bank Shot",
+        "SHOT",
+        "Seeds bounce once to a nearby target.",
+        "A bounce through a marked target gets one extra ricochet.",
+        "Final ricochet splits into two weaker seeds."
+      ],
+      [
+        "Acorn Decoy",
+        "TRAP",
+        "Every 18 seconds, leave a decoy that draws nearby ordinary bugs for 3 seconds.",
+        "The decoy bursts when surrounded.",
+        "The burst scatters four splinters. Bosses target you, not the decoy."
+      ],
+      [
+        "Snapline",
+        "TRAP",
+        "Rolling places two stakes with a short trip line between them.",
+        "The first enemy crossing triggers a snare pulse.",
+        "Two crossings may trigger before the line breaks."
+      ],
+      [
+        "Trail Mark",
+        "AIM",
+        "Every fourth volley marks its first target for a follow-up strike.",
+        "Marked targets pass the mark to one nearby bug when defeated.",
+        "A follow-up strike against a boss also creates a brief side opening."
+      ],
+      [
+        "Scatter Satchel",
+        "SHOT",
+        "Every sixth volley scatters a short fan of seeds.",
+        "Fan hits arm nearby traps for an early trigger.",
+        "The final fan seed pierces once."
+      ],
+      [
+        "Quickdraw Roll",
+        "ROLL",
+        "Your first volley after rolling fires a focused piercing shot.",
+        "The shot punches through one additional target.",
+        "A precise hit after narrowly dodging also fires a trailing seed."
+      ],
+      [
+        "Bark Guard",
+        "DEFENSE",
+        "A ready guard blocks one hit, then recharges after 20 seconds without damage.",
+        "Blocking emits a small outward shove.",
+        "The shove creates two short-lived bark shards that intercept bullets."
+      ],
+      [
+        "Counterseed",
+        "COUNTER",
+        "A near-miss during a roll readies a retaliatory seed.",
+        "That seed pins an ordinary bug briefly.",
+        "The pinned target releases a small seed burst when defeated."
+      ],
+      [
+        "Forager Route",
+        "PICKUP",
+        "Collecting eight seeds by hand charges a short seed ring.",
+        "The ring arms traps it crosses.",
+        "The ring carries one ricochet seed toward a nearby target."
+      ]
+    ],
+    "combos": [
+      [
+        0,
+        3,
+        "Marked Ricochet",
+        "A bounced seed hitting a marked target returns a weaker seed toward another marked target. One extra return only."
+      ],
+      [
+        1,
+        4,
+        "Acorn Ambush",
+        "A scatter fan hitting your decoy makes it burst early into a wider seed fan."
+      ],
+      [
+        2,
+        5,
+        "Tripwire Volley",
+        "A quickdraw shot crossing your line travels along it as a piercing sweep."
+      ],
+      [
+        6,
+        7,
+        "Bark Reprisal",
+        "Blocking with Bark Guard immediately fires your readied Counterseed."
+      ],
+      [
+        2,
+        8,
+        "Trail Network",
+        "A Forager ring crossing a trip line refreshes one trigger, once per line."
+      ]
+    ]
+  }
+}

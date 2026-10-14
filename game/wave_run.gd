@@ -41,7 +41,6 @@ func begin(host, number: int) -> void:
 	remaining = 1 if number<10 else 0 # Compatibility flag: reinforcements are active.
 	host.spawn_timer = 0
 	if number>1:
-		if host.upgrade_ranks[6]>0: host.shield = mini(host.guard_capacity(),host.shield+1)
 		if host.run_growth[13]>0 and number%3==0: host.shield = mini(host.guard_capacity(),host.shield+1)
 	host.banner = "WAVE %d / 10" % number + (" / LAST STAND" if number==9 else " / SWARM SURGE" if number==7 else "")
 	host.banner_timer = 1.6

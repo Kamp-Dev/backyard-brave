@@ -9,6 +9,7 @@ func run_checks() -> void:
 	root.add_child(g)
 	g.growth=g.ScoutGrowth.new()
 	g.unlocked_stage=30
+	g.selected_character=1 if "--poppy" in OS.get_cmdline_user_args() else 0
 	g.start_run()
 	g.damage=0
 	g.hp=10000
@@ -55,18 +56,16 @@ func run_checks() -> void:
 		g.pending_levels=1
 		g.level=2
 		g.show_upgrades()
-		assert(g.upgrades.size()==3 and g.upgrades[0] in [0,2])
-		assert(g.UPGRADE_FAMILIES[g.upgrades[1]]=="CROWD CONTROL")
-		assert(g.UPGRADE_FAMILIES[g.upgrades[2]]=="TRAIL SURVIVOR")
+		assert(g.upgrades.size()==3 and g.upgrades[0] in [0,1,4])
 		g.waves.final_prep=true
 		g.show_upgrades()
 		assert(g.upgrades.size()==3)
-		for kind in g.upgrades: assert(kind!=3)
+		for kind in g.upgrades: assert(g.run_character==1 or kind!=8)
 		assert(g.upgrades[0]!=g.upgrades[1] and g.upgrades[1]!=g.upgrades[2] and g.upgrades[0]!=g.upgrades[2])
 		g.waves.final_prep=false
 	g.start_run()
 	g.upgrade_ranks.assign(g.UPGRADE_CAPS)
-	g.upgrade_ranks[2]=4
+	g.upgrade_ranks[2]=2
 	g.waves.final_prep=true
 	g.show_upgrades()
 	assert(g.upgrades==[2])
@@ -136,9 +135,10 @@ func run_checks() -> void:
 	assert(guardian.mode=="windup" and guardian.charges==1 and guardian.timer>=0.8, "Second charge gets a fresh, full warning")
 	print("CHAPTER CHECKS PASSED: five-minute pressure, required minibosses, two minibosses, solid arena, warning, victory delay, skill fairness and clear records")
 	var results=[]
-	for stage in range(1,6):
+	for stage in ([1,5] if "--probe" in OS.get_cmdline_user_args() else range(1,6)):
 		for build in range(4):
-			for seed_value in [17,42,93]:
+			if "--targeted" in OS.get_cmdline_user_args() and not ((stage in [2,4] and build==1) or (stage==5 and build==0)): continue
+			for seed_value in ([42] if "--probe" in OS.get_cmdline_user_args() else [17,42,93]):
 				g.selected_stage=stage
 				g.test_build=build
 				g.start_run()
@@ -147,6 +147,8 @@ func run_checks() -> void:
 				var choices=[]
 				var last_wave=1
 				var peak=0
+				var projectile_peak=0
+				var zone_peak=0
 				for frame in range(27000):
 					while g.state=="upgrade":
 						choices.append({"wave":g.wave,"time":snappedf(g.elapsed,0.1)})
@@ -154,26 +156,29 @@ func run_checks() -> void:
 					if g.state!="playing": break
 					g.simulate(1.0/30,g.bot_direction())
 					peak=maxi(peak,g.enemies.size())
+					projectile_peak=maxi(projectile_peak,g.bullets.size())
+					zone_peak=maxi(zone_peak,g.run_skills.zones.size())
 					if g.arena_active: assert(g.player.distance_to(g.arena_center)<=g.BOSS_ARENA_RADIUS-17+0.02)
 					if g.wave!=last_wave:
 						splits.append(snappedf(g.elapsed,0.1))
 						last_wave=g.wave
-				var record={"stage":stage,"build":build,"seed":seed_value,"result":g.state,"seconds":snappedf(g.elapsed,0.1),"wave":g.wave,"hp":g.hp,"hits":g.damage_taken,"level":g.level,"choices":choices,"splits":splits,"peak":peak,"ranks":g.upgrade_ranks.duplicate()}
+				var record={"character":g.run_character,"stage":stage,"build":build,"seed":seed_value,"result":g.state,"seconds":snappedf(g.elapsed,0.1),"wave":g.wave,"hp":g.hp,"hits":g.damage_taken,"level":g.level,"catches":g.poppy.catches,"choices":choices,"splits":splits,"peak":peak,"projectile_peak":projectile_peak,"zone_peak":zone_peak,"ranks":g.upgrade_ranks.duplicate()}
 				results.append(record)
 				print("CHAPTER BALANCE ",JSON.stringify(record))
 	for record in results:
 		assert(record.result in ["won","dead"] and record.seconds<720, "Every run must end without stalled encounters")
-		assert(record.peak<=70)
+		assert(record.peak<=70 and record.projectile_peak<=80 and record.zone_peak<=20)
 		if record.result=="won":
 			assert(record.seconds>=303 and record.wave==10, "No early timer or skipped guardian victory")
 			assert(record.choices.size()==record.level+2 and record.level>=8 and record.level<=10, "Choices match earned levels plus both minibosses and final prep")
 	# Sustained survival can punish a build/seed. Require every archetype to
 	# succeed on at least two of three seeds, rather than guaranteeing victory.
-	for stage in range(1,6):
+	for stage in ([1,5] if "--probe" in OS.get_cmdline_user_args() else range(1,6)):
 		for build in range(4):
+			if "--targeted" in OS.get_cmdline_user_args() and not ((stage in [2,4] and build==1) or (stage==5 and build==0)): continue
 			var wins=0
 			for record in results:
 				if record.stage==stage and record.build==build and record.result=="won": wins+=1
-			assert(wins>=2, "Every build must remain viable in every chapter stage")
-	print("CHAPTER BALANCE PASSED: 60 complete simulations, five stages, four viable builds, three seeds")
+			if not "--probe" in OS.get_cmdline_user_args(): assert(wins>=2, "Every build must remain viable in every chapter stage")
+	print(("CHAPTER PROBE FINISHED" if "--probe" in OS.get_cmdline_user_args() else "CHAPTER BALANCE PASSED")+": %d complete simulations / character %d" % [results.size(),g.selected_character])
 	quit()

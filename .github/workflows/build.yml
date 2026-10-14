@@ -12,8 +12,39 @@ concurrency:
   group: backyard-test-build
   cancel-in-progress: true
 jobs:
-  build:
+  balance:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        character: [scout, poppy]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          curl -fL --retry 3 https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          echo "/tmp/godot" >> "$GITHUB_PATH"
+      - name: Validate complete character runs
+        env:
+          CHARACTER: ${{ matrix.character }}
+        run: |
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path game --editor --import --quit
+          args=()
+          if [ "$CHARACTER" = poppy ]; then args+=(--poppy); fi
+          timeout 1800 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/chapter_checks.gd -- "${args[@]}" 2>&1 | tee /tmp/chapter.log
+          grep -q 'CHAPTER BALANCE PASSED' /tmp/chapter.log
+          ! grep -q 'SCRIPT ERROR' /tmp/chapter.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: balance-${{ matrix.character }}
+          path: /tmp/chapter.log
+  build:
+    needs: balance
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -46,9 +77,6 @@ jobs:
           timeout 120 Godot_v4.7.2-stable_linux.x86_64 --headless --path game -- --smoke-test 2>&1 | tee /tmp/smoke.log
           grep -q 'SMOKE TEST PASSED' /tmp/smoke.log
           ! grep -q 'SCRIPT ERROR' /tmp/smoke.log
-          timeout 900 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/chapter_checks.gd 2>&1 | tee /tmp/chapter.log
-          grep -q 'CHAPTER BALANCE PASSED' /tmp/chapter.log
-          ! grep -q 'SCRIPT ERROR' /tmp/chapter.log
           timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/boss_pressure_checks.gd 2>&1 | tee /tmp/boss-pressure.log
           grep -q 'BOSS PRESSURE PASSED' /tmp/boss-pressure.log
           ! grep -q 'SCRIPT ERROR' /tmp/boss-pressure.log

@@ -42,10 +42,6 @@ func run() -> void:
 	g.update_locomotion(Vector2.ZERO)
 	assert(g.poppy.gait(g)==Vector2.ZERO,"Blocked or idle movement plants both feet")
 	fresh(g)
-	for kind in range(9):
-		var lines=g.story_description(kind)
-		assert(g.ui_font(23).get_string_size(lines[0],HORIZONTAL_ALIGNMENT_LEFT,-1,23).x<=394)
-		assert(g.ui_font(24).get_string_size(lines[1],HORIZONTAL_ALIGNMENT_LEFT,-1,24).x<=394)
 	var e=target(g)
 	g.shoot(Vector2.RIGHT)
 	var power=g.bullets[0].power
@@ -66,34 +62,6 @@ func run() -> void:
 	assert(g.poppy.empowered and g.poppy.catches==1)
 	g.shoot(Vector2.RIGHT)
 	assert(not g.poppy.empowered and g.bullets[-1].empowered and is_equal_approx(g.bullets[-1].power,power*1.5))
-	fresh(g)
-	target(g)
-	g.upgrade_ranks[0]=2
-	g.upgrade_ranks[1]=3
-	g.shots=4
-	g.shoot(Vector2.RIGHT)
-	assert(g.bullets.size()==4)
-	var catchable=0
-	for disc in g.bullets:
-		if disc.catchable: catchable+=1
-		assert(disc.turn_time==0.32)
-	assert(catchable==1,"Only the central main throw grants a catch bonus")
-	g.run_skills.advance(g,0.13)
-	assert(g.bullets.size()==8)
-	for i in range(4,8): assert(not g.bullets[i].catchable and g.bullets[i].boomerang)
-	fresh(g)
-	e=target(g)
-	g.upgrade_ranks[7]=1
-	g.upgrade_ranks[8]=1
-	g.run_skills.volleys=2
-	g.shoot(Vector2.RIGHT)
-	for i in range(90): g.update_player_bullets(1.0/60)
-	assert(e.needle_stacks==2 and g.run_skills.pulses.size()==1,"Both passes build needle marks; thump detonates only once")
-	fresh(g)
-	target(g)
-	g.upgrade_ranks[2]=1
-	for i in range(4): g.shoot(Vector2.RIGHT)
-	assert(g.bullets[3].charged and g.bullets[3].power>g.bullets[2].power*2)
 	# Faster frame rates must not change damage per pass or lose a normal catch.
 	for hz in [30,60,120]:
 		fresh(g)
@@ -105,7 +73,7 @@ func run() -> void:
 	e=target(g)
 	g.obstacles.append(g.player+Vector2(70,0))
 	g.shoot(Vector2.RIGHT)
-	g.update_player_bullets(0.5)
+	for i in range(30): g.update_player_bullets(1.0/60)
 	assert(e.hp==1000 and g.bullets.is_empty(),"Boomerangs cannot damage enemies through rocks")
 	fresh(g)
 	g.poppy.empowered=true
@@ -135,5 +103,5 @@ func run() -> void:
 	g.start_run()
 	g.shoot(Vector2.RIGHT)
 	assert(not g.bullets[0].get("boomerang",false) and g.fire_rate<0.4,"Original scout weapon is unchanged")
-	print("POPPY CHECKS PASSED: two passes, moving return, roll catch, nonstacking charge, scatter/echo safety, rocks, reset and touch/controller selection")
+	print("POPPY CHECKS PASSED: two passes, moving return, roll catch, nonstacking charge, travel-driven gait, rocks, reset and touch/controller selection")
 	quit()
