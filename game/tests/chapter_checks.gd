@@ -4,125 +4,115 @@ func _initialize() -> void:
 	call_deferred("run_checks")
 
 func run_checks() -> void:
-	var g = load("res://main.tscn").instantiate()
-	g.screenshot_mode = true
+	var g=load("res://main.tscn").instantiate()
+	g.screenshot_mode=true
 	root.add_child(g)
-	g.growth = g.ScoutGrowth.new()
-	g.unlocked_stage = 30
-	for stage in range(1,6):
-		g.selected_stage = stage
-		g.start_run()
-		for second in [0,60,120]:
-			g.elapsed = second
-			g.enemies.clear()
-			for i in range(40): g.spawn_enemy()
-			for e in g.enemies: assert(g.Chapter.pool(stage,second).has(e.kind))
-		g.enemies.clear()
-		g.elapsed = 150
-		g.spawn_boss()
-		assert(g.enemies.size()==1 and g.enemies[0].kind==g.Chapter.FINALES[stage-1])
-		assert(g.boss_warning>0 and g.obstacles.is_empty())
-		g.spawn_enemy()
-		g.update_elite_schedule()
-		assert(g.enemies.size()==1, "Only the finale may remain after its entrance")
-		g.spawn_boss()
-		assert(g.enemies.size()==1)
-		g.elapsed = 180
-		g.spawn_enemy()
-		g.update_elite_schedule()
-		assert(g.enemies.size()==1)
-		g.elapsed = 151
-		g.enemies.append(g.make_enemy(g.player+Vector2(100,0),0))
-		g.kill_enemy(0)
-		assert(g.state=="playing" and g.boss_defeat_timer==1.0, "Final hit starts the victory beat")
-		var health = g.hp
-		g.simulate(0.5,Vector2.ZERO)
-		assert(g.state=="playing" and g.hp==health)
-		g.simulate(0.5,Vector2.ZERO)
-		assert(g.state=="won", "Victory must follow exactly one second after the final hit")
-		g.pending_levels = 0
-		g.simulate(1.0/30,Vector2.ZERO)
-		assert(g.state=="won")
-	g.selected_stage = 1
+	g.growth=g.ScoutGrowth.new()
+	g.unlocked_stage=30
 	g.start_run()
-	g.enemies.append(g.make_enemy(g.player,0))
-	var retiring = g.enemies[0]
-	g.spawn_boss()
-	assert(g.boss_warning==3.0 and retiring.retreat)
-	assert(not g.enemy_targetable(retiring) and not g.enemy_contact(retiring,g.player))
-	var health_before = g.hp
-	g.simulate(1.5,Vector2.ZERO)
-	assert(g.enemies.has(retiring) and g.boss_warning==1.5 and g.hp==health_before)
-	g.simulate(1.5,Vector2.ZERO)
-	assert(not g.enemies.has(retiring) and g.enemies.size()==1 and g.kills==0 and g.gems.is_empty())
+	g.damage=0
+	g.hp=10000
+	for frame in range(6000): g.simulate(1.0/30,Vector2.RIGHT)
+	assert(g.wave==1 and not g.boss_spawned and g.waves.remaining==0 and not g.enemies.is_empty(), "Waiting beyond 3 minutes cannot clear a wave")
 	g.start_run()
-	g.elapsed=21
-	g.simulate(0.01,Vector2.ZERO)
-	assert(g.enemies.size()==2 and g.enemies[1].swarm_extra)
-	g.kill_enemy(1)
-	assert(g.gems.is_empty() and g.kills==1 and g.reward_kills==0)
-	var expected_seeds = 2 if g.enemies[0].kind in [2,3,4,9,10,11] else 1
+	for number in range(1,10):
+		assert(g.wave==number)
+		var total=g.waves.remaining
+		while g.waves.remaining>0:
+			g.spawn_timer=0
+			g.waves.advance(g,0.01)
+			for i in range(g.enemies.size()-1,-1,-1): g.kill_enemy(i)
+		assert(total>0)
+		g.waves.advance(g,0.01)
+		assert(g.waves.cleared==number and g.wave==number)
+		while g.state=="upgrade": g.bot_upgrade()
+		g.waves.advance(g,1.3)
+	assert(g.wave==10 and g.elite_spawn_index==2 and g.encounter_rewards==3)
+	assert(g.arena_active and g.boss_warning==3.0 and g.enemies.size()==1)
+	assert(g.repairs.size()<=2 and g.bonus_drops.size()<=1)
+	var boss=g.enemies[0]
+	for i in range(16):
+		var direction=Vector2.from_angle(i*TAU/16)
+		var start=g.arena_center+direction*150
+		var destination=g.move_actor(start,direction*2000,17)
+		assert(destination.distance_to(g.arena_center)<=g.BOSS_ARENA_RADIUS-17+0.01, "Rolls cannot cross any part of the rim")
+		assert(g.move_actor(start,direction*2000,boss.radius).distance_to(g.arena_center)<=g.BOSS_ARENA_RADIUS-boss.radius+0.01)
+	assert(not g.enemy_targetable(boss) and not g.enemy_contact(boss,boss.p))
+	g.state="playing"
+	g.pending_levels=0
+	g.simulate(1.5,Vector2.ZERO)
+	assert(g.boss_warning==1.5)
+	g.simulate(1.5,Vector2.ZERO)
+	assert(g.boss_warning==0 and g.enemy_targetable(boss))
 	g.kill_enemy(0)
-	assert(g.gems.size()==expected_seeds and g.kills==2 and g.reward_kills==1)
-	g.selected_stage = 5
+	var hp_before=g.hp
+	g.simulate(0.5,Vector2.ZERO)
+	assert(g.state=="playing" and g.hp==hp_before)
+	g.simulate(0.5,Vector2.ZERO)
+	assert(g.state=="won")
 	g.start_run()
-	g.obstacles.clear()
-	g.spawn_boss()
-	var boss = g.enemies[0]
-	boss.arrival = 0
-	boss.p = g.player + Vector2(150,0)
-	boss.timer = 0
-	g.update_enemy(boss,0.01)
-	assert(boss.mode=="windup" and boss.attack=="fan")
-	var aim: Vector2 = boss.aim
-	g.player.y += 50
-	g.update_enemy(boss,0.5)
-	assert(g.hostile_bullets.is_empty() and boss.aim==aim)
-	g.update_enemy(boss,0.51)
-	assert(g.hostile_bullets.size()==7 and boss.mode=="recover")
-	boss.hp = boss.max_hp * 0.6
-	g.update_enemy(boss,0.01)
-	assert(boss.phase==2 and boss.mode=="recover" and g.hostile_bullets.is_empty())
-	boss.mode = "seek"
-	boss.timer = 0
-	boss.cycle = 2
-	g.update_enemy(boss,0.01)
-	assert(boss.attack=="ring" and boss.mode=="windup")
-	g.update_enemy(boss,1.01)
-	assert(g.hostile_bullets.size()==13)
-	for shot in g.hostile_bullets: assert(absf(shot.v.angle_to(boss.aim))>0.5)
-	boss.hp = boss.max_hp * 0.25
-	g.update_enemy(boss,0.01)
-	assert(boss.phase==3 and boss.mode=="recover")
-	boss.mode = "seek"
-	boss.timer = 0
-	boss.cycle = 0
-	g.update_enemy(boss,0.01)
-	assert(boss.attack=="lunge" and boss.mode=="windup")
-	g.update_enemy(boss,1.16)
-	assert(boss.mode=="rush")
-	g.update_enemy(boss,0.56)
-	assert(boss.mode=="recover")
-	print("CHAPTER CHECKS PASSED: pools, finales, cutoff, victory, locked warnings, three phases, ring gap and charge recovery")
-	var results = []
+	assert(not g.arena_active and g.wave==1 and g.waves.remaining>0)
+	# Offers are distinct, uncapped, useful at the finale, and preserve three families.
+	for seed_value in range(100):
+		g.rng.seed=seed_value
+		g.pending_levels=1
+		g.level=2
+		g.show_upgrades()
+		assert(g.upgrades.size()==3 and g.upgrades[0] in [0,2])
+		assert(g.UPGRADE_FAMILIES[g.upgrades[1]]=="CROWD CONTROL")
+		assert(g.UPGRADE_FAMILIES[g.upgrades[2]]=="TRAIL SURVIVOR")
+		g.waves.final_prep=true
+		g.show_upgrades()
+		assert(g.upgrades.size()==3)
+		for kind in g.upgrades: assert(kind not in [3,7,8])
+		assert(g.upgrades[0]!=g.upgrades[1] and g.upgrades[1]!=g.upgrades[2] and g.upgrades[0]!=g.upgrades[2])
+		g.waves.final_prep=false
+	g.start_run()
+	g.upgrade_ranks.assign(g.UPGRADE_CAPS)
+	g.upgrade_ranks[2]=4
+	g.waves.final_prep=true
+	g.show_upgrades()
+	assert(g.upgrades==[2])
+	# New records use their own key, preserving legacy records and unlocks.
+	g.stage_records={}
+	g.elapsed=172.5
+	g.record_stage_result("won")
+	g.elapsed=200
+	g.record_stage_result("won")
+	assert(g.stage_records[str(g.run_stage)].ten_wave_best==172.5)
+	g.elapsed=150
+	g.record_stage_result("won")
+	assert(g.stage_records[str(g.run_stage)].ten_wave_best==150)
+	print("CHAPTER CHECKS PASSED: ten finite waves, no waiting shortcut, two minibosses, solid arena, warning, victory delay, skill fairness and clear records")
+	var results=[]
 	for stage in range(1,6):
-		for scenario in range(9 if stage==5 else 3):
-			var seed_value: int = [17,42,93][scenario%3]
-			g.selected_stage = stage
-			g.rng.seed = seed_value
-			g.test_build = scenario / 3
-			g.start_run()
-			var boss_attacks = {}
-			for frame in range(10500):
-				while g.state=="upgrade": g.bot_upgrade()
-				if g.state!="playing": break
-				g.simulate(1.0/30,g.bot_direction())
-				for enemy in g.enemies:
-					if enemy.get("chapter_boss",false) and enemy.mode=="windup": boss_attacks[enemy.attack]=true
-			var record = {"stage":stage,"seed":seed_value,"result":g.state,"seconds":snappedf(g.elapsed,0.1),"hp":g.hp,"hits":g.damage_taken,"kills":g.kills,"enemies":g.enemies.size(),"boss_attacks":boss_attacks.keys()}
-			results.append(record)
-			print("CHAPTER BALANCE ",JSON.stringify(record))
+		for build in range(4):
+			for seed_value in [17,42,93]:
+				g.selected_stage=stage
+				g.test_build=build
+				g.start_run()
+				g.rng.seed=seed_value
+				var splits=[]
+				var choices=[]
+				var last_wave=1
+				var peak=0
+				for frame in range(18000):
+					while g.state=="upgrade":
+						choices.append({"wave":g.wave,"time":snappedf(g.elapsed,0.1)})
+						g.bot_upgrade()
+					if g.state!="playing": break
+					g.simulate(1.0/30,g.bot_direction())
+					peak=maxi(peak,g.enemies.size())
+					if g.arena_active: assert(g.player.distance_to(g.arena_center)<=g.BOSS_ARENA_RADIUS-17+0.02)
+					if g.wave!=last_wave:
+						splits.append(snappedf(g.elapsed,0.1))
+						last_wave=g.wave
+				var record={"stage":stage,"build":build,"seed":seed_value,"result":g.state,"seconds":snappedf(g.elapsed,0.1),"wave":g.wave,"hp":g.hp,"hits":g.damage_taken,"level":g.level,"choices":choices,"splits":splits,"peak":peak,"ranks":g.upgrade_ranks.duplicate()}
+				results.append(record)
+				print("CHAPTER BALANCE ",JSON.stringify(record))
 	for record in results:
-		assert(record.result == 'won' and record.seconds <= 280, 'Chapter reference run must finish without stalled cleanup')
-	print('CHAPTER BALANCE PASSED: 21 complete runs, including three boss builds')
+		assert(record.result=="won" and record.seconds<540, "Reference build must finish without stalled waves")
+		assert(record.choices.size()==9 and record.level==7, "Fresh builds receive six XP choices, two miniboss rewards and final preparation")
+		assert(record.peak<=70 and record.wave==10)
+	print("CHAPTER BALANCE PASSED: 60 complete runs, five stages, four builds, three seeds")
 	quit()

@@ -35,6 +35,11 @@ const HomeGarden = preload("res://home_garden.gd")
 var home_garden = HomeGarden.new()
 const StageArt = preload("res://stage_art.gd")
 const Chapter = preload("res://garden_chapter.gd")
+const WaveRun = preload("res://wave_run.gd")
+var waves = WaveRun.new()
+var arena_active = false
+var arena_center = Vector2.ZERO
+const BOSS_ARENA_RADIUS = 245.0
 const StagePreviewMotion = preload("res://stage_preview_motion.gd")
 var stage_art = StageArt.new()
 var locked_preview: SubViewport
@@ -155,7 +160,7 @@ const UPGRADE_NAMES = ["QUICK DRAW", "SCATTER SEEDS", "HARD SEEDS", "FORAGER POU
 const UPGRADE_CAPS = [5, 5, 5, 5, 5, 5, 5, 5, 5]
 const MAX_LEVEL = 7
 const LEVEL_SEED_POWER = 0.55
-const RUN_XP_STEPS = [10,35,60,85,110,145]
+const RUN_XP_STEPS = [8,20,35,50,70,100]
 const SCATTER_POWER = [1.0, 0.85, 0.70, 0.62, 0.55, 0.50]
 const UPGRADE_FAMILIES = ["SHARPSHOOTER", "CROWD CONTROL", "SHARPSHOOTER", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "TRAIL SURVIVOR", "SHARPSHOOTER", "CROWD CONTROL"]
 var upgrade_ranks: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -372,6 +377,8 @@ func start_run() -> void:
 	camera_center = player
 	clear_touch()
 	boss_spawned = false
+	arena_active = false
+	waves = WaveRun.new()
 	terrain_cell = Vector2i(2147483647, 2147483647)
 	refresh_terrain()
 	facing = Vector2.UP
@@ -433,6 +440,7 @@ func start_run() -> void:
 	guard_break_time = 0.0
 	state = "playing"
 	previous_state = "playing"
+	waves.begin(self,1)
 	if run_growth[7]>0:
 		shield = 2
 	if run_growth[6]>0:
@@ -763,26 +771,8 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 		if enemies[i].get("retreat",false) and boss_warning <= 0: enemies.remove_at(i)
 	guard_hit_time = maxf(0, guard_hit_time - dt)
 	guard_break_time = maxf(0, guard_break_time - dt)
-	var last_wave = wave
-	wave = 1 + int(minf(elapsed, SPAWN_DURATION - 0.001) / 20.0)
-	banner_timer = maxf(0, banner_timer - dt)
-	if last_wave != wave:
-		if upgrade_ranks[6] > 0:
-			shield = mini(guard_capacity(), shield + 1)
-		if run_growth[13]>0 and wave%3==0:
-			shield = mini(guard_capacity(),shield+1)
-		banner = "WAVE %02d" % wave
-		for kind in range(Tuning.START_WAVES.size()):
-			if Tuning.START_WAVES[kind] == wave:
-				banner += " / " + Tuning.ENEMY_NAMES[kind].to_upper()
-		if Chapter.active(run_stage):
-			banner = ["FIND YOUR FOOTING", "NEW BUGS IN THE GARDEN", "HOLD YOUR GROUND"][mini(2,int(elapsed/60))]
-		banner_timer = 2.5
-		if Chapter.active(run_stage) and wave not in [4,7]: banner_timer = 0
-		if boss_spawned: banner_timer = 0
-	if elapsed >= (135.0 if run_stage==5 else Tuning.BOSS_ARRIVAL) and elapsed < SPAWN_DURATION and not boss_spawned:
-		spawn_boss()
-	update_elite_schedule()
+	banner_timer = maxf(0,banner_timer-dt)
+	waves.advance(self,dt)
 	hurt_timer = maxf(0, hurt_timer - dt)
 	attack_pose_timer = maxf(0, attack_pose_timer - dt)
 	roll_timer = maxf(0, roll_timer - dt)
@@ -804,7 +794,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			player_aim = facing
 	var previous_player_position = player
 	player = move_actor(player, (roll_direction * 230.0 * 1.9125 if roll_time > 0 else move * speed) * dt, 17)
-	camera_center = player
+	camera_center = arena_center if arena_active else player
 	refresh_terrain()
 	update_locomotion(player - previous_player_position)
 	record_movement_fx(dt, previous_player_position)
@@ -813,20 +803,6 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 	if fire_timer <= 0 and not enemies.is_empty() and attack_phase != "windup" and roll_time <= 0:
 		begin_attack()
 		fire_timer = fire_rate
-	spawn_timer -= dt
-	if spawn_timer <= 0 and elapsed < SPAWN_DURATION:
-		spawn_enemy()
-		# Extra swarm members add pressure without adding XP or reward milestones.
-		if elapsed >= 20 and not boss_spawned and enemies.size() < 70:
-			var before = enemies.size()
-			spawn_enemy()
-			if enemies.size() > before:
-				enemies[-1].swarm_extra = true
-				enemies[-1].hp *= 0.65
-				enemies[-1].max_hp = enemies[-1].hp
-				enemies[-1].trail_hp = enemies[-1].hp
-		spawn_timer = maxf(0.17, 0.85 - wave * 0.065) * 1.15 * (1.5 if boss_spawned else 1.0) / Tuning.stage_density(run_stage) * Tuning.closing_spawn_delay(elapsed)
-		if Chapter.active(run_stage): spawn_timer *= Chapter.spawn_pace(run_stage,elapsed) * (3.5 if run_stage==5 and boss_spawned else 1.0)
 	for e in enemies:
 		var previous_position: Vector2 = e.p
 		update_enemy(e, dt)
@@ -848,10 +824,6 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 		return
 	update_hostile_bullets(dt)
 	if state == "dead":
-		return
-	if elapsed >= SPAWN_DURATION and enemies.is_empty():
-		hostile_bullets.clear()
-		finish_run("won")
 		return
 	for e in enemies:
 		update_enemy_health_feedback(e,dt)
@@ -883,7 +855,9 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			effects.remove_at(i)
 
 func constrain_actor(p: Vector2, radius: float, edge_radius: float = -1.0) -> Vector2:
-	# Only physical rocks block travel; the garden has no outer walls.
+	# The risen dirt rim bounds both rolls and boss charges.
+	if arena_active:
+		p = arena_center + (p-arena_center).limit_length(maxf(1,BOSS_ARENA_RADIUS-radius))
 	for o in obstacles:
 		var diff = p - o
 		if diff.length() < 38 + radius:
@@ -996,7 +970,7 @@ func make_enemy(p: Vector2, kind: int) -> Dictionary:
 	return {"uid": next_enemy_id, "p": constrain_actor(p, ENEMY_RADII[kind], ENEMY_SIZES[kind] / 2), "hp": health, "max_hp": health, "trail_hp": health, "display_hp": health, "bar_delay": 0.0, "radius": ENEMY_RADII[kind], "walk_distance": 0.0, "chain": 0, "speed": ([62.0, 125.0, 48.0, 82.0, 65.0, 42.0, 55.0, 100.0, 85.0, 62.0, 80.0, 68.0][kind] + wave * 3) * Tuning.stage_speed(run_stage), "kind": kind, "flash": 0.0, "recoil": 0.0, "hit_dir": Vector2.ZERO, "mode": "seek", "timer": 1.2, "aim": Vector2.UP}
 
 func spawn_boss() -> void:
-	if elapsed >= SPAWN_DURATION or boss_spawned: return
+	if boss_spawned: return
 	boss_spawned = true
 	boss_warning = 3.0
 	for enemy in enemies:
@@ -1006,7 +980,21 @@ func spawn_boss() -> void:
 	for rock in obstacles:
 		if world_view().has_point(rock): burst(rock,Color("b7a581"),8)
 	obstacles.clear()
-	var p = nearby_spawn_point(340,380)
+	arena_active = true
+	arena_center = player
+	# Two nearby berries and one guard pickup are enough for a recovery opportunity.
+	repairs.sort_custom(func(a,b): return a.distance_squared_to(player)<b.distance_squared_to(player))
+	if repairs.size()>2: repairs.resize(2)
+	for i in range(repairs.size()): repairs[i] = arena_center+(repairs[i]-arena_center).limit_length(BOSS_ARENA_RADIUS-45)
+	var guard_drop = false
+	for i in range(bonus_drops.size()-1,-1,-1):
+		if bonus_drops[i].kind!=2 or guard_drop:
+			bonus_drops.remove_at(i)
+		else:
+			guard_drop = true
+			bonus_drops[i].p = arena_center+(bonus_drops[i].p-arena_center).limit_length(BOSS_ARENA_RADIUS-45)
+	camera_center = arena_center
+	var p = arena_center + Vector2(0,-175)
 	var kind: int = Chapter.FINALES[run_stage-1] if Chapter.active(run_stage) else 5
 	var finale = make_enemy(p,kind)
 	finale.finale = true
@@ -1041,22 +1029,20 @@ func spawn_boss() -> void:
 	tone(150, 0.3)
 
 func update_elite_schedule() -> void:
-	if boss_spawned or elapsed >= 145 or elite_spawn_index >= ELITE_TIMES.size():
-		return
-	var encounter_time: float = [40.0,80.0,110.0][elite_spawn_index] if run_stage==5 else ELITE_TIMES[elite_spawn_index]
-	if elapsed < encounter_time:
-		return
-	for e in enemies:
-		if Tuning.is_elite(e.kind):
-			return
-	var kind: int = ELITE_KINDS[elite_spawn_index]
-	if Chapter.active(run_stage): kind = Chapter.ELITES[run_stage-1][elite_spawn_index]
+	# Wave encounters replace elapsed-time events.
+	if boss_spawned or wave not in [3,6] or waves.miniboss_spawned: return
+	waves.miniboss_spawned = true
+	var kind = Chapter.ELITES[run_stage-1][0 if wave==3 else 1] if Chapter.active(run_stage) else (7 if wave==3 else 6)
+	var enemy = make_enemy(nearby_spawn_point(275,310),kind)
+	enemy.miniboss = true
+	enemy.hp *= 0.8 if wave==3 else 1.05
+	enemy.max_hp = enemy.hp
+	enemy.trail_hp = enemy.hp
+	enemy.arrival = 0.8
+	enemies.append(enemy)
 	elite_spawn_index += 1
-	var spawn_point = nearby_spawn_point(320,360)
-	enemies.append(make_enemy(spawn_point, kind))
-	banner = Tuning.ENEMY_NAMES[kind].to_upper() + " / " + ("BOSS" if kind == 6 else "MINIBOSS")
-	banner_timer = 3.0
-	spawn_timer = maxf(spawn_timer, 2.0)
+	banner = "WAVE %d / MINIBOSS" % wave
+	banner_timer = 2.0
 
 func update_elite(e: Dictionary, dt: float) -> void:
 	e.timer -= dt
@@ -1097,7 +1083,7 @@ func update_elite(e: Dictionary, dt: float) -> void:
 		e.timer = 1.0 if e.kind == 6 else 0.85
 		e.chain = 1 if e.kind == 6 else 0
 		return
-	if e.kind == 8 and e.p.distance_to(player) < (140 if elapsed>=SPAWN_DURATION else 260):
+	if e.kind == 8 and e.p.distance_to(player) < (140 if waves.remaining==0 else 260):
 		direction = direction.orthogonal() * 0.7 - direction * 0.3
 	elif e.kind == 7 and e.p.distance_to(player) > 160:
 		direction = (direction + direction.orthogonal() * 0.4).normalized()
@@ -1168,7 +1154,7 @@ func update_enemy(e: Dictionary, dt: float) -> void:
 			e.aim = direction
 			return
 		if e.kind == 4:
-			if elapsed>=SPAWN_DURATION:
+			if waves.remaining==0:
 				direction=direction if distance>145 else direction.orthogonal()*0.35
 			elif distance < 200:
 				direction = -direction
@@ -1271,7 +1257,7 @@ func kill_enemy(index: int) -> void:
 		bonus_drops.append({"p": constrain_actor(e.p - Vector2(18, 0), 12), "kind": 2 if e.kind in [5, 6] else 3})
 	elif reward_kills % 50 == 0:
 		bonus_drops.append({"p": e.p, "kind": 3})
-	if Tuning.is_elite(e.kind) and encounter_rewards < 3:
+	if e.get("miniboss",false) and encounter_rewards < 2:
 		encounter_rewards += 1
 		pending_encounter_rewards += 1
 		pending_levels += 1
@@ -1288,7 +1274,7 @@ func nearby_spawn_point(minimum: float, maximum: float) -> Vector2:
 	return constrain_actor(candidate,62)
 
 func spawn_enemy() -> void:
-	if boss_spawned or elapsed >= SPAWN_DURATION or enemies.size() >= 70:
+	if boss_spawned or wave >= 10 or enemies.size() >= 70:
 		return
 	var p=nearby_spawn_point(260,320)
 	var kind = 0
@@ -1306,7 +1292,7 @@ func spawn_enemy() -> void:
 	elif wave>=3 and roll>=0.88 and roll<0.95: kind=10
 	elif wave>=4 and roll>=0.95: kind=11
 	if Chapter.active(run_stage):
-		var pool = Chapter.pool(run_stage,elapsed)
+		var pool = Chapter.pool(run_stage,float(wave-1)*20)
 		kind = pool[mini(pool.size()-1,int(roll*pool.size()))]
 	enemies.append(make_enemy(p, kind))
 	enemies[-1].arrival=0.55
@@ -1407,6 +1393,14 @@ func upgrade_description(kind: int) -> String:
 		8: return "Knockback %d > %d" % [6 + upgrade_ranks[8] * 6, 12 + upgrade_ranks[8] * 6]
 	return ""
 
+func skill_available(kind: int) -> bool:
+	if upgrade_ranks[kind]>=UPGRADE_CAPS[kind]: return false
+	# A first weapon choice must increase direct damage, not only piercing.
+	if kind==7 and level<=2 and learned_skill_ranks()==0: return false
+	# The final prep is for a lone guardian: no pickup, pierce or knockback traps.
+	if waves.final_prep and kind in [3,7,8]: return false
+	return true
+
 func show_upgrades() -> void:
 	clear_touch()
 	upgrades.clear()
@@ -1414,14 +1408,14 @@ func show_upgrades() -> void:
 	for family in ["SHARPSHOOTER", "CROWD CONTROL", "TRAIL SURVIVOR"]:
 		var pool: Array[int] = []
 		for kind in range(UPGRADE_NAMES.size()):
-			if UPGRADE_FAMILIES[kind] == family and upgrade_ranks[kind] < UPGRADE_CAPS[kind]:
+			if UPGRADE_FAMILIES[kind] == family and skill_available(kind):
 				pool.append(kind)
 		if not pool.is_empty():
 			upgrades.append(pool[rng.randi_range(0, pool.size() - 1)])
 	# A completed family yields its slot to another available upgrade.
 	var remaining: Array[int] = []
 	for kind in range(UPGRADE_NAMES.size()):
-		if upgrade_ranks[kind] < UPGRADE_CAPS[kind] and not upgrades.has(kind):
+		if skill_available(kind) and not upgrades.has(kind):
 			remaining.append(kind)
 	while upgrades.size() < 3 and not remaining.is_empty():
 		var index = rng.randi_range(0, remaining.size() - 1)
@@ -1697,7 +1691,7 @@ func draw_paused_skills() -> void:
 			if star<rank: draw_polyline(points+PackedVector2Array([points[0]]),Color("6e613c"),1.2,true)
 		card_text(Rect2(origin,Vector2(180,130)),origin.y+131,"Rank %d / 5" % rank if rank>0 else "Not learned",17,LEAF_GREEN)
 	center_text(812,"Level %d / %d  -  %d skill ranks learned" % [level,MAX_LEVEL,learned_skill_ranks()],21,JOURNAL_INK)
-	center_text(841,"6 level choices + 3 encounter rewards",19,LEAF_GREEN)
+	center_text(841,"6 level choices + 2 miniboss + 1 final prep",19,LEAF_GREEN)
 
 func bonus_pickup_reach() -> float:
 	return clampf(magnet*0.65,60,100)
@@ -1763,6 +1757,7 @@ func _draw() -> void:
 	for o in obstacles:
 		if visible_world.grow(80).has_point(o):
 			draw_backyard_rock(o)
+	if arena_active: draw_dirt_arena()
 	draw_bug_deaths()
 	for g in gems:
 		if pickup_view.has_point(g):
@@ -1811,12 +1806,12 @@ func _draw() -> void:
 	if state == "upgrade":
 		draw_rect(Rect2(-ui_offset(), get_viewport_rect().size), Color(0.08, 0.11, 0.07, 0.86))
 		story_panel(Rect2(60, 66, 600, 160))
-		center_text(143, "ENCOUNTER REWARD" if pending_encounter_rewards > 0 else "SCOUT UPGRADES", 34, JOURNAL_INK)
+		center_text(143, "FINAL PREPARATION" if waves.final_prep else ("ENCOUNTER REWARD" if pending_encounter_rewards > 0 else "SCOUT UPGRADES"), 34, JOURNAL_INK)
 		center_text(182, "Level %d  /  Choose your next skill" % level, 22, LEAF_GREEN)
 		for i in range(upgrades.size()):
 			draw_story_card(i)
 		center_text(1137, "Tap a card to continue", 29, PAPER)
-		center_text(1183, "6 level choices + 3 encounter rewards", 22, PAPER)
+		center_text(1183, "6 level choices + 2 miniboss + 1 final prep", 22, PAPER)
 		center_text(1217, "Bright star = next rank / Merits add bonuses", 20, PAPER)
 	elif state == "paused":
 		draw_pause_menu()
@@ -1835,7 +1830,7 @@ func draw_scout_report() -> void:
 	draw_string(heading_font,Vector2(-79,0),scout_name,HORIZONTAL_ALIGNMENT_CENTER,158,caption_size,JOURNAL_INK)
 	set_scene_transform(Vector2.ZERO)
 	draw_texture_rect_region(REPORT_ART,Rect2(309,282,312,220),Rect2(770,88,700,415))
-	var stats = [["Bugs defeated",str(kills)],["Time","%02d:%02d" % [int(elapsed)/60,int(elapsed)%60]],["Run level",str(level)],["Best bugs",str(run_best)],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
+	var stats = [["Bugs defeated",str(kills)],["Clear time" if state=="won" else "Time","%.1fs" % elapsed],["Run level",str(level)],["Best clear","%.1fs" % float(stage_records.get(str(run_stage),{}).get("ten_wave_best",elapsed)) if state=="won" else "--"],["Hits taken",str(damage_taken)],["Damage dealt",str(damage_dealt)]]
 	for i in range(stats.size()):
 		text_at(Vector2(330,317+i*30),stats[i][0],20,JOURNAL_INK)
 		draw_string(heading_font,Vector2(522,317+i*30),stats[i][1],HORIZONTAL_ALIGNMENT_RIGHT,76,20,JOURNAL_INK)
@@ -1896,7 +1891,7 @@ func draw_home() -> void:
 		draw_stage_arrow(STAGE_PREVIOUS,-1,selected_stage > 1)
 		draw_stage_arrow(STAGE_NEXT,1,selected_stage < STAGE_COUNT)
 		draw_garden_button(HOME_PLAY,"PLAY" if selected_stage <= unlocked_stage else "LOCKED",false,39,selected_stage <= unlocked_stage)
-		center_text(1130,Chapter.BRIEFS[selected_stage-1] if Chapter.active(selected_stage) else "3 minutes / Clear the stage to unlock the next",20,JOURNAL_INK)
+		center_text(1130,Chapter.BRIEFS[selected_stage-1] if Chapter.active(selected_stage) else "10 waves / Clear each wave to advance",20,JOURNAL_INK)
 	elif home_tab == 0 and not scout_handbook:
 		draw_scout_growth()
 	elif home_tab == 0:
@@ -2263,6 +2258,10 @@ func draw_enemy(e: Dictionary) -> void:
 	if (e.kind in [3, 6, 7, 8] or e.get("chapter_boss",false)) and e.mode in ["windup", "rush", "recover"]:
 		angle = e.aim.angle()
 	var r: float = e.radius
+	if e.get("champion",false):
+		draw_arc(p,r+4,0,TAU,20,Color(0.95,0.75,0.35,0.65),2,true)
+		var mark = p+Vector2(0,-r-18)
+		draw_colored_polygon(PackedVector2Array([mark+Vector2(0,-4),mark+Vector2(4,0),mark+Vector2(0,4),mark+Vector2(-4,0)]),Color("e8bd66"))
 	if e.mode == "windup":
 		var warning_color: Color = Tuning.ENEMY_COLORS[e.kind]
 		if e.get("chapter_boss",false):
@@ -2315,7 +2314,7 @@ func draw_enemy(e: Dictionary) -> void:
 	if e.get("retreat",false): return
 	if Tuning.is_elite(e.kind):
 		text_at(p + Vector2(-42, -r - 19), e.get("title",Tuning.ENEMY_NAMES[e.kind]), 11, PAPER)
-	if (e.hp < e.max_hp or Tuning.is_elite(e.kind)) and e.kind != 5:
+	if (e.hp < e.max_hp or Tuning.is_elite(e.kind) or e.get("champion",false)) and e.kind != 5:
 		var width = 76.0 if Tuning.is_elite(e.kind) else clampf(r*2,38,68)
 		var bar = Rect2(p.x-width/2,p.y-r-12,width,12 if Tuning.is_elite(e.kind) else 10)
 		draw_combat_health(bar,maxf(0,float(e.hp))/e.max_hp,float(e.get("trail_hp",e.hp))/e.max_hp,Tuning.is_elite(e.kind),float(e.get("bar_delay",0))/0.18)
@@ -2350,8 +2349,8 @@ func draw_hud() -> void:
 		for charge in range(shield): draw_pickup(Vector2(86+charge*26,106),2,23)
 	else:
 		text_at(Vector2(73,112),"STAGE %02d" % run_stage,17,LEAF_GREEN)
-	var labels = ["BUGS", "WAVE", "TIME", "FINALE" if boss_spawned else "SURVIVE"]
-	var values = [str(kills), "%02d" % wave, "%02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60], "BOSS" if boss_spawned else "03:00"]
+	var labels = ["BUGS", "WAVE", "TIME", "FINALE" if boss_spawned else "LEFT"]
+	var values = [str(kills), "%d/10" % wave, "%02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60], "BOSS" if boss_spawned else str(waves.remaining+enemies.size())]
 	for i in range(4):
 		var column = Rect2(64 + i * 147, 126, 147, 66)
 		card_text(column, 148, labels[i], 17, LEAF_GREEN)
@@ -2423,7 +2422,7 @@ func draw_ground() -> void:
 
 func draw_enemy_directions() -> void:
 	for e in enemies:
-		if elapsed < SPAWN_DURATION and not Tuning.is_major(e.kind):
+		if waves.remaining > 0 and not Tuning.is_major(e.kind):
 			continue
 		var point = world_to_screen(e.p)
 		if get_viewport_rect().grow(-25).has_point(point):
@@ -2436,8 +2435,8 @@ func draw_enemy_directions() -> void:
 
 func test_new_encounters() -> void:
 	start_run()
-	run_stage = 6 # Preserve coverage of the later chapters' original schedule.
-	elapsed = 45
+	run_stage = 6
+	wave = 3
 	update_elite_schedule()
 	assert(enemies.size() == 1 and enemies[0].kind == 7)
 	elapsed = 90
@@ -2445,9 +2444,12 @@ func test_new_encounters() -> void:
 	assert(enemies.size() == 1 and elite_spawn_index == 1, "Do not stack special encounters")
 	kill_enemy(0)
 	assert(gems.size() == 8 and repairs.size() == 1 and bonus_drops[0].kind == 3)
+	wave = 6
+	waves.miniboss_spawned = false
 	update_elite_schedule()
 	assert(enemies[0].kind == 6)
 	var rhino = enemies[0]
+	rhino.arrival = 0
 	rhino.p = player - Vector2(150, 0)
 	rhino.timer = 0
 	update_enemy(rhino, 0.01)
@@ -2462,9 +2464,8 @@ func test_new_encounters() -> void:
 	assert(rhino.mode == "windup" and rhino.chain == 0, "Second charge needs a fresh warning")
 	kill_enemy(0)
 	assert(bonus_drops[-1].kind == 2)
-	elapsed = 125
-	update_elite_schedule()
-	assert(enemies[0].kind == 8 and elite_spawn_index == 3)
+	enemies.append(make_enemy(player+Vector2(180,0),8))
+	assert(enemies[0].kind == 8 and elite_spawn_index == 2)
 	var wasp = enemies[0]
 	wasp.p = player + Vector2(180, 0)
 	wasp.timer = 0
@@ -2680,7 +2681,7 @@ func smoke_test() -> void:
 	for i in range(15):
 		if state == "playing":
 			simulate(0.016)
-	assert(state == "won" and enemies.is_empty(), "Killing the last enemy must clear the grid immediately")
+	assert(state == "playing" and enemies.is_empty(), "An empty arena cannot grant victory without defeating the final boss")
 	start_run()
 	spawn_enemy()
 	enemies[0].p = player
@@ -2694,7 +2695,7 @@ func smoke_test() -> void:
 	boss_spawned = true
 	elapsed = SPAWN_DURATION
 	simulate(0.016)
-	assert(state == "won", "An already empty grid should clear at cutoff")
+	assert(state == "playing", "Time alone cannot grant victory")
 	start_run()
 	for i in range(12000):
 		if state == "upgrade":
@@ -2820,8 +2821,8 @@ func test_enemy_behaviors() -> void:
 	hurt_player()
 	assert(shield == 0 and hp == 7 and guard_break_time > 0)
 	start_run()
-	elapsed = Tuning.BOSS_ARRIVAL - 0.01
-	run_stage = 6 # Legacy boss pattern is still used beyond chapter one.
+	run_stage = 6
+	waves.begin(self,10)
 	simulate(0.02, Vector2.ZERO)
 	assert(boss_spawned)
 	var bosses = enemies.filter(func(e): return e.kind == 5)
@@ -2845,6 +2846,7 @@ func test_enemy_behaviors() -> void:
 	run_stage = 1
 	assert(Combat.hit_fraction(Vector2.ZERO, Vector2(100, 0), Vector2(50, 0), 5) < 0.5)
 	assert(Combat.hit_fraction(Vector2.ZERO, Vector2(100, 0), Vector2(50, 20), 5) == INF)
+	arena_active = false
 	obstacles = [Vector2(260,270)]
 	var blocked = move_actor(Vector2(150, 270), Vector2(220, 0), 17)
 	assert(blocked.x < 210, "Fast movement must not tunnel through a pillar")
@@ -2916,6 +2918,7 @@ func test_scout_progression() -> void:
 		gain_xp()
 	assert(level == MAX_LEVEL and pending_levels == 6 and is_equal_approx(damage, 6.3))
 	enemies.append(make_enemy(Vector2(700, 390), 6))
+	enemies[-1].miniboss = true
 	kill_enemy(0)
 	assert(pending_levels == 7 and encounter_rewards == 1 and pending_encounter_rewards == 1)
 	while pending_levels > 0:
@@ -2928,7 +2931,7 @@ func test_scout_progression() -> void:
 		choose_upgrade(0)
 	assert(is_equal_approx(roll_cooldown(), 2.0) and shield == 4 and speed == 260)
 	shield = 0
-	elapsed = 19.99
+	waves.begin(self,2)
 	spawn_timer = 99
 	simulate(0.02, Vector2.ZERO)
 	assert(shield == 1, "Ranked guard restores one charge at a wave boundary")
@@ -2958,7 +2961,7 @@ func bot_direction() -> Vector2:
 			move += diff.normalized() * (1.0 - distance / (150 + e.radius)) * 4
 			if distance < 75 + e.radius:
 				danger = true
-		if e.kind in [3, 6, 7, 8] and e.mode in ["windup", "rush"]:
+		if (e.kind in [3, 6, 7, 8] or e.get("finale",false)) and e.mode in ["windup", "rush"]:
 			var closest = Geometry2D.get_closest_point_to_segment(player, e.p, e.p + e.aim * 320)
 			if player.distance_to(closest) < 65:
 				move += (player - closest).normalized() * 2
@@ -2975,13 +2978,17 @@ func bot_direction() -> Vector2:
 			if tangent.dot(target - player) < 0:
 				tangent = -tangent
 			move += tangent * 1.5 + diff.normalized() * 0.5
+	if arena_active:
+		var offset = player-arena_center
+		if offset.length()>BOSS_ARENA_RADIUS-65:
+			move += -offset.normalized()*3.0
 	if danger and roll_timer <= 0:
 		facing = move.normalized()
 		start_roll()
 	return move.normalized()
 
 func bot_upgrade() -> void:
-	var priorities = [[2, 7, 0, 5, 4, 6, 3, 8, 1], [1, 8, 0, 2, 5, 7, 6, 4, 3], [5, 4, 6, 2, 0, 3, 7, 8, 1]]
+	var priorities = [[2, 7, 0, 5, 4, 6, 3, 8, 1], [1, 8, 0, 2, 5, 7, 6, 4, 3], [5, 4, 6, 2, 0, 3, 7, 8, 1], [6,4,5,3,2,0,7,8,1]]
 	var priority: Array = priorities[test_build]
 	# Survivor remains a mixed build: invest every third choice in its weapon.
 	var chosen = 0
@@ -3011,7 +3018,7 @@ func balance_test() -> void:
 		if not "--balance-survey" in OS.get_cmdline_user_args():
 			assert(state == "won" and boss_spawned and enemies.is_empty(), "Reference pilot must be able to beat the complete run")
 		if not "--balance-survey" in OS.get_cmdline_user_args():
-			assert(elite_spawn_index == 3, "Reference run must encounter all three new threats")
+			assert(elite_spawn_index == 2, "Reference run must encounter both minibosses")
 		print("  ranks=%s rewards=%d xp=%d" % [upgrade_ranks, encounter_rewards, xp])
 	shutdown.call_deferred()
 
@@ -3158,7 +3165,7 @@ func test_mobile_world() -> void:
 	assert(distant.p.distance_to(old_position) <= 2000.0/1.5*0.05+0.1 and distant.p.x < old_position.x, "Catchup must move continuously, not teleport")
 	kill_enemy(0)
 	simulate(0.05,Vector2.ZERO)
-	assert(state == "won", "Final death, not timer alone, completes the run")
+	assert(state == "playing", "Only a final boss death completes the run")
 	start_run()
 	# Traverse a clear cell boundary for a complete run, far beyond the old map.
 	player = Vector2(0, 40)
@@ -3176,7 +3183,7 @@ func test_mobile_world() -> void:
 	assert(elapsed >= SPAWN_DURATION and player.x < -30000, "A full three-minute walk must cross terrain cells without hitting a world edge")
 	var count_at_cutoff = enemies.size()
 	spawn_enemy()
-	assert(enemies.size() == count_at_cutoff, "Spawning must stop at three minutes even far from the starting area")
+	assert(enemies.size() == count_at_cutoff+1, "Slow builds can still spawn their finite wave beyond three minutes")
 	start_run()
 	print("MOBILE WORLD PASSED: multitouch, pause, upgrade taps, three-minute travel, stable terrain, nearby safe spawns and final cleanup")
 
@@ -3315,6 +3322,8 @@ func stage_status() -> String:
 	var record: Dictionary = stage_records.get(str(selected_stage),{})
 	if record.is_empty():
 		return "Stage %02d / %d  -  Ready to explore" % [selected_stage,STAGE_COUNT]
+	if float(record.get("ten_wave_best",0))>0:
+		return "10 waves / Best clear: %.1fs" % float(record.ten_wave_best)
 	return "%s / Best: %d bugs" % ["CLEARED" if record.get("cleared",false) else "READY",record.get("best",0)]
 
 func record_stage_result(result: String) -> void:
@@ -3324,6 +3333,8 @@ func record_stage_result(result: String) -> void:
 	record["cleared"] = bool(record.get("cleared",false)) or result == "won"
 	stage_records[str(run_stage)] = record
 	if result == "won":
+		var best_clear = float(record.get("ten_wave_best",0))
+		record["ten_wave_best"] = elapsed if best_clear<=0 else minf(best_clear,elapsed)
 		unlocked_stage = maxi(unlocked_stage,mini(run_stage+1,STAGE_COUNT))
 
 func draw_stage_island(bob: float) -> void:
@@ -3822,7 +3833,7 @@ func update_garden_bug(e: Dictionary, dt: float) -> void:
 				e.mode="recover"
 				e.timer=0.7
 			return
-		if e.timer<=0 and distance<180 and elapsed<SPAWN_DURATION and clear_line(e.p,player):
+		if e.timer<=0 and distance<180 and clear_line(e.p,player):
 			e.mode="brace"
 			e.aim=direction
 			e.timer=0.7
@@ -3849,7 +3860,7 @@ func update_garden_bug(e: Dictionary, dt: float) -> void:
 				e.mode="recover"
 				e.timer=0.45
 			return
-		if e.timer<=0 and distance>80 and distance<260 and elapsed<SPAWN_DURATION and clear_line(e.p,player):
+		if e.timer<=0 and distance>80 and distance<260 and clear_line(e.p,player):
 			e.goal=constrain_actor(e.p+direction*minf(distance,175),e.radius)
 			e.mode=preparing
 			e.aim=direction
@@ -3872,3 +3883,26 @@ func draw_garden_bug_warning(e: Dictionary) -> void:
 				var at: Vector2=e.p+Vector2.from_angle(i*TAU/5+e.timer)*float(5+i)
 				draw_circle(at,4,Color("57412a"))
 				draw_circle(at+Vector2(-1,-1),2.5,Color("ac8150"))
+
+func draw_dirt_arena() -> void:
+	# A rough soil ridge rises around an exact, continuous inner collision edge.
+	var rise = smoothstep(0.0,3.0,3.0-boss_warning)
+	var rim = PackedVector2Array()
+	for i in range(129):
+		var angle = TAU*i/128.0
+		rim.append(arena_center+Vector2.from_angle(angle)*(BOSS_ARENA_RADIUS+21+sin(angle*13)*2))
+	draw_polyline(rim,Color(0.15,0.09,0.03,0.35),48,true)
+	draw_polyline(rim,Color("62452c"),12+29*rise,true)
+	draw_polyline(rim,Color("8e633b"),5+23*rise,true)
+	for i in range(90):
+		var angle = TAU*i/90.0
+		var normal = Vector2.from_angle(angle)
+		var tangent = normal.orthogonal()
+		var point = arena_center+normal*(BOSS_ARENA_RADIUS+20+sin(i*2.7)*7)
+		var size = (5+float(i%5))*rise
+		var clod = PackedVector2Array([point-tangent*size,point-tangent*size*0.6-normal*size*0.8,point+normal*size*0.1,point+tangent*size*0.8-normal*size*0.4,point+tangent*size+normal*size*0.6,point+normal*size])
+		draw_colored_polygon(clod,[Color("a27545"),Color("765031"),Color("b08451"),Color("936238")][i%4])
+		if i%2==0:
+			draw_line(point,point+tangent*size*0.5-normal*size*0.3,Color("c09a65"),1.2,true)
+		if i%5==0:
+			draw_line(point+normal*12,point+normal*17+tangent*4,Color("677343"),2,true)
