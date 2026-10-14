@@ -33,7 +33,7 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --editor --import --quit
           args=()
           if [ "$CHARACTER" = poppy ]; then args+=(--poppy); fi
-          timeout 1800 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/chapter_checks.gd -- "${args[@]}" 2>&1 | tee /tmp/chapter.log
+          timeout 1800 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 --script res://tests/chapter_checks.gd -- "${args[@]}" 2>&1 | tee /tmp/chapter.log
           grep -q 'CHAPTER BALANCE PASSED' /tmp/chapter.log
           ! grep -q 'SCRIPT ERROR' /tmp/chapter.log
       - uses: actions/upload-artifact@v4
@@ -74,19 +74,19 @@ jobs:
       - name: Import and export
         run: |
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --editor --import --quit
-          timeout 120 Godot_v4.7.2-stable_linux.x86_64 --headless --path game -- --smoke-test 2>&1 | tee /tmp/smoke.log
+          timeout 120 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 -- --smoke-test 2>&1 | tee /tmp/smoke.log
           grep -q 'SMOKE TEST PASSED' /tmp/smoke.log
           ! grep -q 'SCRIPT ERROR' /tmp/smoke.log
-          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/boss_pressure_checks.gd 2>&1 | tee /tmp/boss-pressure.log
+          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 --script res://tests/boss_pressure_checks.gd 2>&1 | tee /tmp/boss-pressure.log
           grep -q 'BOSS PRESSURE PASSED' /tmp/boss-pressure.log
           ! grep -q 'SCRIPT ERROR' /tmp/boss-pressure.log
-          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/skill_behavior_checks.gd 2>&1 | tee /tmp/skills.log
+          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 --script res://tests/skill_behavior_checks.gd 2>&1 | tee /tmp/skills.log
           grep -q 'SKILL BEHAVIORS PASSED' /tmp/skills.log
           ! grep -q 'SCRIPT ERROR' /tmp/skills.log
-          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/spawn_xp_checks.gd 2>&1 | tee /tmp/spawn-xp.log
+          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 --script res://tests/spawn_xp_checks.gd 2>&1 | tee /tmp/spawn-xp.log
           grep -q 'SPAWN XP PASSED' /tmp/spawn-xp.log
           ! grep -q 'SCRIPT ERROR' /tmp/spawn-xp.log
-          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --script res://tests/poppy_checks.gd 2>&1 | tee /tmp/poppy.log
+          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 --script res://tests/poppy_checks.gd 2>&1 | tee /tmp/poppy.log
           grep -q 'POPPY CHECKS PASSED' /tmp/poppy.log
           ! grep -q 'SCRIPT ERROR' /tmp/poppy.log
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --export-release Web ../web/backyard-${GITHUB_SHA}.html
