@@ -97,6 +97,10 @@ var earned_breakdown: Dictionary = {}
 const ScoutProfile = preload("res://scout_profile.gd")
 var scout_profile = ScoutProfile.new()
 var scout_name = "Backyard Scout"
+const Poppy = preload("res://poppy.gd")
+var poppy = Poppy.new()
+var selected_character = 0
+var run_character = 0
 var progress_save_failed = false
 const GROWTH_BUY = Rect2(177,1018,366,79)
 var home_tab = 1
@@ -307,6 +311,8 @@ func _ready() -> void:
 		unlocked_stage = clampi(int(save.get_value("stages", "unlocked", 1)), 1, STAGE_COUNT)
 		stage_records = save.get_value("stages", "records", {})
 		selected_stage = clampi(int(save.get_value("stages", "selected", unlocked_stage)), 1, unlocked_stage)
+	selected_character = clampi(int(save.get_value("scout","character",0)),0,1) if not screenshot_mode and not "--smoke-test" in OS.get_cmdline_user_args() else 0
+	poppy.setup()
 	scout_experience.load_config(save,stage_records)
 	if not "--smoke-test" in OS.get_cmdline_user_args() and not "--balance-test" in OS.get_cmdline_user_args():
 		var new_growth = not save.has_section("growth")
@@ -361,6 +367,8 @@ func _ready() -> void:
 func start_run() -> void:
 	if selected_stage > unlocked_stage:
 		return
+	run_character = selected_character
+	poppy.reset()
 	exit_stage_confirmation = false
 	pause_choice = 1
 	run_growth.assign(growth.bonuses())
@@ -769,6 +777,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 		if boss_defeat_timer <= 0: finish_run("won")
 		return
 	update_upgrade_fx(dt)
+	poppy.catch_notice = maxf(0,poppy.catch_notice-dt)
 	elapsed += dt
 	boss_warning = maxf(0,boss_warning-dt)
 	for i in range(enemies.size()-1,-1,-1):
@@ -913,6 +922,9 @@ func steering(e: Dictionary, desired: Vector2) -> Vector2:
 func update_player_bullets(dt: float) -> void:
 	for bi in range(bullets.size() - 1, -1, -1):
 		var b = bullets[bi]
+		if b.get("boomerang",false) and poppy.step(self,b,dt):
+			bullets.remove_at(bi)
+			continue
 		var start: Vector2 = b.p
 		b.p += b.v * dt
 		b.life -= dt
@@ -1370,12 +1382,15 @@ func shoot(locked_direction: Vector2 = Vector2.ZERO) -> void:
 	run_skills.volleys += 1
 	var charged: bool = upgrade_ranks[2]>0 and run_skills.volleys%4==0
 	var volley: Array = []
+	var powered = run_character==1 and poppy.empowered
+	if run_character==1: poppy.empowered = false
 	for i in range(shots):
 		var angle = (i - (shots - 1) / 2.0) * 0.20
 		var v = dir.rotated(angle)
 		var power = damage * SCATTER_POWER[upgrade_ranks[1]]
 		if charged: power *= 2.0+upgrade_ranks[2]*0.25
 		var b = {"p":scout_muzzle(dir),"origin":player,"v":v*720,"life":0.65 if shots>1 else 1.4,"power":power,"pierce":upgrade_ranks[7]+(1 if charged else 0),"hit_ids":[],"visual":upgrade_ranks.duplicate(),"charged":charged,"scatter":shots>1,"needle":upgrade_ranks[7],"thump":upgrade_ranks[8] if i==shots/2 and run_skills.volleys%3==0 else 0}
+		if run_character==1: poppy.prepare(self,b,i==shots/2,powered)
 		bullets.append(b)
 		if upgrade_ranks[0]>0:
 			var followup = b.duplicate(true)
@@ -1383,6 +1398,11 @@ func shoot(locked_direction: Vector2 = Vector2.ZERO) -> void:
 			followup.charged = false
 			followup.thump = 0
 			followup.pierce = upgrade_ranks[7]
+			if run_character==1:
+				followup.power *= 0.95
+				followup.catchable = false
+				followup.empowered = false
+				followup.pierce = 99
 			volley.append(followup)
 	if upgrade_ranks[0]>0: run_skills.echo = {"delay":0.12,"shots":volley}
 	merit_volleys += 1
@@ -1513,6 +1533,7 @@ func save_progress() -> bool:
 		return false
 	save.set_value("run", "best", run_best)
 	save.set_value("scout", "name", scout_name)
+	save.set_value("scout", "character", selected_character)
 	save.set_value("run", "completed", completed_runs)
 	save.set_value("run", "cleared", cleared_runs)
 	save.set_value("run", "longest", longest_run)
@@ -1609,6 +1630,12 @@ func card_text(rect: Rect2, y: float, label: String, size: int, color: Color = J
 
 func story_description(kind: int) -> Array[String]:
 	var rank: int = mini(5,upgrade_ranks[kind]+1)
+	if run_character==1:
+		match kind:
+			0: return ["Extra disc; quicker throws", "%d%% power; no catch bonus" % (20+rank*3)]
+			1: return ["%d discs / %d%% each" % [1+rank,int(SCATTER_POWER[rank]*100)], "Shorter arc; +20% up close"]
+			2: return ["Every 4th throw charges", "%.2fx power on both passes" % (2.0+rank*0.25)]
+			7: return ["Both passes mark repeat hits", "Build up to +%d%% damage" % ((2+rank)*4)]
 	match kind:
 		0: return ["A second burst follows", "%d%% echo; quicker firing" % (20+rank*3)]
 		1: return ["%d seeds / %d%% each" % [1+rank,int(SCATTER_POWER[rank]*100)], "Short range; +20% up close"]
@@ -1899,6 +1926,9 @@ func draw_reward_summary() -> void:
 		center_text(978,"Scout Growth complete!",25,LEAF_GREEN)
 
 func home_scout(rect: Rect2) -> void:
+	if selected_character==1:
+		poppy.portrait(self,rect)
+		return
 	var region: Rect2 = player_regions[0][2]
 	var size = region.size * (rect.size.y / region.size.y)
 	draw_texture_rect_region(PLAYER_TEXTURES[0], Rect2(Vector2(rect.get_center().x - size.x / 2, rect.position.y), size), region)
@@ -2050,6 +2080,9 @@ func roll_frame() -> int:
 	return clampi(int((1.0 - roll_time / ROLL_DURATION) * 4), 0, 3)
 
 func draw_roll(origin: Vector2 = player, phase: int = -1, heading: Vector2 = roll_direction, tint: Color = Color.WHITE, shadow: bool = true) -> void:
+	if run_character==1:
+		poppy.player_art(self,origin,true,tint)
+		return
 	var direction = scout_frame(heading)
 	var column: int = [0, 1, 2, 1, 0, 3, 4, 3][direction]
 	var mirrored = direction in [3, 4, 5]
@@ -2085,6 +2118,11 @@ func draw_attack_meter() -> void:
 	draw_line(bar.position, bar.position + Vector2(bar.size.x * attack_ready_fraction(), 0), Color("fff0a0"), 1)
 
 func draw_player() -> void:
+	if run_character==1:
+		if hurt_timer > 0 and not guard_absorbed_hit and not settings.values.reduced_flashes and int(hurt_timer * 16) % 2 == 0: return
+		poppy.player_art(self,player,roll_time>0)
+		poppy.draw_cue(self)
+		return
 	if roll_time > 0:
 		draw_roll()
 		return
@@ -2198,6 +2236,9 @@ func seed_color(ranks: Array) -> Color:
 	return Color("b9d779") if ranks[1] > 0 else Color("f3d693")
 
 func draw_seed_projectile(b: Dictionary) -> void:
+	if b.get("boomerang",false):
+		poppy.projectile_art(self,b)
+		return
 	var ranks: Array = b.get("visual", [0,0,0,0,0,0,0,0,0])
 	var color = seed_color(ranks)
 	var direction: Vector2 = b.v.normalized()
@@ -3475,7 +3516,7 @@ func scout_max_hp() -> int:
 	return 8 + run_growth[1] + run_growth[16]*2
 
 func scout_fire_rate() -> float:
-	return 0.36 / (1.0 + run_growth[5]*0.02 + run_growth[21]*0.06)
+	return (0.70 if run_character==1 else 0.36) / (1.0 + run_growth[5]*0.02 + run_growth[21]*0.06)
 
 func growth_max_scroll(track: int = -1) -> float:
 	var acorns = merit_track if track<0 else track==1
@@ -3747,6 +3788,9 @@ func draw_campsite_header() -> void:
 	var source = Rect2(20,200,1956,336)
 	var target = Rect2(18,38,684,source.size.y*684.0/source.size.x)
 	draw_texture_rect_region(CAMP_HEADER,target,source)
+	if selected_character==1:
+		draw_garden_button(ScoutProfile.PORTRAIT.grow(4),"",false,12)
+		poppy.portrait(self,ScoutProfile.PORTRAIT.grow(-3))
 	var name_size = 31
 	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>230:
 		name_size -= 1

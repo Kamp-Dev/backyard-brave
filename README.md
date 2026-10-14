@@ -42,3 +42,9 @@ Ranks strengthen these mechanics. Secondary explosions cannot trigger recursive 
 ## Validation
 
 GitHub Actions runs the smoke suite and `tests/chapter_checks.gd`, `tests/boss_pressure_checks.gd`, `tests/skill_behavior_checks.gd` and `tests/spawn_xp_checks.gd` before publishing. Chapter checks cover sustained reinforcements during retreat, the elite gate, preparation before boss arrival, arena bounds, warning timing, skill fairness and 60 full-stage simulations across five stages, four builds and three seeds. Spawn/XP checks include 100 seeds, opposing approaches, rocks, identity-preserving re-entry, visible-enemy protection, manual collection and the single pre-boss sweep. These scripted tests do not replace real-device playtesting.
+
+## Poppy (v0.9.0)
+
+Tap the camp scout portrait to switch between your original scout and Poppy. Both are available immediately and share camp progression. Selection is saved on this device. Poppy throws a boomerang that pierces once outward and once on its return toward her current position. Roll into the returning main disc to bank 50% more damage for the next throw. Extra scatter discs and Burst echoes cannot stack catch charges. Her card descriptions reflect boomerang behavior; movement, pickup and guard skills remain compatible. This release includes her base gardening outfit.
+
+Poppy checks run before publishing and cover two-pass damage, steering, catch consumption, skill compatibility, rock blocking, 30/60/120 FPS and touch/controller selection. The reproducible `tests/poppy_balance.gd` script covers five stages and four builds; initial seed-42 calibration finished 20/20 runs with wins. Real-device movement and comfort still need player testing.

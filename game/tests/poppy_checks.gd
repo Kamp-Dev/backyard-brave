@@ -1,0 +1,121 @@
+extends SceneTree
+func _initialize() -> void: call_deferred("run")
+
+func fresh(g) -> void:
+	g.selected_character=1
+	g.start_run()
+	g.obstacles.clear()
+	g.enemies.clear()
+	g.fire_timer=99
+	g.spawn_timer=99
+
+func target(g) -> Dictionary:
+	var e=g.make_enemy(g.player+Vector2(135,0),2)
+	e.hp=1000.0
+	e.max_hp=1000.0
+	g.enemies.append(e)
+	return e
+
+func run() -> void:
+	var g=load("res://main.tscn").instantiate()
+	g.screenshot_mode=true
+	root.add_child(g)
+	g.growth=g.ScoutGrowth.new()
+	g.unlocked_stage=30
+	fresh(g)
+	assert(g.poppy.regions.size()==4)
+	for kind in range(9):
+		var lines=g.story_description(kind)
+		assert(g.ui_font(23).get_string_size(lines[0],HORIZONTAL_ALIGNMENT_LEFT,-1,23).x<=394)
+		assert(g.ui_font(24).get_string_size(lines[1],HORIZONTAL_ALIGNMENT_LEFT,-1,24).x<=394)
+	var e=target(g)
+	g.shoot(Vector2.RIGHT)
+	var power=g.bullets[0].power
+	for i in range(90): g.update_player_bullets(1.0/60)
+	assert(g.bullets.is_empty() and is_equal_approx(e.hp,1000-power*2),"Boomerang hits once in each direction, without repeated contact damage")
+	assert(not g.poppy.empowered,"An ordinary catch cannot empower the next throw")
+	fresh(g)
+	target(g)
+	g.shoot(Vector2.RIGHT)
+	var b=g.bullets[0]
+	g.update_player_bullets(0.3)
+	g.player+=Vector2(0,80)
+	g.update_player_bullets(0.2)
+	assert(b.returning and b.v.y>0,"Return aims at current player position")
+	b.p=g.player+Vector2(25,0)
+	g.roll_time=0.15
+	g.update_player_bullets(0.02)
+	assert(g.poppy.empowered and g.poppy.catches==1)
+	g.shoot(Vector2.RIGHT)
+	assert(not g.poppy.empowered and g.bullets[-1].empowered and is_equal_approx(g.bullets[-1].power,power*1.5))
+	fresh(g)
+	target(g)
+	g.upgrade_ranks[0]=2
+	g.upgrade_ranks[1]=3
+	g.shots=4
+	g.shoot(Vector2.RIGHT)
+	assert(g.bullets.size()==4)
+	var catchable=0
+	for disc in g.bullets:
+		if disc.catchable: catchable+=1
+		assert(disc.turn_time==0.32)
+	assert(catchable==1,"Only the central main throw grants a catch bonus")
+	g.run_skills.advance(g,0.13)
+	assert(g.bullets.size()==8)
+	for i in range(4,8): assert(not g.bullets[i].catchable and g.bullets[i].boomerang)
+	fresh(g)
+	e=target(g)
+	g.upgrade_ranks[7]=1
+	g.upgrade_ranks[8]=1
+	g.run_skills.volleys=2
+	g.shoot(Vector2.RIGHT)
+	for i in range(90): g.update_player_bullets(1.0/60)
+	assert(e.needle_stacks==2 and g.run_skills.pulses.size()==1,"Both passes build needle marks; thump detonates only once")
+	fresh(g)
+	target(g)
+	g.upgrade_ranks[2]=1
+	for i in range(4): g.shoot(Vector2.RIGHT)
+	assert(g.bullets[3].charged and g.bullets[3].power>g.bullets[2].power*2)
+	# Faster frame rates must not change damage per pass or lose a normal catch.
+	for hz in [30,60,120]:
+		fresh(g)
+		e=target(g)
+		g.shoot(Vector2.RIGHT)
+		for i in range(hz*2): g.update_player_bullets(1.0/hz)
+		assert(g.bullets.is_empty() and is_equal_approx(e.hp,1000-power*2))
+	fresh(g)
+	e=target(g)
+	g.obstacles.append(g.player+Vector2(70,0))
+	g.shoot(Vector2.RIGHT)
+	g.update_player_bullets(0.5)
+	assert(e.hp==1000 and g.bullets.is_empty(),"Boomerangs cannot damage enemies through rocks")
+	fresh(g)
+	g.poppy.empowered=true
+	g.start_run()
+	assert(not g.poppy.empowered and g.bullets.is_empty())
+	g.state="title"
+	var touch=InputEventScreenTouch.new()
+	touch.pressed=true
+	touch.position=g.scout_profile.PORTRAIT.get_center()+g.ui_offset()
+	g._unhandled_input(touch)
+	assert(g.scout_profile.page=="characters")
+	g.scout_profile.character_choice=0
+	touch.position=g.scout_profile.NEXT.get_center()+g.ui_offset()
+	g._unhandled_input(touch)
+	assert(g.scout_profile.character_choice==1)
+	touch.position=g.scout_profile.SELECT.get_center()+g.ui_offset()
+	g._unhandled_input(touch)
+	assert(g.selected_character==1)
+	var button=InputEventJoypadButton.new()
+	button.pressed=true
+	button.button_index=JOY_BUTTON_DPAD_LEFT
+	g._unhandled_input(button)
+	button.button_index=JOY_BUTTON_A
+	g._unhandled_input(button)
+	assert(g.selected_character==0 and g.scout_profile.page=="characters")
+	g.scout_profile.close()
+	g.start_run()
+	g.shoot(Vector2.RIGHT)
+	assert(not g.bullets[0].get("boomerang",false) and g.fire_rate<0.4,"Original scout weapon is unchanged")
+	print("POPPY CHECKS PASSED: two passes, moving return, roll catch, nonstacking charge, scatter/echo safety, rocks, reset and touch/controller selection")
+	quit()

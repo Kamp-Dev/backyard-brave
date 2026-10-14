@@ -10,6 +10,10 @@ var notice = ""
 var edit: LineEdit
 var merit_id = 100
 var merit_choice = 0
+var character_choice = 0
+const PREVIOUS = Rect2(85,575,95,85)
+const NEXT = Rect2(540,575,95,85)
+const SELECT = Rect2(218,830,284,72)
 
 func open_merits(id: int) -> void:
  if not host.save_progress():
@@ -86,9 +90,36 @@ func save_name() -> void:
   return
  close()
 
+func select_character() -> void:
+ var previous = host.selected_character
+ host.selected_character = character_choice
+ if not host.screenshot_mode and not host.save_progress():
+  host.selected_character = previous
+  notice = "Could not save. Please try again."
+ else:
+  notice = "Poppy is ready!" if character_choice==1 else "Scout is ready!"
+
+func character_input(event: InputEvent) -> void:
+ if event is InputEventKey and event.pressed:
+  if event.keycode in [KEY_LEFT,KEY_RIGHT]: character_choice = 1-character_choice
+  elif event.keycode in [KEY_ENTER,KEY_SPACE]: select_character()
+  elif event.keycode==KEY_ESCAPE: close()
+ elif event is InputEventJoypadButton and event.pressed:
+  if event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_DPAD_RIGHT]: character_choice = 1-character_choice
+  elif event.button_index==JOY_BUTTON_A: select_character()
+  elif event.button_index==JOY_BUTTON_B: close()
+ elif (event is InputEventScreenTouch or (event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT)) and event.pressed:
+  if PREVIOUS.has_point(event.position) or NEXT.has_point(event.position): character_choice = 1-character_choice
+  elif SELECT.has_point(event.position): select_character()
+  elif CLOSE.has_point(event.position): close()
+
+
 func handle(event: InputEvent) -> bool:
  if host.state!="title": return false
  if page!="":
+  if page=="characters":
+   character_input(event)
+   return true
   if page=="merits":
    if event is InputEventKey and event.pressed:
     if event.keycode in [KEY_UP,KEY_LEFT]: merit_choice = posmod(merit_choice-1,3)
@@ -119,6 +150,8 @@ func handle(event: InputEvent) -> bool:
  if (event is InputEventScreenTouch or (event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT)) and event.pressed:
   if PORTRAIT.has_point(event.position):
    page = "characters"
+   character_choice = host.selected_character
+   notice = ""
    return true
   if NAME.has_point(event.position):
    open_name()
@@ -151,10 +184,18 @@ func paint() -> void:
   host.draw_pause_action(CLOSE,"CHOOSE LATER",true)
   return
  if page=="characters":
-  host.home_scout(Rect2(270,465,180,238))
-  host.center_text(755,host.scout_name,30,host.JOURNAL_INK)
-  host.center_text(798,"Level %d / Backyard Scout" % host.scout_experience.level,23,host.LEAF_GREEN)
-  host.center_text(850,"More scouts will join the camp later.",22,host.LEAF_GREEN)
+  var saved = host.selected_character
+  host.selected_character = character_choice
+  host.home_scout(Rect2(270,447,180,205))
+  host.selected_character = saved
+  host.draw_garden_button(PREVIOUS,"<",false,32)
+  host.draw_garden_button(NEXT,">",false,32)
+  host.center_text(692,"POPPY / THE GARDENER" if character_choice==1 else host.scout_name,27,host.JOURNAL_INK)
+  host.center_text(733,"Steer the boomerang's return by moving." if character_choice==1 else "A quick, reliable slingshot for any build.",21,host.LEAF_GREEN)
+  host.center_text(765,"Roll into its pale ring to catch it." if character_choice==1 else "Automatic seed shots. Roll to dodge.",21,host.LEAF_GREEN)
+  host.center_text(797,"Catch: next throw deals +50% damage." if character_choice==1 else "Your camp upgrades apply to both scouts.",21,host.LEAF_GREEN)
+  host.draw_pause_action(SELECT,"SELECTED" if character_choice==host.selected_character else "PLAY AS POPPY" if character_choice==1 else "PLAY AS SCOUT",character_choice==host.selected_character)
+  host.center_text(921,notice,18,host.LEAF_GREEN)
   host.draw_pause_action(CLOSE,"BACK TO CAMP",true)
  else:
   host.home_scout(Rect2(320,460,80,125))
