@@ -61,8 +61,9 @@ func run_checks() -> void:
 	assert(g.enemies.size()==2 and g.enemies[1].swarm_extra)
 	g.kill_enemy(1)
 	assert(g.gems.is_empty() and g.kills==1 and g.reward_kills==0)
+	var expected_seeds = 2 if g.enemies[0].kind in [2,3,4,9,10,11] else 1
 	g.kill_enemy(0)
-	assert(g.gems.size()==1 and g.kills==2 and g.reward_kills==1)
+	assert(g.gems.size()==expected_seeds and g.kills==2 and g.reward_kills==1)
 	g.selected_stage = 5
 	g.start_run()
 	g.obstacles.clear()
