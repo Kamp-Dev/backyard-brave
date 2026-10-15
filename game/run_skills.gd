@@ -210,6 +210,7 @@ func make_volley(g,dir:Vector2) -> Array:
 	return result
 
 func projectile_power(g,b:Dictionary,e:Dictionary) -> float:
+	if g.run_character==0 and b.get("ricochet",false): g.mastery.signature += 1
 	var power:float=b.get("power",g.damage)
 	if b.get("counter",false):
 		if rank(g,7)>=2:

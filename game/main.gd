@@ -93,6 +93,7 @@ var scout_profile = ScoutProfile.new()
 var scout_name = "Backyard Scout"
 const Poppy = preload("res://poppy.gd")
 var poppy = Poppy.new()
+var mastery = preload("res://mastery.gd").new()
 var selected_character = 0
 var run_character = 0
 var progress_save_failed = false
@@ -297,6 +298,8 @@ func _ready() -> void:
 		selected_stage = clampi(int(save.get_value("stages", "selected", unlocked_stage)), 1, unlocked_stage)
 	selected_character = clampi(int(save.get_value("scout","character",0)),0,1) if not screenshot_mode and not "--smoke-test" in OS.get_cmdline_user_args() else 0
 	poppy.setup()
+	mastery.load_config(save)
+	if not mastery.unlocked(selected_character,stage_records): selected_character = 0
 	scout_experience.load_config(save,stage_records)
 	if not "--smoke-test" in OS.get_cmdline_user_args() and not "--balance-test" in OS.get_cmdline_user_args():
 		var new_growth = not save.has_section("growth")
@@ -351,6 +354,8 @@ func _ready() -> void:
 func start_run() -> void:
 	if selected_stage > unlocked_stage:
 		return
+	if not screenshot_mode and not mastery.unlocked(selected_character,stage_records): selected_character = 0
+	mastery.signature = 0
 	run_character = selected_character
 	poppy.reset()
 	exit_stage_confirmation = false
@@ -1462,6 +1467,7 @@ func finish_run(result: String) -> void:
 	var old_scout_level = scout_experience.level
 	earned_scout_xp = scout_experience.reward(run_stage,result=="won",elapsed,kills)
 	scout_levels_gained = scout_experience.level-old_scout_level
+	mastery.finish(run_character,run_stage,result=="won",kills,poppy.catches,run_skills.active_combos)
 	record_stage_result(result)
 	earned_acorns = growth.claim_milestones(stage_records)
 	save_progress()
@@ -1483,6 +1489,7 @@ func save_progress() -> bool:
 	save.set_value("stages", "unlocked", unlocked_stage)
 	save.set_value("stages", "selected", mini(selected_stage, unlocked_stage))
 	save.set_value("stages", "records", stage_records)
+	mastery.write_config(save)
 	growth.write_config(save)
 	scout_experience.write_config(save)
 	if save.save("user://records.cfg") != OK:
@@ -1848,6 +1855,7 @@ func draw_scout_report() -> void:
 		card_text(Rect2(567,0,72,0),194,"CLEARED",12,JOURNAL_INK)
 	draw_texture_rect_region(REPORT_ART,Rect2(105,531,510,218),Rect2(18,567,907,394))
 	center_text(569,"SEED PACKETS EARNED   +%d" % earned_packets,22,JOURNAL_INK)
+	center_text(717,"POPPY UNLOCKED / Visit your portrait in camp" if state=="won" and run_stage==3 else "MASTERY / "+mastery.title(run_character),18,LEAF_GREEN)
 	draw_reward_summary()
 	draw_garden_button(START_BUTTON,"NEXT STAGE" if state=="won" and run_stage<mini(STAGE_COUNT,unlocked_stage) else "TRY AGAIN" if state=="dead" else "PLAY AGAIN",false,30)
 	draw_garden_button(HOME_RETURN,"UPGRADE SCOUT" if next_growth_ready() else "BACK TO CAMP",false,23)
