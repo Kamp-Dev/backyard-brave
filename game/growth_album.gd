@@ -142,18 +142,17 @@ func draw_merit_vine() -> void:
   begin_emphasis(rect,emphasis[id])
   draw_texture_rect_region(VINE,rect,Rect2(0,30,1086,1280),Color.WHITE if unlocked else Color(0.87,0.88,0.79))
   var y = rect.position.y
-  center_label(rect,y+57,"Growth %d" % ((id-99)*10),17)
+  center_label(rect,y+57,"Growth %d" % model.GATES[id-100],17)
   var badge = Rect2(rect.get_center().x-28,y+65,56,48)
   part(badge,ACORN)
   if owned:
    draw_texture_rect(WAX_SEAL,Rect2(rect.get_center().x+32,y+80,30,30),false)
-  elif not unlocked:
-   center_label(rect,y+100,"?",24)
-  var title: String = model.name_for(id) if owned else "Choose a bonus" if unlocked else "Locked"
+
+  var title: String = model.name_for(id)
   var title_size = 18
   while host.heading_font.get_string_size(title,HORIZONTAL_ALIGNMENT_LEFT,-1,title_size).x>114 and title_size>11: title_size-=1
   center_label(rect,y+137,title,title_size)
-  var detail: String = model.detail_for(id) if owned else "Pick 1 of 3" if unlocked else "Growth %d needed" % ((id-99)*10)
+  var detail: String = model.detail_for(id)
   var lines: Array[String] = []
   var line = ""
   for word in detail.split(" "):
@@ -164,7 +163,7 @@ func draw_merit_vine() -> void:
   lines.append(line)
   for i in range(mini(lines.size(),4)):
    center_label(rect,y+156+i*16,lines[i] if i<3 or lines.size()<=4 else lines[i]+"…",14)
-  center_label(rect,y+236,"Learned" if owned else "1 Acorn" if unlocked else str((id-99)*10),10,GREEN)
+  center_label(rect,y+236,"Earned" if owned else "NEXT / Tap for goals" if id==model.next_reward() else "Tap for requirements",10,GREEN)
   draw_set_transform(Vector2.ZERO)
  draw_scroll_track(581,host.acorn_scroll,host.growth_max_scroll(1))
 

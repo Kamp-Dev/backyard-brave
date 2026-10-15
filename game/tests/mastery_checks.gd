@@ -8,7 +8,8 @@ func run():
  assert(not m.unlocked(1,{"3":{"cleared":true}}))
  assert(not m.unlocked(1,{"4":{"cleared":true}}))
  assert(not m.unlocked(1,{"5":{"cleared":false}}))
- assert(m.unlocked(1,{"5":{"cleared":true}}))
+ assert(not m.unlocked(1,{"5":{"cleared":true}}))
+ assert(m.unlocked(1,{"15":{"cleared":true}}))
  m.signature=150
  m.finish(0,1,true,750,0,[0,1,2])
  assert(m.tier(0)==4)

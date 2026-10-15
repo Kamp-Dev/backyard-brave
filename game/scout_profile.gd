@@ -16,31 +16,6 @@ const NEXT = Rect2(540,575,95,85)
 const MASTERY = Rect2(218,770,284,52)
 const SELECT = Rect2(218,830,284,72)
 
-func open_merits(id: int) -> void:
- if not host.save_progress():
-  host.growth_notice = "Could not save reward choices. Please try again."
-  return
- merit_id = id
- merit_choice = 0
- notice = ""
- page = "merits"
-
-func merit_rect(index: int) -> Rect2:
- return Rect2(105,463+index*132,510,119)
-
-func choose_merit(index: int) -> void:
- var offers = host.growth.merit_offers(merit_id)
- if index<0 or index>=offers.size(): return
- var before = ConfigFile.new()
- host.growth.write_config(before)
- if not host.growth.buy(merit_id,host.stage_records,offers[index]): return
- if not host.save_progress():
-  host.growth.load_config(before)
-  notice = "Could not save. Nothing spent."
-  return
- host.growth_notice = host.growth.name_for(merit_id)+" learned! Applies next run."
- close()
-
 func setup(owner_node: Node2D) -> void:
  host = owner_node
  edit = LineEdit.new()
@@ -92,8 +67,8 @@ func save_name() -> void:
  close()
 
 func select_character() -> void:
- if not host.mastery.unlocked(character_choice,host.stage_records):
-  notice = "Clear Stage 5 to invite Poppy to camp."
+ if not host.lifetime.character_unlocked(character_choice,host.stage_records,host.scout_experience.level):
+  notice = "Clear Stage 15 to invite Poppy to camp."
   return
  var previous = host.selected_character
  host.selected_character = character_choice
@@ -131,23 +106,6 @@ func handle(event: InputEvent) -> bool:
   if page=="characters":
    character_input(event)
    return true
-  if page=="merits":
-   if event is InputEventKey and event.pressed:
-    if event.keycode in [KEY_UP,KEY_LEFT]: merit_choice = posmod(merit_choice-1,3)
-    elif event.keycode in [KEY_DOWN,KEY_RIGHT]: merit_choice = posmod(merit_choice+1,3)
-    elif event.keycode in [KEY_ENTER,KEY_SPACE]: choose_merit(merit_choice)
-   elif event is InputEventJoypadButton and event.pressed:
-    if event.button_index in [JOY_BUTTON_DPAD_UP,JOY_BUTTON_DPAD_LEFT]: merit_choice = posmod(merit_choice-1,3)
-    elif event.button_index in [JOY_BUTTON_DPAD_DOWN,JOY_BUTTON_DPAD_RIGHT]: merit_choice = posmod(merit_choice+1,3)
-    elif event.button_index==JOY_BUTTON_A:
-     choose_merit(merit_choice)
-     return true
-   elif (event is InputEventScreenTouch or event is InputEventMouseButton) and event.pressed:
-    for index in range(3):
-     if merit_rect(index).has_point(event.position):
-      choose_merit(index)
-      return true
-    if CLOSE.has_point(event.position): close()
   if event is InputEventKey and event.pressed and event.keycode==KEY_ESCAPE:
    close()
   elif event is InputEventJoypadButton and event.pressed and event.button_index in [JOY_BUTTON_B,JOY_BUTTON_A]:
@@ -177,26 +135,7 @@ func paint() -> void:
  if page=="mastery":
   paint_mastery()
   return
- host.center_text(413,"CHOOSE AN ACORN BONUS" if page=="merits" else "CHOOSE YOUR SCOUT" if page=="characters" else "NAME YOUR SCOUT",30,host.JOURNAL_INK)
- if page=="merits":
-  var offers = host.growth.merit_offers(merit_id)
-  for index in range(offers.size()):
-   var rect = merit_rect(index)
-   host.story_panel(rect,Color.WHITE if index==merit_choice else Color(0.92,0.94,0.86))
-   host.card_text(rect,rect.position.y+39,host.growth.NAMES[offers[index]],25,host.JOURNAL_INK)
-   var words = host.growth.DETAILS[offers[index]].split(" ")
-   var line = ""
-   var y = rect.position.y+70
-   for word in words:
-    if (line+" "+word).length()>37:
-     host.card_text(rect,y,line,20,host.LEAF_GREEN)
-     line = ""
-     y += 23
-    line += (" " if not line.is_empty() else "")+word
-   host.card_text(rect,y,line,20,host.LEAF_GREEN)
-  host.center_text(893,notice if not notice.is_empty() else "Choose one / Costs 1 Golden Acorn",22,host.LEAF_GREEN)
-  host.draw_pause_action(CLOSE,"CHOOSE LATER",true)
-  return
+ host.center_text(413,"CHOOSE YOUR SCOUT" if page=="characters" else "NAME YOUR SCOUT",30,host.JOURNAL_INK)
  if page=="characters":
   var saved = host.selected_character
   host.selected_character = character_choice
@@ -208,8 +147,8 @@ func paint() -> void:
   host.center_text(733,"Steer the boomerang's return by moving." if character_choice==1 else "Build firing lanes with seeds and traps.",21,host.LEAF_GREEN)
   host.center_text(760,"Roll into its pale ring to catch it." if character_choice==1 else "Automatic seed shots. Roll to dodge.",21,host.LEAF_GREEN)
   host.draw_pause_action(MASTERY,"MASTERY / %d OF 5" % host.mastery.tier(character_choice),false)
-  var available = host.mastery.unlocked(character_choice,host.stage_records)
-  host.draw_pause_action(SELECT,"CLEAR STAGE 5" if not available else "SELECTED" if character_choice==host.selected_character else "SELECT CHARACTER",character_choice==host.selected_character and available)
+  var available = host.lifetime.character_unlocked(character_choice,host.stage_records,host.scout_experience.level)
+  host.draw_pause_action(SELECT,"CLEAR STAGE 15" if not available else "SELECTED" if character_choice==host.selected_character else "SELECT CHARACTER",character_choice==host.selected_character and available)
   host.center_text(921,notice if not notice.is_empty() else host.mastery.title(character_choice),18,host.LEAF_GREEN)
   host.draw_pause_action(CLOSE,"BACK TO CAMP",true)
  else:

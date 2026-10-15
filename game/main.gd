@@ -93,6 +93,10 @@ var scout_profile = ScoutProfile.new()
 var scout_name = "Backyard Scout"
 const Poppy = preload("res://poppy.gd")
 var poppy = Poppy.new()
+var lifetime = preload("res://lifetime_progress.gd").new()
+var run_pickups = 0
+var run_dodges = 0
+var roll_counted = false
 var mastery = preload("res://mastery.gd").new()
 var selected_character = 0
 var run_character = 0
@@ -299,13 +303,19 @@ func _ready() -> void:
 	selected_character = clampi(int(save.get_value("scout","character",0)),0,1) if not screenshot_mode and not "--smoke-test" in OS.get_cmdline_user_args() else 0
 	poppy.setup()
 	mastery.load_config(save)
-	if not mastery.unlocked(selected_character,stage_records): selected_character = 0
 	scout_experience.load_config(save,stage_records)
+	lifetime.load_config(save)
+	if not save.has_section("lifetime"):
+		lifetime.totals.bosses = cleared_runs
+		for record in mastery.records.values(): lifetime.totals.kills += int(record.get("bugs",0))
+	if not lifetime.character_unlocked(selected_character,stage_records,scout_experience.level): selected_character = 0
+	growth.lifetime = lifetime
+	growth.account_level = scout_experience.level
 	if not "--smoke-test" in OS.get_cmdline_user_args() and not "--balance-test" in OS.get_cmdline_user_args():
 		var new_growth = not save.has_section("growth")
 		growth.load_config(save)
 		if growth.migrated:
-			growth_notice = "Old talent costs refunded; merits kept."
+			growth_notice = "Acorn track updated; old perks kept, spare acorns refunded."
 		var backfilled = growth.claim_milestones(stage_records)
 		if (new_growth or backfilled>0 or growth.migrated) and not screenshot_mode:
 			save_progress()
@@ -354,7 +364,10 @@ func _ready() -> void:
 func start_run() -> void:
 	if selected_stage > unlocked_stage:
 		return
-	if not screenshot_mode and not mastery.unlocked(selected_character,stage_records): selected_character = 0
+	if not screenshot_mode and not lifetime.character_unlocked(selected_character,stage_records,scout_experience.level): selected_character = 0
+	run_pickups = 0
+	run_dodges = 0
+	roll_counted = false
 	mastery.signature = 0
 	run_character = selected_character
 	poppy.reset()
@@ -415,7 +428,7 @@ func start_run() -> void:
 	fire_rate = scout_fire_rate()
 	damage = 3.0 + run_growth[0]*0.15 + run_growth[17]*0.45
 	shots = 1
-	magnet = 90.0 + run_growth[2]*7 + run_growth[18]*25
+	magnet = (90.0 + run_growth[2]*7) * (1.5 if run_growth[18]>0 else 1.0)
 	pending_levels = 0
 	bug_deaths.clear()
 	roll_echoes.clear()
@@ -721,6 +734,7 @@ func toggle_pause() -> void:
 func start_roll() -> void:
 	if state != "playing" or roll_timer > 0:
 		return
+	roll_counted = false
 	roll_time = ROLL_DURATION
 	roll_timer = roll_cooldown()
 	run_skills.on_roll(self)
@@ -852,6 +866,7 @@ func simulate(dt: float, bot_move: Vector2 = Vector2.INF) -> void:
 			if run_character==0 and upgrade_ranks[8] > 0:
 				add_upgrade_fx(player + Vector2(0, 7), "gather", upgrade_ranks[8], Vector2.UP, 0.28)
 			gems.remove_at(i)
+			run_pickups += 1
 			run_skills.on_pickup(self)
 			gain_xp()
 	for i in range(repairs.size() - 1, -1, -1):
@@ -1236,10 +1251,10 @@ func hurt_player() -> void:
 	damage_taken += 1
 	hurt_timer = 1.0
 	if hp <= 0:
-		if run_growth[8]>0 and not rescue_used:
+		if (run_growth[8]>0 or run_growth[22]>0) and not rescue_used:
 			rescue_used = true
-			hp = ceili(scout_max_hp()/2.0)
-			hurt_timer = 2.0
+			hp = scout_max_hp() if run_growth[22]>0 else ceili(scout_max_hp()/2.0)
+			hurt_timer = 4.0 if run_growth[22]>0 else 2.0
 			guard_hit_time = 0.55
 			burst(player,LEAF_GREEN,20)
 			banner = "SECOND WIND"
@@ -1467,6 +1482,8 @@ func finish_run(result: String) -> void:
 	var old_scout_level = scout_experience.level
 	earned_scout_xp = scout_experience.reward(run_stage,result=="won",elapsed,kills)
 	scout_levels_gained = scout_experience.level-old_scout_level
+	lifetime.record(kills,damage_dealt,run_pickups,run_dodges,result=="won")
+	growth.account_level = scout_experience.level
 	mastery.finish(run_character,run_stage,result=="won",kills,poppy.catches,run_skills.active_combos)
 	record_stage_result(result)
 	earned_acorns = growth.claim_milestones(stage_records)
@@ -1489,6 +1506,7 @@ func save_progress() -> bool:
 	save.set_value("stages", "unlocked", unlocked_stage)
 	save.set_value("stages", "selected", mini(selected_stage, unlocked_stage))
 	save.set_value("stages", "records", stage_records)
+	lifetime.write_config(save)
 	mastery.write_config(save)
 	growth.write_config(save)
 	scout_experience.write_config(save)
@@ -1855,7 +1873,7 @@ func draw_scout_report() -> void:
 		card_text(Rect2(567,0,72,0),194,"CLEARED",12,JOURNAL_INK)
 	draw_texture_rect_region(REPORT_ART,Rect2(105,531,510,218),Rect2(18,567,907,394))
 	center_text(569,"SEED PACKETS EARNED   +%d" % earned_packets,22,JOURNAL_INK)
-	center_text(717,"POPPY UNLOCKED / Visit your portrait in camp" if state=="won" and run_stage==5 else "MASTERY / "+mastery.title(run_character),18,LEAF_GREEN)
+	center_text(717,"POPPY UNLOCKED / Visit your portrait in camp" if state=="won" and run_stage==15 else "MASTERY / "+mastery.title(run_character),18,LEAF_GREEN)
 	draw_reward_summary()
 	draw_garden_button(START_BUTTON,"NEXT STAGE" if state=="won" and run_stage<mini(STAGE_COUNT,unlocked_stage) else "TRY AGAIN" if state=="dead" else "PLAY AGAIN",false,30)
 	draw_garden_button(HOME_RETURN,"UPGRADE SCOUT" if next_growth_ready() else "BACK TO CAMP",false,23)
@@ -1962,7 +1980,8 @@ func draw_field_journal() -> void:
 		text_at(Vector2(141,y+16),notes[i][0],16,LEAF_GREEN)
 		text_at(Vector2(141,y+43),notes[i][1],22,JOURNAL_INK)
 		text_at(Vector2(141,y+67),notes[i][2],18,Color("786b4c"))
-	center_text(1078,"Every expedition helps your scout grow.",21,LEAF_GREEN)
+	center_text(1070,"Lifetime: %d bugs / %d damage" % [lifetime.totals.kills,lifetime.totals.damage],17,LEAF_GREEN)
+	center_text(1094,"%d XP drops / %d near misses / %d boss wins" % [lifetime.totals.pickups,lifetime.totals.dodges,lifetime.totals.bosses],17,LEAF_GREEN)
 
 func scout_frame(direction: Vector2) -> int:
 	return posmod(int(round(direction.angle() / (PI / 4.0))), 8)
@@ -3359,10 +3378,10 @@ func test_stages() -> void:
 	print("STAGES PASSED: 30 distinct stable layouts, chapter boundaries, safe starts, locks, unlocks and isolated preview RNG")
 
 func scout_max_hp() -> int:
-	return 8 + run_growth[1] + run_growth[16]*2
+	return ceili((8 + run_growth[1]) * (1.25 if run_growth[16]>0 else 1.0))
 
 func scout_fire_rate() -> float:
-	return (0.64 if run_character==1 else 0.36) / (1.0 + run_growth[5]*0.02 + run_growth[21]*0.06)
+	return (0.64 if run_character==1 else 0.36) / (1.0 + run_growth[5]*0.02 + run_growth[21]*0.15)
 
 func growth_max_scroll(track: int = -1) -> float:
 	var acorns = merit_track if track<0 else track==1
@@ -3457,8 +3476,8 @@ func growth_key(key: int) -> bool:
 	return true
 
 func purchase_growth() -> void:
-	if growth_selected>=100 and growth.status(growth_selected,stage_records)=="READY":
-		scout_profile.open_merits(growth_selected)
+	if growth_selected>=100:
+		growth_notice = growth.requirement_text(growth_selected,stage_records)
 		return
 	var old = ConfigFile.new()
 	growth.write_config(old)
@@ -3471,7 +3490,7 @@ func purchase_growth() -> void:
 		growth_notice = "Save failed. Nothing spent; please try again."
 		return
 	growth_notice = "Learned! Applies next run."
-	if growth.acorns>before_acorns: growth_notice = "Golden Acorn earned! A new merit is ready."
+	if growth.acorns>before_acorns: growth_notice = "Acorn reward unlocked! Applies next run."
 	tone(880,0.08)
 
 func draw_scout_growth() -> void:
@@ -3479,7 +3498,7 @@ func draw_scout_growth() -> void:
 	draw_workbench_header()
 	card_text(Rect2(68,0,342,0),469,"GROWTH  /  Scroll up",15,LEAF_GREEN)
 	card_text(Rect2(426,0,220,0),469,"ACORNS  /  Scroll up",15,LEAF_GREEN)
-	var detail = "Choose one of three unique bonuses" if growth_selected>=100 and growth.ranks[growth_selected]==0 else growth.detail_for(growth_selected)
+	var detail = growth.detail_for(growth_selected)
 	center_text(959,("Level %d / " % (growth_selected+1) if growth_selected<100 else "")+detail,19,JOURNAL_INK)
 	var hint = growth_notice if not growth_notice.is_empty() else growth.status(growth_selected,stage_records)
 	center_text(990,hint,18,LEAF_GREEN)
@@ -3663,7 +3682,7 @@ func draw_workbench_header() -> void:
 	card_text(left,395,"Packets: %d" % growth.packets,20,JOURNAL_INK)
 	card_text(right,395,"Acorns: %d" % growth.acorns,20,JOURNAL_INK)
 	card_text(left,417,"Growth %d / 100" % growth.growth_level(),17,JOURNAL_INK)
-	card_text(right,417,"All acorns earned" if growth.growth_level()>=100 else "Next: Growth %d" % ((growth.growth_level()/10+1)*10),17,JOURNAL_INK)
+	card_text(right,417,"All acorns earned" if growth.acorns>=10 else "Next: Growth %d" % growth.GATES[growth.next_reward()-100],17,JOURNAL_INK)
 	var meter = Rect2(181,428,142,7)
 	draw_style_box(bar_style(Color("aaa680")),meter)
 	draw_style_box(bar_style(LEAF_GREEN),Rect2(meter.position,Vector2(maxf(2,meter.size.x*growth.growth_level()/100.0),7)))

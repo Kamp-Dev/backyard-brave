@@ -110,6 +110,9 @@ func on_roll(g):
 			trim_kind("line",3)
 
 func on_near_miss(g):
+	if not g.roll_counted:
+		g.run_dodges += 1
+		g.roll_counted = true
 	if g.run_character==0 and rank(g,7)>0: counter_ready=true
 	if g.run_character==0 and rank(g,5)>=3: quick_near_miss=true
 

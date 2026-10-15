@@ -4,7 +4,7 @@ const TITLES = [["Trail Beginner", "Seed Slinger", "Lane Keeper", "Clover Ranger
 var records: Dictionary = {}
 var signature = 0
 func unlocked(character: int, stages: Dictionary) -> bool:
-	return character == 0 or bool(stages.get("5", {}).get("cleared", false))
+	return preload("res://lifetime_progress.gd").new().character_unlocked(character,stages)
 func entry(character: int) -> Dictionary:
 	var key = str(character)
 	if not records.has(key): records[key] = {"clears": [], "bugs": 0, "signature": 0, "combos": [], "chapter": false}
