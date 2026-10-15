@@ -1855,7 +1855,7 @@ func draw_scout_report() -> void:
 		card_text(Rect2(567,0,72,0),194,"CLEARED",12,JOURNAL_INK)
 	draw_texture_rect_region(REPORT_ART,Rect2(105,531,510,218),Rect2(18,567,907,394))
 	center_text(569,"SEED PACKETS EARNED   +%d" % earned_packets,22,JOURNAL_INK)
-	center_text(717,"POPPY UNLOCKED / Visit your portrait in camp" if state=="won" and run_stage==3 else "MASTERY / "+mastery.title(run_character),18,LEAF_GREEN)
+	center_text(717,"POPPY UNLOCKED / Visit your portrait in camp" if state=="won" and run_stage==5 else "MASTERY / "+mastery.title(run_character),18,LEAF_GREEN)
 	draw_reward_summary()
 	draw_garden_button(START_BUTTON,"NEXT STAGE" if state=="won" and run_stage<mini(STAGE_COUNT,unlocked_stage) else "TRY AGAIN" if state=="dead" else "PLAY AGAIN",false,30)
 	draw_garden_button(HOME_RETURN,"UPGRADE SCOUT" if next_growth_ready() else "BACK TO CAMP",false,23)

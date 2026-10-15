@@ -93,7 +93,7 @@ func save_name() -> void:
 
 func select_character() -> void:
  if not host.mastery.unlocked(character_choice,host.stage_records):
-  notice = "Clear Stage 3 to invite Poppy to camp."
+  notice = "Clear Stage 5 to invite Poppy to camp."
   return
  var previous = host.selected_character
  host.selected_character = character_choice
@@ -209,7 +209,7 @@ func paint() -> void:
   host.center_text(760,"Roll into its pale ring to catch it." if character_choice==1 else "Automatic seed shots. Roll to dodge.",21,host.LEAF_GREEN)
   host.draw_pause_action(MASTERY,"MASTERY / %d OF 5" % host.mastery.tier(character_choice),false)
   var available = host.mastery.unlocked(character_choice,host.stage_records)
-  host.draw_pause_action(SELECT,"CLEAR STAGE 3" if not available else "SELECTED" if character_choice==host.selected_character else "SELECT CHARACTER",character_choice==host.selected_character and available)
+  host.draw_pause_action(SELECT,"CLEAR STAGE 5" if not available else "SELECTED" if character_choice==host.selected_character else "SELECT CHARACTER",character_choice==host.selected_character and available)
   host.center_text(921,notice if not notice.is_empty() else host.mastery.title(character_choice),18,host.LEAF_GREEN)
   host.draw_pause_action(CLOSE,"BACK TO CAMP",true)
  else:
