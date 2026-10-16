@@ -334,6 +334,8 @@ func _ready() -> void:
 		var backfilled = growth.claim_milestones(stage_records)
 		if (new_growth or backfilled>0 or growth.migrated) and not screenshot_mode:
 			save_progress()
+	# Start the album at the next unlearned upgrade after loading saved progress.
+	focus_next_growth()
 	preview_rng.randomize()
 	scout_profile.setup(self)
 	settings.setup(self)
@@ -564,6 +566,7 @@ func activate_pointer(position: Vector2) -> void:
 	if state == "title":
 		for tab in range(3):
 			if home_tab_rect(tab).has_point(position):
+				if tab == 0 and home_tab != 0: focus_next_growth()
 				home_tab = tab
 				return
 		if home_tab == 0:
@@ -681,11 +684,13 @@ func _unhandled_input(event: InputEvent) -> void:
 					voice.stop()
 		if state == "title" and event.keycode in [KEY_UP, KEY_DOWN]:
 			home_tab = posmod(home_tab + (-1 if event.keycode == KEY_UP else 1), 3)
+			if home_tab == 0: focus_next_growth()
 		elif state == "title" and event.keycode in [KEY_LEFT, KEY_RIGHT]:
 			if home_tab == 1:
 				select_stage(selected_stage + (-1 if event.keycode == KEY_LEFT else 1))
 			else:
 				home_tab = posmod(home_tab + (-1 if event.keycode == KEY_LEFT else 1), 3)
+				if home_tab == 0: focus_next_growth()
 		if event.keycode == KEY_ESCAPE and state in ["dead", "won"]:
 			return_home()
 		if event.keycode == KEY_ENTER and state in ["title", "dead", "won"]:
@@ -715,11 +720,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 		if state == "title" and event.button_index in [JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN]:
 			home_tab = posmod(home_tab + (-1 if event.button_index == JOY_BUTTON_DPAD_UP else 1), 3)
+			if home_tab == 0: focus_next_growth()
 		elif state == "title" and event.button_index in [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]:
 			if home_tab == 1:
 				select_stage(selected_stage + (-1 if event.button_index == JOY_BUTTON_DPAD_LEFT else 1))
 			else:
 				home_tab = posmod(home_tab + (-1 if event.button_index == JOY_BUTTON_DPAD_LEFT else 1), 3)
+				if home_tab == 0: focus_next_growth()
 		elif state in ["dead", "won"] and event.button_index == JOY_BUTTON_B:
 			return_home()
 		if event.button_index == JOY_BUTTON_A:
@@ -3418,6 +3425,10 @@ func growth_node_rect(id: int) -> Rect2:
 
 func visible_merit() -> int:
 	return 100+clampi(roundi(acorn_scroll/280.0) if merit_track else int(envelope_scroll/170.0)/10,0,9)
+
+func focus_next_growth() -> void:
+	focus_growth(mini(growth.growth_level(),99))
+	growth_drag_id = -2
 
 func focus_growth(id: int) -> void:
 	growth_selected = clampi(id,0,109)
