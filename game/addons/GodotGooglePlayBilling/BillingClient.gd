@@ -115,7 +115,7 @@ func query_purchases(product_type: ProductType, include_suspended_subs: bool = f
 	var product_type_str = "inapp"
 	if product_type == ProductType.SUBS:
 		product_type_str = "subs"
-	
+
 	if _plugin_singleton:
 		_plugin_singleton.queryPurchases(product_type_str, include_suspended_subs)
 
