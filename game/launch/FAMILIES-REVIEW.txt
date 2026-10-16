@@ -13,7 +13,7 @@ Evidence currently inspected
 - wardrobe.gd: optional cosmetics, no combat boosts or character bypass, explicit prices supplied by store, Back always available. Inspect final on-device prices and touch behavior before certification.
 - garden_settings.gd: external privacy/support links. Review destination content and hosting data handling, not merely the link label.
 - Backend ledger stores hashed tokens/product/state/check time; pruning currently occurs during verification. No deployed cleanup schedule or parent-request procedure is established.
-- Export presets do not establish the merged manifest, transitive SDK behavior, or runtime network behavior. No final AAB has been audited.
+- The unsigned release AAB for ee42ced passed merged-manifest and native-alignment checks. See ANDROID-AUDIT.txt for artifact identity and limits. Runtime network behavior and a signed Play-delivered release remain unverified.
 
 Required closure evidence
 1. Content: inspect every stage/boss, audio, intro, warning flashes, frightening imagery, defeat presentation, reading and controls. Select only genuinely supported Play age bands. Under-13 intent does not prove suitability for preschoolers; IARC rating is separately determined from truthful answers.

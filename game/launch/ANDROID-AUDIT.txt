@@ -1,0 +1,45 @@
+Backyard Brave - Android and purchase audit, 2026-10-16
+Result: static build and synthetic purchase checks PASS; Families release approval remains BLOCKED.
+
+Artifact evidence
+Source commit: ee42ced
+Workflow: https://github.com/Kamp-Dev/backyard-brave/actions/runs/38980639966
+Artifact: android-families-audit / Backyard-Brave-audit.aab (unsigned; not a phone install or store submission)
+SHA-256: 97147fa330e5ec0ee2961cb5199a76d21b19a92b14fef52a4f4548c57eb63c76
+Evidence saved locally under work/android-families-audit-ee42ced.
+CI artifacts expire after 14 days; retain local evidence for the release record.
+
+Verified
+- bundletool validation passes. Package com.kampdev.backyardbrave; target API 36.
+- INTERNET, ACCESS_NETWORK_STATE, VIBRATE and BILLING only, plus the app-specific signature-protected AndroidX receiver permission. No advertising ID, location, camera or microphone permission.
+- allowBackup=false; release is not debuggable; cleartext traffic is not enabled.
+- Both arm64 native libraries have 16 KB PT_LOAD alignment; bundle requests 16 KB ZIP alignment. Actual device compatibility still requires testing.
+- Google Play Billing plugin is packaged. Plugin declares billing-ktx 9.1.0. Native plugin constructor does not construct BillingClient; initPlugin does. Game configuration gates explicit initialization and keeps checkout disabled.
+- Synthetic transport test passed in CI: five requests, only product_id/token fields, pending tokens excluded, redirect not followed. Also exercises reconciliation and superseded-response handling. This uses fake receipts, not Google Play transactions.
+- Ten verifier tests passed locally; commerce behavior checks passed locally. Cases include acknowledgement failure, pending/refund, duplicate restore, outage, minimized fields, ledger retention and deletion.
+
+Fixes applied
+Client: disable verification redirects; atomic receipt-cache replacement; ignore superseded verification responses.
+Server: disable HTTP redirects; reject additional request/receipt fields; bound receipts to product inventory; operator-only hash deletion and retention pruning tools.
+Android: explicit verifier network permission and API 36 target. Established signing identity and released APK preserved.
+Documentation: parent guidance, purchase data map, draft parent-data operations, explicit launch review blockers.
+
+SDK finding and evidence limits
+Merged manifest contains Google DataTransport CCT backend and scheduling components. Their presence is not proof of observed transmission, but diagnostic processing must be included in vendor disclosures and device traffic review. Do not claim zero third-party data collection.
+The post-export Gradle dependencies report lists the base Godot/AndroidX graph but omits exporter-injected billing dependencies. It is not a complete software bill of materials. The final manifest, native plugin bytecode and DEX inspection provide separate evidence; a complete graph and Google vendor data documentation remain release blockers.
+Absence of selected advertising/analytics DEX markers is a limited inventory check, not proof of all SDK behavior.
+allowBackup=false does not certify every manufacturer device-transfer path.
+
+Required before enabling checkout or claiming readiness
+1. Deploy verifier with TLS, durable storage, least-privilege Google credentials, protected signing key, redacted logs, bounded retention/backups and a scheduled prune job. Confirm operational deletion and parent-request verification. Tools alone do not establish these operations.
+2. Review Google Billing/DataTransport vendor processing and eligibility for children; complete accurate Data Safety and privacy disclosures. Resolve legal basis, any applicable COPPA exception or verifiable parental consent, and supported launch regions with qualified review.
+3. Install a signed internal-test build through Google Play on the Android device. Test supervised-account approval, pending approval, cancellation, successful purchase, restore/reinstall, refund/revocation, restart, offline and network failures. Observe traffic and confirm prices, touch targets, no unintended purchase, and no child-ineligible initialization.
+4. Finish content suitability for each selected age band, IARC and Target Audience declarations. Under-13 intent alone does not establish suitability for ages 5 and under.
+5. Reaudit the actual signed release after checkout configuration and SDK changes. Do not reuse this unsigned disabled-checkout result as certification of that build.
+
+No Android device was connected during this audit. No real Google Play purchase, supervised account, production verifier or store submission was tested.
+
+Primary policy references
+https://support.google.com/googleplay/android-developer/answer/9893335?hl=en
+https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions
+https://developer.android.com/privacy-and-security/declare-data-use
