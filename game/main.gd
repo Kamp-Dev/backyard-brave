@@ -250,7 +250,17 @@ var guard_absorbed_hit = false
 var guard_hit_time = 0.0
 var guard_break_time = 0.0
 
+var top_content_inset = 0.0
+
+func refresh_content_inset() -> void:
+	if OS.has_feature("web"):
+		var ratio = JavaScriptBridge.eval("window.backyardTopInsetRatio ? window.backyardTopInsetRatio() : 0")
+		if ratio != null: top_content_inset = maxf(0.0,float(ratio)) * get_viewport_rect().size.y
+	queue_redraw()
+
 func _ready() -> void:
+	refresh_content_inset()
+	get_viewport().size_changed.connect(refresh_content_inset)
 	browser_touch.setup()
 	locked_preview = SubViewport.new()
 	locked_preview.size = Vector2i(532,532)
@@ -479,11 +489,11 @@ func shutdown() -> void:
 
 func ui_offset() -> Vector2:
 	var offset = (get_viewport_rect().size - Vector2(720,1280)) / 2
-	if state == "title": offset.y = 0
+	if state == "title": offset.y = top_content_inset
 	return offset
 
 func pause_hit_rect() -> Rect2:
-	return Rect2(PAUSE_BUTTON.position - Vector2(0, ui_offset().y), PAUSE_BUTTON.size)
+	return Rect2(PAUSE_BUTTON.position + Vector2(0, top_content_inset - ui_offset().y), PAUSE_BUTTON.size)
 
 func roll_hit_rect() -> Rect2:
 	return Rect2(ROLL_BUTTON.position + Vector2(0, ui_offset().y), ROLL_BUTTON.size)
@@ -2297,7 +2307,7 @@ func hud_meter_style(border: Color) -> StyleBoxFlat:
 	return style
 
 func draw_hud() -> void:
-	draw_set_transform(Vector2(ui_offset().x, 0))
+	draw_set_transform(Vector2(ui_offset().x, top_content_inset))
 	story_panel(Rect2(12, 24, 696, 198))
 	for i in range(scout_max_hp()):
 		journal_heart(Vector2(80 + i * minf(26,224.0/scout_max_hp()), 77), i < hp)
@@ -3569,7 +3579,7 @@ func garden_wood(rect: Rect2, active: bool) -> void:
 func draw_garden_button(rect: Rect2, label: String, selected: bool = false, size: int = 26, enabled: bool = true) -> void:
 	var pointer=get_global_mouse_position()-ui_offset()
 	if state in ["playing","upgrade"]:
-		if rect==PAUSE_BUTTON: pointer.y+=ui_offset().y
+		if rect==PAUSE_BUTTON: pointer.y+=ui_offset().y-top_content_inset
 		elif rect.position.y>1000: pointer.y-=ui_offset().y
 	var hovered=enabled and rect.has_point(pointer) and not screenshot_mode
 	var active=enabled and (selected or hovered)

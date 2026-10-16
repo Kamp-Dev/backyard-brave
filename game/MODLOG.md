@@ -58,3 +58,7 @@ Add an opt-in ?display-check=1 overlay on the actual game page. Displays browser
 ## Home Screen bottom-gap sizing
 Installed apps use 100vh for the page and intro; an external ResizeObserver sizes the Godot canvas buffer from the same body bounds with canvasResizePolicy=0. Normal browser mode retains existing sizing. This avoids mixing percentage/innerHeight sizing with the installed full-screen layout. Export and forced-standalone desktop fixture checked: Enter transitions to camp, body/canvas 430x932, no console errors. Physical iPhone validation pending.
 
+
+## Status-area content spacing
+Move camp content and the gameplay HUD below the web safe top inset while retaining edge-to-edge painted backgrounds. Installed iOS uses a 60 CSS-pixel minimum when safe-area reporting is zero. Pause hit testing and hover follow the shifted HUD. World camera, joystick, roll button and loading layout unchanged. Godot render inspected at 430x932, shifted pause touch passed, Web export passed.
+

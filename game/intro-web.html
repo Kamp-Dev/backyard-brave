@@ -24,6 +24,16 @@ html.garden-standalone,html.garden-standalone body {height:100vh;min-height:100v
 html.garden-standalone #status {position:absolute;height:100%;}
 </style>
 <script>
+window.backyardTopInsetRatio=()=>{
+ const probe=document.createElement('div');
+ probe.style.cssText='position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top)';
+ document.body.append(probe);
+ let top=parseFloat(getComputedStyle(probe).paddingTop)||0;probe.remove();
+ // Some iOS Home Screen versions report zero despite an overlaid status bar.
+ const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(ios&&(navigator.standalone||matchMedia('(display-mode: standalone)').matches))top=Math.max(top,60);
+ return top/Math.max(1,document.body.getBoundingClientRect().height);
+};
 window.backyardConfigureDisplay=(config)=>{
  if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))return;
  document.documentElement.classList.add('garden-standalone');
