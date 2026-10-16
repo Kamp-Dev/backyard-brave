@@ -36,6 +36,8 @@ jobs:
           (home/'editor_settings-4.7.tres').write_text('[gd_resource type="EditorSettings" format=3]\n[resource]\nexport/android/android_sdk_path = "'+os.environ['ANDROID_HOME']+'"\nexport/android/java_sdk_path = "'+os.environ['JAVA_HOME']+'"\n')
           PY
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --editor --import --quit
+      - name: Check adapter transport using synthetic receipts
+        run: python3 tests/purchase-transport/test_transport.py Godot_v4.7.2-stable_linux.x86_64 game/google_play_store.gd evidence/transport.json
       - name: Export release bundle with billing plugin, checkout disabled
         run: |
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --install-android-build-template --export-release "Google Play Candidate" ../evidence/Backyard-Brave-audit.aab 2>&1 | tee evidence/export.log

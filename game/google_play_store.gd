@@ -24,16 +24,19 @@ func setup(owner_store: Node) -> void:
  billing.connect("query_product_details_response",_products)
  billing.connect("query_purchases_response",func(result): _purchases(result,true))
  billing.connect("on_purchase_updated",_updated)
+ create_verification_request()
+ if FileAccess.file_exists(RECEIPTS):
+  var saved=JSON.parse_string(FileAccess.get_file_as_string(RECEIPTS))
+  if saved is Array: receipts=saved
+ billing.startConnection()
+
+func create_verification_request() -> void:
  request=HTTPRequest.new()
  request.timeout=20
  request.body_size_limit=65536
  request.max_redirects=0 # A receipt must never follow a redirect to another host.
  add_child(request)
  request.request_completed.connect(_verified)
- if FileAccess.file_exists(RECEIPTS):
-  var saved=JSON.parse_string(FileAccess.get_file_as_string(RECEIPTS))
-  if saved is Array: receipts=saved
- billing.startConnection()
 
 func _connected() -> void:
  billing.queryProductDetails(PackedStringArray(store.products.keys()),"inapp")

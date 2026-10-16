@@ -1,0 +1,29 @@
+Backyard Brave - parent data and security operations
+DRAFT: to be implemented and verified before checkout is enabled.
+Owner: XEV APPS developer/account owner. Contact: xevapps@gmail.com.
+
+Scope and purpose
+The intended audience includes under-13 players and older players. Apply the same data-minimizing gameplay defaults to all players. No ads, profiling, required online accounts or chat are part of this release design. Store validation is solely for delivering/restoring cosmetic purchases. No sales/marketing reuse of receipts or support messages is authorized.
+
+Current implementation vs outstanding operations
+- Verifier accepts product_id/token only. Google processes payments. The verifier checks ownership and acknowledges; only digest/product/state/check time enter its ledger.
+- Ledger rows older than 90 days are removable by maintenance.py and pruned on verification. Daily-or-more-frequent scheduling and failure alerting are NOT deployed. The 90-day necessity and resulting deletion window need review before the public policy is finalized.
+- Signed ownership expires after 90 days; this is separate from server retention. Receipt cache and progression live on the device. No cloud progression recovery is offered.
+- Hosting logs, database backups and Gmail have separate controls. Record their actual retention, deletion, subprocessors, locations and written privacy/security assurances before launch. Do not assert deletion of Google-held financial records.
+
+Before production
+Document the final vendor/SDK inventory and review child-directed usage terms. Inspect the release bundle manifest and runtime network traffic. Provision least-privilege service credentials in secret storage; public signing key only in the game; TLS mandatory; ingress body limits/rate limits; body/query logging disabled. Limit admin access and use MFA. Define patching and key-rotation procedures. Monitor aggregate health without receipts or child identifiers. Exercise failed-storage and acknowledgement retry paths.
+
+Parent requests
+Support page asks adults to handle inquiries and avoid child's real name, birthdate, photos, identity documents or purchase tokens. First determine which system holds the requested information. Local-only progression cannot be remotely looked up by the developer. Use a proportionate, privacy-preserving authority/record-matching procedure approved for the final service before disclosing or deleting anything. This procedure is currently an OPEN RELEASE BLOCKER; an email claiming parenthood is not sufficient by itself.
+After verification: record only minimum request status, handle access/deletion through authorized operator tools, separately process mail/logs/backups, and explain any lawful retention and store limitations. delete-verified-hash is only a ledger tool; it is not a refund or complete erasure across providers. A later store restore may create a fresh verification record. Close and remove request records under the approved retention policy.
+If a child emails personal information: do not add them to marketing, solicit additional information, or create an ongoing child profile. Follow the reviewed response/retention procedure and applicable consent/exception; escalate uncertainty to qualified counsel.
+
+Incident readiness
+Assign a contact and response procedure for credential exposure or unexpected collection: disable checkout/affected collection, secure credentials, assess affected data/providers, preserve minimum necessary investigation evidence, and obtain advice on notice obligations. Re-test after changing an SDK, host, data field or audience feature.
+
+Required review
+Determine applicability of COPPA exceptions or verifiable parental consent for each actual collection purpose, and regional child/privacy requirements for intended distribution. Google Play purchase approval and a parent UI are not substitutes for this review. No age/consent checkbox or math question is asserted to prove parental consent.
+
+Source: FTC six-step compliance plan
+https://www.ftc.gov/business-guidance/resources/childrens-online-privacy-protection-rule-six-step-compliance-plan-your-business

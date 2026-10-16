@@ -100,3 +100,6 @@ After loading progress and entering the Scout tab, select and scroll to the next
 
 ## 2026-10-16 — Advance Growth after purchase
 After an upgrade is successfully saved, focus the next unlearned Growth node using the existing auto-focus behavior. Failed purchases/saves retain selection; completed tracks remain on level 100. No costs or progression changes.
+
+## 2026-10-16 — Android/Families audit and receipt hardening
+User authorized Android verification despite earlier packaging deferral. Added isolated unsigned AAB audit with no store upload, synthetic HTTP transport fixtures, explicit API 36/INTERNET candidate configuration, redirect blocking, atomic receipt saves, and stale response suppression. Added verifier input minimization and operator ledger cleanup/deletion with 10 passing unit checks. Child/parent privacy guidance and data-flow/operations records added. Actual AAB inspected: billing 9.1.0, target 36, backup disabled, 16KB LOAD/ZIP alignment, expected network/billing/vibration and AndroidX signature receiver permissions only. No physical device or Google purchase certification, backend deployment, legal-basis determination or final Families signoff yet.

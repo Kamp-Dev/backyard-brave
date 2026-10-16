@@ -31,3 +31,12 @@ https://support.google.com/googleplay/android-developer/answer/11043825?hl=en
 https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions
 
 This records an initial source review, not a legal opinion or complete policy audit.
+
+2026-10-16 implementation evidence update
+- Candidate preset explicitly enables INTERNET for verification and targets API 36. Existing test APK and signing identity left untouched. Isolated unsigned Android CI audit added; no store upload authorized by this workflow.
+- Client receipt file now uses temporary-file + atomic rename. HTTP receipt redirects disabled. Superseded in-flight verification responses ignored.
+- Server rejects extra fields, limits receipt inventory to the five products, and disables urllib redirects.
+- maintenance.py implements scheduled-prune and operator-only verified-hash deletion; deployment, scheduling, requester verification, backups and Gmail cleanup remain pending.
+- Local loopback fixture tested actual adapter POSTs: five requests, product_id/token only, pending receipts excluded, duplicate item bounded, full snapshot reconciliation and redirect refusal. Fake store and fake receipts only; no real billing claims.
+- Ten server tests pass: signature checking in tests, acknowledgement failure, duplicate/restore, pending/refund, outages, input minimization, retention and deletion. Existing commerce checks pass.
+- Privacy/support pages now explicitly discuss children, nickname use and parent handling of support. Legal review of processing and consent/exception remains open.

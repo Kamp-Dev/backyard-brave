@@ -1,0 +1,7 @@
+flow,data,destination,purpose,status,remaining_evidence
+Gameplay,"Nickname; stage/mastery/Acorn progress; settings",Device private storage,Save progress,Source reviewed,"Final Android backup/device-transfer behavior; runtime traffic"
+Purchase query,"Store products; purchase receipt; Google account context within SDK",Google Play Billing,Query prices and ownership,"Native plugin integrated; checkout disabled","Vendor disclosures/terms; transitive SDKs; supervised-account trace"
+Verification,"Product ID; purchase token",Configured HTTPS verifier,Validate cosmetic ownership,"Synthetic adapter HTTP tests passed; redirects disabled","Production TLS/host logs; legal basis/consent assessment"
+Verification ledger,"SHA-256 token digest; product; state; last-check timestamp",Operator SQLite ledger,Idempotent acknowledgement and verification,"10 unit tests passed; raw tokens absent from fixture DB","Durable deployment; schedule prune; backup/log retention; verified parent request process"
+Support,"Sender email and voluntarily supplied message",Gmail,Answer support or parent requests,Parent guidance added,"Written support retention/deletion process; accidental child-data handling"
+Website,"IP address and connection metadata may be processed",GitHub Pages and infrastructure providers,Deliver game/privacy/support pages,Provider processing not certified,"Provider policies; log controls; legal basis and region review"

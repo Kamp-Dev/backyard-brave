@@ -8,6 +8,12 @@ root = ET.parse(manifest).getroot()
 permissions = sorted(e.attrib[android+"name"] for e in root.findall("uses-permission"))
 allowed = {"android.permission.INTERNET", "android.permission.VIBRATE", "android.permission.ACCESS_NETWORK_STATE", "com.android.vending.BILLING"}
 errors = []
+# AndroidX uses an app-specific signature permission to protect receivers on
+# older Android versions. Only allow our exact name with signature protection.
+receiver_permission = root.attrib.get("package", "") + ".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+for declaration in root.findall("permission"):
+    if declaration.attrib.get(android+"name") == receiver_permission and declaration.attrib.get(android+"protectionLevel") in ("signature", "0x00000002", "2"):
+        allowed.add(receiver_permission)
 if set(permissions)-allowed: errors.append("Unexpected permissions: " + str(set(permissions)-allowed))
 if not {"android.permission.INTERNET", "com.android.vending.BILLING"} <= set(permissions): errors.append("Required verifier/billing permission absent")
 sdk = root.find("uses-sdk")
