@@ -27,7 +27,7 @@ func _ready():
  add_child(movie)
  movie.play()
  var shade=ColorRect.new()
- shade.color=Color(0.12,0.16,0.06,0.2)
+ shade.color=Color(0,0,0,0)
  shade.mouse_filter=Control.MOUSE_FILTER_IGNORE
  add_child(shade)
  shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -51,8 +51,19 @@ func _ready():
  meter.show_percentage=false
  add_child(meter)
  skip=Button.new()
- skip.text="Enter garden"
+ skip.text="ENTER"
  skip.disabled=true
+ skip.hide()
+ skip.add_theme_font_override("font",load("res://assets/fonts/breeserif.ttf"))
+ skip.add_theme_font_size_override("font_size",32)
+ skip.add_theme_color_override("font_color",Color("49351e"))
+ skip.add_theme_color_override("font_hover_color",Color("49351e"))
+ var atlas=AtlasTexture.new()
+ atlas.atlas=load("res://assets/ui/wood-tab-natural.png")
+ atlas.region=Rect2(85,128,1735,565)
+ var wood=StyleBoxTexture.new()
+ wood.texture=atlas
+ for state in ["normal","hover","pressed","focus"]: skip.add_theme_stylebox_override(state,wood)
  skip.pressed.connect(enter_garden)
  add_child(skip)
  resized.connect(layout)
@@ -69,8 +80,8 @@ func layout():
  caption.size=Vector2(frame.x,35)
  meter.position=Vector2(frame.x*0.2,frame.y-145)
  meter.size=Vector2(frame.x*0.6,14)
- skip.position=Vector2(frame.x/2-100,frame.y-110)
- skip.size=Vector2(200,55)
+ skip.position=Vector2(frame.x/2-140,frame.y-140)
+ skip.size=Vector2(280,85)
 func _process(dt):
  if movie==null or entering: return
  elapsed+=dt
@@ -85,7 +96,9 @@ func _process(dt):
   meter.value=100
   skip.disabled=false
   caption.text="Your adventure is ready"
-  if elapsed>=5.8: enter_garden()
+  skip.show()
+  meter.hide()
+  caption.hide()
 func enter_garden():
  if not ready_to_enter or entering: return
  entering=true
