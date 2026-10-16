@@ -516,7 +516,9 @@ func clear_touch() -> void:
 	touch_move = Vector2.ZERO
 
 func home_tab_rect(index: int) -> Rect2:
-	return Rect2(30 + index * 220, 1160, 220, 94)
+	# Keep navigation near the bottom on tall phones, with home-indicator room.
+	var y = maxf(1160, get_viewport_rect().size.y - ui_offset().y - 94 - 72)
+	return Rect2(30 + index * 220, y, 220, 94)
 
 func return_home() -> void:
 	var ready_growth = state in ["won", "dead"] and next_growth_ready()

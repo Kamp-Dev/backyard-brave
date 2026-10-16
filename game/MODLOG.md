@@ -62,3 +62,7 @@ Installed apps use 100vh for the page and intro; an external ResizeObserver size
 ## Status-area content spacing
 Move camp content and the gameplay HUD below the web safe top inset while retaining edge-to-edge painted backgrounds. Installed iOS uses a 60 CSS-pixel minimum when safe-area reporting is zero. Pause hit testing and hover follow the shifted HUD. World camera, joystick, roll button and loading layout unchanged. Godot render inspected at 430x932, shifted pause touch passed, Web export passed.
 
+
+## Bottom navigation spacing
+Anchor the three home tabs toward the bottom on tall screens, with 72 game units reserved below them. Existing minimum position is retained on shorter screens. Rendering and touch input use the same rect. Portrait render and all three shifted tab touch targets verified. Background concepts are proposals only; no background art changes in this release.
+
