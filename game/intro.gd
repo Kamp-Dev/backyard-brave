@@ -31,17 +31,6 @@ func _ready():
  shade.mouse_filter=Control.MOUSE_FILTER_IGNORE
  add_child(shade)
  shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
- var title=Label.new()
- title.text="BACKYARD\nBRAVE"
- title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- title.add_theme_font_override("font",load("res://assets/fonts/breeserif.ttf"))
- title.add_theme_font_size_override("font_size",52)
- title.add_theme_color_override("font_color",Color("fff1ca"))
- title.add_theme_color_override("font_shadow_color",Color("273318"))
- title.add_theme_constant_override("shadow_offset_y",3)
- add_child(title)
- title.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
- title.position.y=70
  caption=Label.new()
  caption.text="Getting the garden ready…"
  caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER

@@ -3,7 +3,6 @@ html,body {margin:0;padding:0;width:100%;height:100%;min-height:100dvh;backgroun
 #status {position:fixed;inset:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#c2d187 url('garden-poster.png') center/cover no-repeat;font-family:Georgia,serif;color:#fff1ca;z-index:10;}
 #status-splash {display:none!important;}
 #garden-intro {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;}
-#status::before {content:'BACKYARD BRAVE';position:absolute;z-index:2;top:calc(4% + env(safe-area-inset-top));left:5%;width:90%;text-align:center;font-size:clamp(28px,7vw,58px);font-weight:bold;text-shadow:0 3px 12px #263319;}
 #status::after {content:'Getting the garden ready…';position:absolute;z-index:2;bottom:calc(18% + env(safe-area-inset-bottom));width:100%;text-align:center;font-size:clamp(16px,4vw,24px);text-shadow:0 2px 8px #172010;}
 #status.ready::after {content:'';}
 #status-progress {z-index:3;top:auto;bottom:calc(12% + env(safe-area-inset-bottom));width:min(65%,420px);height:12px;accent-color:#8aa64f;border:2px solid #e5d4a1;border-radius:10px;overflow:hidden;background:#354725;}
