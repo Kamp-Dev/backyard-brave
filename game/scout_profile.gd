@@ -97,6 +97,7 @@ func character_input(event: InputEvent) -> void:
   if event.keycode in [KEY_LEFT,KEY_RIGHT]: character_choice = 1-character_choice
   elif event.keycode in [KEY_ENTER,KEY_SPACE]: select_character()
   elif event.keycode==KEY_M: page = "mastery"
+  elif event.keycode==KEY_O: host.wardrobe.open(character_choice)
   elif event.keycode==KEY_ESCAPE: close()
  elif event is InputEventJoypadButton and event.pressed:
   if event.button_index in [JOY_BUTTON_DPAD_LEFT,JOY_BUTTON_DPAD_RIGHT]: character_choice = 1-character_choice
@@ -104,7 +105,8 @@ func character_input(event: InputEvent) -> void:
   elif event.button_index==JOY_BUTTON_A: select_character()
   elif event.button_index==JOY_BUTTON_B: close()
  elif (event is InputEventScreenTouch or (event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT)) and event.pressed:
-  if PREVIOUS.has_point(event.position) or NEXT.has_point(event.position): character_choice = 1-character_choice
+  if host.wardrobe.OPEN.has_point(event.position): host.wardrobe.open(character_choice)
+  elif PREVIOUS.has_point(event.position) or NEXT.has_point(event.position): character_choice = 1-character_choice
   elif MASTERY.has_point(event.position): page = "mastery"
   elif SELECT.has_point(event.position): select_character()
   elif CLOSE.has_point(event.position): close()
@@ -154,6 +156,7 @@ func paint() -> void:
   var saved = host.selected_character
   host.selected_character = character_choice
   host.home_scout(Rect2(270,447,180,205))
+  host.draw_garden_button(host.wardrobe.OPEN,"OUTFITS",false,21)
   host.selected_character = saved
   host.draw_garden_button(PREVIOUS,"<",false,32)
   host.draw_garden_button(NEXT,">",false,32)

@@ -3,6 +3,7 @@ extends RefCounted
 const DAY = preload("res://assets/ui/pollinator-garden.png")
 const NIGHT = preload("res://assets/ui/firefly-garden.png")
 var clock = 0.0
+var honey_texture: Texture2D
 var light: GradientTexture2D
 
 func _init() -> void:
@@ -23,6 +24,9 @@ func paint(canvas: Node2D) -> void:
  var bounds=Rect2(-canvas.ui_offset(),canvas.get_viewport_rect().size)
  var night=canvas.settings.values.dark_mode
  var texture=NIGHT if night else DAY
+ if canvas.wardrobe.has_honey_garden() and not night:
+  if honey_texture==null: honey_texture=load("res://assets/cosmetics/honey_garden.png")
+  texture=honey_texture
  var scale=maxf(bounds.size.x/texture.get_width(),bounds.size.y/texture.get_height())
  var size=texture.get_size()*scale
  canvas.draw_texture_rect(texture,Rect2(bounds.get_center()-size/2,size),false)

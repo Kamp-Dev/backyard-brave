@@ -1,0 +1,20 @@
+{
+  "generator": "built-in image_gen",
+  "references": [
+    "assets/player/scout-storybook.png",
+    "assets/player/poppy.png",
+    "assets/ui/pollinator-garden.png"
+  ],
+  "generated_sources": {
+    "raincoat": "364c7b4c-cc02-4da1-a0fb-7daefaed1b6a",
+    "acorn": "ea98de13-a3c1-4f03-87b9-fb542c929040",
+    "moonflower": "2b40bda9-9b2a-432d-8f00-ea4625c9fb79",
+    "strawberry": "fb82502e-7a03-431a-b75e-431c0d273812",
+    "honeybee": "5ccdfa35-b843-41dc-9ebb-d7f41139bc04",
+    "honeyblossom": "682287ad-8396-454d-b2db-c7aa5a9504a7",
+    "guardian_scout": "46be48d4-dcb7-45e8-8a16-7236fc472c47",
+    "guardian_poppy": "3920658a-fa9b-4b1e-b81b-5cc659e25b5b",
+    "honey_garden": "79c3c462-e4e6-4698-87d9-30eccd320e49"
+  },
+  "constraints": "Preserve four-frame pose layout, identity and shared character_art rig; soft painted garden costumes. Delivered character atlases are 1254x1254 RGBA. Honey garden is a full-bleed portrait background."
+}

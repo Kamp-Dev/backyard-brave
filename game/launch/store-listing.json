@@ -1,0 +1,11 @@
+{
+  "developer": "Xevajius",
+  "support_email": "xevapps@gmail.com",
+  "app_name": "Backyard Brave",
+  "package": "com.kampdev.backyardbrave",
+  "short_description": "A tiny scout, a lively garden, and a new survival build every adventure.",
+  "full_description": "Explore a painted backyard where every bug is a big encounter. Dodge growing waves, discover skill combinations, and face garden guardians in enclosed boss arenas.\n\nPlay as Scout and earn Poppy by clearing Stage 15. Grow your builds through character-specific skills, mastery tracks and lifetime Acorn rewards.\n\nCollect earned Garden Guardian outfits or personalize your adventurers with optional cosmetic outfits. Cosmetics never increase combat power. The core adventure is free, with no forced ads or energy timer.\n\nDesigned for portrait play with touch controls, reduced-effects options and battery saver. Progress is stored on your device.",
+  "privacy_url": "https://kamp-dev.github.io/backyard-brave/privacy.html",
+  "support_url": "https://kamp-dev.github.io/backyard-brave/support.html",
+  "status": "Draft; screenshots, age rating, device certification and Play setup outstanding"
+}

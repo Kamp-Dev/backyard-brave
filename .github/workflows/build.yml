@@ -2,7 +2,7 @@ name: Build and publish browser game
 on:
   push:
     branches: [main]
-    paths: ['game/**', '.github/workflows/build.yml']
+    paths: ['game/**', 'services/**', '.github/workflows/build.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,6 +12,16 @@ concurrency:
   group: backyard-test-build
   cancel-in-progress: true
 jobs:
+  commerce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r services/purchases/requirements.txt
+      - run: python -m unittest discover -s services/purchases -v
+      - run: python game/tools/check_launch.py
   balance:
     runs-on: ubuntu-latest
     timeout-minutes: 35
@@ -42,7 +52,7 @@ jobs:
           name: balance-${{ matrix.character }}
           path: /tmp/chapter.log
   build:
-    needs: balance
+    needs: [balance, commerce]
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
@@ -82,12 +92,16 @@ jobs:
           timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 --script res://tests/lifetime_checks.gd 2>&1 | tee /tmp/lifetime.log
           grep -q 'LIFETIME ACORN CHECKS PASSED' /tmp/lifetime.log
           ! grep -q 'SCRIPT ERROR' /tmp/lifetime.log
+          timeout 60 Godot_v4.7.2-stable_linux.x86_64 --headless --path game --quit-after 300 --script res://tests/commerce_checks.gd 2>&1 | tee /tmp/commerce.log
+          grep -q 'COMMERCE CHECKS PASSED' /tmp/commerce.log
+          ! grep -q 'SCRIPT ERROR' /tmp/commerce.log
           Godot_v4.7.2-stable_linux.x86_64 --headless --path game --export-release Web ../web/backyard-${GITHUB_SHA}.html
           mv web/backyard-${GITHUB_SHA}.html web/index.html
           cp game/assets/intro/garden-intro.mp4 game/assets/intro/garden-poster.png web/
           cp game/assets/ui/wood-tab-natural.png web/
           python3 game/tools/prepare_web.py web/index.html
           test -s web/backyard-${GITHUB_SHA}.wasm
+          cp game/launch/privacy.html game/launch/support.html web/
           touch web/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:

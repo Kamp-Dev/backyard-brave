@@ -106,18 +106,23 @@ func handle(event: InputEvent) -> bool:
     if row(i).has_point(event.position): focus=i; toggle(i)
   else:
    for i in range(3):
-    if Rect2(150,610+i*98,420,74).has_point(event.position): focus=i; save_action(i)
+    if Rect2(150,610+i*84,420,74).has_point(event.position): focus=i; save_action(i)
+   if Rect2(110,885,245,60).has_point(event.position): save_action(3)
+   elif Rect2(365,885,245,60).has_point(event.position): save_action(4)
  return true
 
 func navigate(key: int) -> void:
  if key==KEY_ESCAPE: opened=false
  elif key in [KEY_LEFT,KEY_RIGHT,KEY_TAB]: tab=1-tab; focus=0
- elif key in [KEY_UP,KEY_DOWN]: focus=posmod(focus+(1 if key==KEY_DOWN else -1),KEYS.size() if tab==0 else 3)
+ elif key in [KEY_UP,KEY_DOWN]: focus=posmod(focus+(1 if key==KEY_DOWN else -1),KEYS.size() if tab==0 else 5)
  elif key in [KEY_ENTER,KEY_SPACE]:
   if tab==0: toggle(focus)
   else: save_action(focus)
 
 func save_action(index: int) -> void:
+ if index>=3:
+  OS.shell_open("https://kamp-dev.github.io/backyard-brave/"+("privacy.html" if index==3 else "support.html"))
+  return
  if index==0:
   DisplayServer.clipboard_set(player_id)
   notice="Local player ID copied."
@@ -206,8 +211,10 @@ func paint() -> void:
   host.center_text(494,player_id,20,host.LEAF_GREEN)
   host.center_text(544,"Progress is saved on this device.",22,host.JOURNAL_INK)
   host.center_text(578,"Cloud accounts are not connected.",20,host.LEAF_GREEN)
-  for i in range(3): host.draw_pause_action(Rect2(150,610+i*98,420,74),["COPY PLAYER ID","BACK UP SAVE","CHECK SAVE FILE"][i],focus==i)
-  host.center_text(940,"Backups stay in the game's local save folder.",18,host.LEAF_GREEN)
-  host.center_text(973,"Backyard Brave / Development build",18,host.LEAF_GREEN)
+  for i in range(3): host.draw_pause_action(Rect2(150,610+i*84,420,74),["COPY PLAYER ID","BACK UP SAVE","CHECK SAVE FILE"][i],focus==i)
+  host.draw_pause_action(Rect2(110,885,245,60),"PRIVACY",focus==3)
+  host.draw_pause_action(Rect2(365,885,245,60),"SUPPORT",focus==4)
+  host.center_text(973,"Xevajius / Backyard Brave",18,host.LEAF_GREEN)
+
  host.center_text(1004,notice,18,host.LEAF_GREEN)
  host.draw_pause_action(CLOSE,"BACK TO CAMP",true)

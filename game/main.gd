@@ -90,6 +90,8 @@ var earned_acorns = 0
 var earned_breakdown: Dictionary = {}
 const ScoutProfile = preload("res://scout_profile.gd")
 var scout_profile = ScoutProfile.new()
+var wardrobe = preload("res://wardrobe.gd").new()
+var commerce = preload("res://commerce.gd").new()
 var scout_name = "Backyard Scout"
 const Poppy = preload("res://poppy.gd")
 var poppy = Poppy.new()
@@ -319,6 +321,9 @@ func _ready() -> void:
 		lifetime.totals.bosses = cleared_runs
 		for record in mastery.records.values(): lifetime.totals.kills += int(record.get("bugs",0))
 	if not lifetime.character_unlocked(selected_character,stage_records,scout_experience.level): selected_character = 0
+	add_child(commerce)
+	commerce.setup(self)
+	wardrobe.setup(self,save)
 	growth.lifetime = lifetime
 	growth.account_level = scout_experience.level
 	if not "--smoke-test" in OS.get_cmdline_user_args() and not "--balance-test" in OS.get_cmdline_user_args():
@@ -379,6 +384,7 @@ func start_run() -> void:
 	run_dodges = 0
 	roll_counted = false
 	mastery.signature = 0
+	wardrobe.refresh()
 	run_character = selected_character
 	poppy.reset()
 	exit_stage_confirmation = false
@@ -618,6 +624,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		event = event.duplicate()
 		event.position -= ui_offset()
 	if settings.handle(event): return
+	if wardrobe.handle(event): return
 	if scout_profile.handle(event): return
 	if event is InputEventScreenTouch:
 		album_view.hover_point = Vector2.INF
@@ -774,7 +781,7 @@ func _process(delta: float) -> void:
 	settings.advance(delta)
 	if state=="title" and not screenshot_mode and not settings.values.low_graphics:
 		home_garden.advance(delta)
-	album_view.visible = state == "title" and home_tab == 0 and not scout_handbook and scout_profile.page.is_empty() and not settings.opened
+	album_view.visible = state == "title" and home_tab == 0 and not scout_handbook and scout_profile.page.is_empty() and not settings.opened and not wardrobe.opened
 	album_view.position = GROWTH_VIEW.position + ui_offset()
 	if album_view.visible:
 		if growth_drag_id == -2 and absf(growth_velocity)>1:
@@ -1521,6 +1528,7 @@ func save_progress() -> bool:
 	save.set_value("stages", "records", stage_records)
 	lifetime.write_config(save)
 	mastery.write_config(save)
+	wardrobe.write_config(save)
 	growth.write_config(save)
 	scout_experience.write_config(save)
 	if save.save("user://records.cfg") != OK:
@@ -1965,6 +1973,7 @@ func draw_home() -> void:
 		var rect = home_tab_rect(tab)
 		draw_garden_button(rect,["SCOUT","ADVENTURE","JOURNAL"][tab],home_tab==tab,24)
 	scout_profile.paint()
+	wardrobe.paint()
 	settings.paint()
 
 func draw_field_journal() -> void:
@@ -3679,6 +3688,8 @@ func draw_campsite_header() -> void:
 	home_center_text(68,"Small scout. Big adventure.",20,LEAF_GREEN)
 	var portrait_center=Vector2(125,183)
 	character_art[selected_character].head_badge(self,portrait_center,49)
+	if commerce.owns("com.kampdev.backyardbrave.supporter"):
+		draw_arc(portrait_center,54,0.2,PI-0.2,32,Color("c39446"),3,true)
 	var name_size=28
 	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>350:
 		name_size-=1

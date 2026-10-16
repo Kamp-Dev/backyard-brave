@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "skins": [
+    {
+      "id": "scout",
+      "name": "Classic Scout",
+      "character": 0,
+      "product": "",
+      "earned_mastery": 0,
+      "description": "Your original garden explorer.",
+      "atlas": "res://assets/player/scout-storybook.png"
+    },
+    {
+      "id": "raincoat",
+      "name": "Raincoat Scout",
+      "character": 0,
+      "product": "com.kampdev.backyardbrave.raincoat",
+      "earned_mastery": 0,
+      "description": "Sunflower coat and puddle-ready boots.",
+      "atlas": "res://assets/cosmetics/raincoat.png"
+    },
+    {
+      "id": "acorn",
+      "name": "Acorn Trail Scout",
+      "character": 0,
+      "product": "com.kampdev.backyardbrave.acorn",
+      "earned_mastery": 0,
+      "description": "Oak embroidery and a warm knitted shirt.",
+      "atlas": "res://assets/cosmetics/acorn.png"
+    },
+    {
+      "id": "honeybee",
+      "name": "Honeybee Scout",
+      "character": 0,
+      "product": "com.kampdev.backyardbrave.supporter",
+      "earned_mastery": 0,
+      "description": "Honeycomb stitching for a garden friend.",
+      "atlas": "res://assets/cosmetics/honeybee.png"
+    },
+    {
+      "id": "guardian_scout",
+      "name": "Guardian Scout",
+      "character": 0,
+      "product": "",
+      "earned_mastery": 5,
+      "description": "Earn all five Scout mastery titles.",
+      "atlas": "res://assets/cosmetics/guardian_scout.png"
+    },
+    {
+      "id": "poppy",
+      "name": "Classic Poppy",
+      "character": 1,
+      "product": "",
+      "earned_mastery": 0,
+      "description": "The original backyard gardener.",
+      "atlas": "res://assets/player/poppy.png"
+    },
+    {
+      "id": "moonflower",
+      "name": "Moonflower Poppy",
+      "character": 1,
+      "product": "com.kampdev.backyardbrave.moonflower",
+      "earned_mastery": 0,
+      "description": "Indigo workwear with ivory blossoms.",
+      "atlas": "res://assets/cosmetics/moonflower.png"
+    },
+    {
+      "id": "strawberry",
+      "name": "Strawberry Poppy",
+      "character": 1,
+      "product": "com.kampdev.backyardbrave.strawberry",
+      "earned_mastery": 0,
+      "description": "Berry embroidery and soft gingham cuffs.",
+      "atlas": "res://assets/cosmetics/strawberry.png"
+    },
+    {
+      "id": "honeyblossom",
+      "name": "Honey Blossom Poppy",
+      "character": 1,
+      "product": "com.kampdev.backyardbrave.supporter",
+      "earned_mastery": 0,
+      "description": "Chamomile flowers and golden overalls.",
+      "atlas": "res://assets/cosmetics/honeyblossom.png"
+    },
+    {
+      "id": "guardian_poppy",
+      "name": "Guardian Poppy",
+      "character": 1,
+      "product": "",
+      "earned_mastery": 5,
+      "description": "Earn all five Poppy mastery titles.",
+      "atlas": "res://assets/cosmetics/guardian_poppy.png"
+    }
+  ],
+  "products": [
+    {
+      "id": "com.kampdev.backyardbrave.raincoat",
+      "title": "Raincoat Scout",
+      "proposed_usd": 2.99,
+      "type": "non_consumable",
+      "grants": [
+        "raincoat"
+      ]
+    },
+    {
+      "id": "com.kampdev.backyardbrave.acorn",
+      "title": "Acorn Trail Scout",
+      "proposed_usd": 2.99,
+      "type": "non_consumable",
+      "grants": [
+        "acorn"
+      ]
+    },
+    {
+      "id": "com.kampdev.backyardbrave.moonflower",
+      "title": "Moonflower Poppy",
+      "proposed_usd": 2.99,
+      "type": "non_consumable",
+      "grants": [
+        "moonflower"
+      ]
+    },
+    {
+      "id": "com.kampdev.backyardbrave.strawberry",
+      "title": "Strawberry Poppy",
+      "proposed_usd": 2.99,
+      "type": "non_consumable",
+      "grants": [
+        "strawberry"
+      ]
+    },
+    {
+      "id": "com.kampdev.backyardbrave.supporter",
+      "title": "Garden Friends Pack",
+      "proposed_usd": 8.99,
+      "type": "non_consumable",
+      "grants": [
+        "honeybee",
+        "honeyblossom",
+        "honey_garden",
+        "supporter_badge"
+      ]
+    }
+  ]
+}

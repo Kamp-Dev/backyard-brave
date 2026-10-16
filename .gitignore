@@ -3,3 +3,7 @@ web/
 android/
 *.keystore
 *.idsig
+
+__pycache__/
+*.pyc
+services/purchases/*.sqlite*
