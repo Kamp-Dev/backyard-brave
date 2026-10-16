@@ -50,3 +50,7 @@ Removed the loading-screen title overlay in both native and browser versions at 
 ## v0.13.3-test — iPhone Home Screen edge layout
 Use a fixed full-viewport page for both the loader and game canvas, remove the solid Safari theme tint, and declare translucent Home Screen launch metadata before styles/scripts with an explicit standalone manifest. Local 430x932 browser check passed for loading and camp, with no console errors. Physical iPhone standalone status-bar behavior still needs device verification; existing launch metadata may be cached by iOS.
 
+
+## iPhone viewport diagnostic
+Add an opt-in ?display-check=1 overlay on the actual game page. Displays browser/standalone mode, viewport and screen dimensions, safe-area values, and canvas/intro bounds with a pink page-edge marker. Local-only; no save access or telemetry. No further layout changes pending physical-device measurements. Export and diagnostic dismissal verified locally.
+

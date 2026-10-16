@@ -28,6 +28,37 @@ window.backyardLoadingComplete=(enter)=>{
  button.onclick=()=>{button.disabled=true;enter();document.getElementById('canvas').focus();};
 };
 document.addEventListener('DOMContentLoaded',()=>{
+ // Opt-in, local-only measurements of the actual game page on a phone.
+ // This does not access progression, transmit data, or change viewport geometry.
+ if(new URLSearchParams(location.search).has('display-check')){
+  const edge=document.createElement('div');
+  edge.style.cssText='position:fixed;inset:0 0 auto;height:4px;background:#ff00ff;z-index:2147483647;pointer-events:none';
+  const probe=document.createElement('div');
+  probe.style.cssText='position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+  const panel=document.createElement('section');
+  panel.style.cssText='position:fixed;z-index:2147483646;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;max-height:65%;overflow:auto;padding:12px;background:#fff7df;color:#302819;border:2px solid #73582c;border-radius:8px;font:13px/1.4 monospace;touch-action:pan-y';
+  const heading=document.createElement('strong');heading.textContent='DISPLAY CHECK 1 — screenshot this panel';
+  const report=document.createElement('pre');report.style.cssText='white-space:pre-wrap;margin:8px 0;font:inherit';
+  const close=document.createElement('button');close.textContent='Close display check';
+  panel.append(heading,report,close);document.body.append(probe,edge,panel);
+  const rect=(selector)=>{const el=document.querySelector(selector);if(!el)return 'absent';const r=el.getBoundingClientRect();return `x ${Math.round(r.x)}, y ${Math.round(r.y)}, ${Math.round(r.width)} x ${Math.round(r.height)}`;};
+  const update=()=>{
+   const v=visualViewport, p=getComputedStyle(probe);
+   report.textContent=[
+    `Mode: ${navigator.standalone||matchMedia('(display-mode: standalone)').matches?'Home Screen':'browser'}`,
+    `Screen: ${screen.width} x ${screen.height}; DPR ${devicePixelRatio}`,
+    `Window: ${innerWidth} x ${innerHeight}`,
+    `Document: ${document.documentElement.clientWidth} x ${document.documentElement.clientHeight}`,
+    `Visual: ${v?`${Math.round(v.width)} x ${Math.round(v.height)}, top ${v.offsetTop}, scale ${v.scale}`:'unavailable'}`,
+    `Safe top/bottom: ${p.paddingTop} / ${p.paddingBottom}`,
+    `Body: ${rect('body')}`,`Canvas: ${rect('#canvas')}`,`Intro: ${rect('#status')}`,
+    'Pink line = top edge the webpage can draw.',
+    'Include the clock and bottom of the screen in the screenshot.'
+   ].join('\n');
+  };
+  const timer=setInterval(update,1000);update();
+  close.onclick=()=>{clearInterval(timer);panel.remove();edge.remove();probe.remove();};
+ }
  const status=document.getElementById('status');
  if(!status)return;
  const button=document.createElement('button');button.id='garden-enter';button.textContent='ENTER';button.hidden=true;status.append(button);
