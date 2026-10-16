@@ -54,3 +54,7 @@ Use a fixed full-viewport page for both the loader and game canvas, remove the s
 ## iPhone viewport diagnostic
 Add an opt-in ?display-check=1 overlay on the actual game page. Displays browser/standalone mode, viewport and screen dimensions, safe-area values, and canvas/intro bounds with a pink page-edge marker. Local-only; no save access or telemetry. No further layout changes pending physical-device measurements. Export and diagnostic dismissal verified locally.
 
+
+## Home Screen bottom-gap sizing
+Installed apps use 100vh for the page and intro; an external ResizeObserver sizes the Godot canvas buffer from the same body bounds with canvasResizePolicy=0. Normal browser mode retains existing sizing. This avoids mixing percentage/innerHeight sizing with the installed full-screen layout. Export and forced-standalone desktop fixture checked: Enter transitions to camp, body/canvas 430x932, no console errors. Physical iPhone validation pending.
+

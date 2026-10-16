@@ -18,8 +18,30 @@ body {position:fixed;inset:0;margin:0;padding:0;width:100%;height:100%;overflow:
 #garden-enter:active {transform:translateX(-50%) scale(.97);}
 #garden-enter:focus-visible {outline:3px solid #f5edba;outline-offset:2px;border-radius:24px;}
 #garden-enter[hidden] {display:none;}
+/* Installed iOS apps can report a shortened percentage/innerHeight viewport
+   even while drawing behind the status bar. vh includes that screen area. */
+html.garden-standalone,html.garden-standalone body {height:100vh;min-height:100vh;}
+html.garden-standalone #status {position:absolute;height:100%;}
 </style>
 <script>
+window.backyardConfigureDisplay=(config)=>{
+ if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))return;
+ document.documentElement.classList.add('garden-standalone');
+ const canvas=document.getElementById('canvas');
+ // Let Godot observe the externally sized buffer instead of overwriting it
+ // every frame with the shorter window.innerHeight.
+ config.canvasResizePolicy=0;
+ const fit=()=>{
+  const r=document.body.getBoundingClientRect(), scale=devicePixelRatio||1;
+  const w=Math.max(1,Math.round(r.width*scale)),h=Math.max(1,Math.round(r.height*scale));
+  if(canvas.width!==w)canvas.width=w;
+  if(canvas.height!==h)canvas.height=h;
+ };
+ new ResizeObserver(fit).observe(document.body);
+ window.addEventListener('pageshow',fit);
+ window.addEventListener('resize',fit);
+ fit();
+};
 window.backyardLoadingComplete=(enter)=>{
  const status=document.getElementById('status');
  const button=document.getElementById('garden-enter');

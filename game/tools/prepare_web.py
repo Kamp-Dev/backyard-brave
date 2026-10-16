@@ -4,6 +4,9 @@ import json
 import sys
 path=Path(sys.argv[1])
 s=path.read_text()
+old='const engine = new Engine(GODOT_CONFIG);'
+assert old in s
+s=s.replace(old,'window.backyardConfigureDisplay(GODOT_CONFIG);\n'+old)
 old='width=device-width, user-scalable=no, initial-scale=1.0'
 assert old in s
 s=s.replace(old,old+', viewport-fit=cover')
