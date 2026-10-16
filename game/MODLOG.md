@@ -86,3 +86,6 @@ Prompt: Match concept A hanging garden sign, isolate a blank natural wooden boar
 
 ## 2026-10-16 — Inset sign contents and browser name editing
 Centered the shared character portrait within an inset parchment medallion; softened and inset XP/stats/settings inside the existing timber sign. Web renaming now uses a native DOM text input in a parchment dialog, positioned around the visual viewport keyboard, and retains existing save/rollback behavior. Native LineEdit remains unchanged. Verified day/night Godot renders and touch targets; browser save, reload persistence, empty-name validation and cancel. Physical iPhone keyboard still needs user verification. Browser-only release.
+
+## 2026-10-16 — Character head badges
+Replaced the small full-body camp medallion with character-specific close-up head framing from the existing Scout/Poppy painted atlases. A circular UV mesh keeps art inside the warm inset frame; selected character drives the badge. No new textures, gameplay animations, unlock requirements or save changes. Verified both characters in actual menu renders.

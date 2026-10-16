@@ -3678,9 +3678,7 @@ func draw_campsite_header() -> void:
 	home_center_text(38,"BACKYARD BRAVE",40,JOURNAL_INK)
 	home_center_text(68,"Small scout. Big adventure.",20,LEAF_GREEN)
 	var portrait_center=Vector2(125,183)
-	draw_circle(portrait_center,51,Color("98784d"),true,-1,true)
-	draw_circle(portrait_center,48,Color("f1dfb7"),true,-1,true)
-	character_art[selected_character].portrait(self,Rect2(portrait_center-Vector2(32,43),Vector2(64,86)))
+	character_art[selected_character].head_badge(self,portrait_center,49)
 	var name_size=28
 	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>350:
 		name_size-=1

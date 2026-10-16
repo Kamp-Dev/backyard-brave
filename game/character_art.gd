@@ -7,9 +7,12 @@ var legs: Array
 var cuts: Array
 var release_offsets: Array
 var rear_faces_left = false
+var head_region: Rect2
 func _init(texture: Texture2D, scout: bool = false):
 	art=texture
 	rear_faces_left=scout
+	# Dedicated face framing for each atlas; independent of the gameplay rig.
+	head_region=Rect2(175,25,320,320) if scout else Rect2(760,5,340,340)
 	anchors=[Vector2(350,617),Vector2(366,1190)] if scout else [Vector2(320,617),Vector2(350,1208)]
 	legs=[Rect2(193,478,157,139),Rect2(350,478,173,139),Rect2(198,1065,168,125),Rect2(366,1065,163,125)] if scout else [Rect2(189,459,128,158),Rect2(317,459,165,158),Rect2(224,1038,127,170),Rect2(351,1038,161,170)]
 	cuts=[482,1069] if scout else [463,1042]
@@ -28,6 +31,20 @@ func portrait(g,rect:Rect2):
 	var region=regions[0]
 	var size=region.size*(rect.size.y/region.size.y)
 	g.draw_texture_rect_region(art,Rect2(Vector2(rect.get_center().x-size.x/2,rect.position.y),size),region)
+
+func head_badge(g, center:Vector2, radius:float) -> void:
+	# Circular UV mesh clips the portrait to its inset frame without new textures.
+	g.draw_circle(center+Vector2(0,2),radius+4,Color("735332"),true,-1,true)
+	g.draw_circle(center,radius+3,Color("b59560"),true,-1,true)
+	g.draw_circle(center,radius,Color("f3e2ba"),true,-1,true)
+	var points=PackedVector2Array()
+	var uv=PackedVector2Array()
+	for i in range(64):
+		var direction=Vector2.from_angle(TAU*i/64.0)
+		points.append(center+direction*(radius-3))
+		uv.append((head_region.position+(direction*0.5+Vector2(0.5,0.5))*head_region.size)/Vector2(art.get_size()))
+	g.draw_polygon(points,PackedColorArray([Color.WHITE]),uv,art)
+	g.draw_arc(center,radius-1,0,TAU,64,Color("ddc695"),2,true)
 
 func gait(g) -> Vector2:
 	# Distance, not time or attack state: blocked/idle feet stop immediately.
