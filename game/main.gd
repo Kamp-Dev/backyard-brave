@@ -3525,6 +3525,7 @@ func purchase_growth() -> void:
 		growth.load_config(old)
 		growth_notice = "Save failed. Nothing spent; please try again."
 		return
+	focus_next_growth()
 	growth_notice = "Learned! Applies next run."
 	if growth.acorns>before_acorns: growth_notice = "Acorn reward unlocked! Applies next run."
 	tone(880,0.08)

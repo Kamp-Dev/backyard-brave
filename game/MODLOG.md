@@ -97,3 +97,6 @@ Validation: commerce signed/forged/refund/mastery checks, five backend unit test
 
 ## 2026-10-16 — Growth opens at next upgrade
 After loading progress and entering the Scout tab, select and scroll to the next unlearned Growth upgrade. Clamp completed tracks to level 100; stop stale scroll inertia and touch drags. Keep manual browsing available. Verified new/partial/complete progress and mobile Godot render. Browser only.
+
+## 2026-10-16 — Advance Growth after purchase
+After an upgrade is successfully saved, focus the next unlearned Growth node using the existing auto-focus behavior. Failed purchases/saves retain selection; completed tracks remain on level 100. No costs or progression changes.
