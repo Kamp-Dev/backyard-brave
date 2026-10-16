@@ -113,7 +113,7 @@ const WOOD_TAB_GREEN = preload("res://assets/ui/wood-tab-green.png")
 const WOOD_TAB_NATURAL = preload("res://assets/ui/wood-tab-natural.png")
 const WORKBENCH = preload("res://assets/ui/gardener-workbench.png")
 const REPORT_ART = preload("res://assets/ui/scout-report-pieces.png")
-const CAMP_HEADER = preload("res://assets/ui/campsite-header-name.png")
+const CAMP_HEADER = preload("res://assets/ui/hanging-garden-sign.png")
 const STORY_SKILLS = preload("res://assets/ui/storybook-skills.png")
 const STORY_ICONS = [Rect2(50,80,425,315), Rect2(525,80,350,315), Rect2(925,100,350,290), Rect2(55,450,385,315), Rect2(490,450,380,330), Rect2(890,455,395,315), Rect2(65,810,380,325), Rect2(490,822,365,310), Rect2(915,835,365,295)]
 const STORY_PAUSE = preload("res://assets/ui/storybook-pause.png")
@@ -3665,15 +3665,17 @@ func pause_key(key: int) -> bool:
 	return true
 
 func draw_campsite_header() -> void:
-	# One restrained hanging sign. Background and stage/card geometry stay fixed.
-	for x in [65.0,655.0]:
-		draw_line(Vector2(x,-110-top_content_inset),Vector2(x,120),Color("705438"),5,true)
-		draw_line(Vector2(x-1,-110-top_content_inset),Vector2(x-1,120),Color("c6a574"),2,true)
+	# Dedicated timber-and-rope artwork, uniformly scaled to preserve its shape.
+	var sign_size=CAMP_HEADER.get_size()*(680.0/CAMP_HEADER.get_width())
+	var rope_scale=680.0/CAMP_HEADER.get_width()
+	for rope_x in [220,1500]:
+		var rope_y=-19.0-64*rope_scale
+		while rope_y > -ui_offset().y-64*rope_scale:
+			draw_texture_rect_region(CAMP_HEADER,Rect2(20+rope_x*rope_scale,rope_y,52*rope_scale,64*rope_scale),Rect2(rope_x,0,52,64))
+			rope_y-=64*rope_scale
+	draw_texture_rect(CAMP_HEADER,Rect2(Vector2(20,-19),sign_size),false)
 	home_center_text(38,"BACKYARD BRAVE",40,JOURNAL_INK)
 	home_center_text(68,"Small scout. Big adventure.",20,LEAF_GREEN)
-	illustrated_wood(Rect2(25,92,670,202),false)
-	for x in [65.0,655.0]:
-		draw_arc(Vector2(x,112),7,0,TAU,24,Color("705438"),3,true)
 	var portrait_center=ScoutProfile.PORTRAIT.get_center()
 	draw_circle(portrait_center,60,Color("8d6b40"),true,-1,true)
 	draw_circle(portrait_center,56,Color("f1dfb7"),true,-1,true)

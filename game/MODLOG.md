@@ -78,3 +78,8 @@ Night: Production mobile game background texture, full bleed portrait 9:16, cozy
 ## Hanging Garden Sign header
 Apply selected concept A using the established painted wooden texture and shared Scout/Poppy portrait art. Title sits above a single rope-hung sign containing portrait, name, level/XP, runs/clears/stage and settings. Remove the separate old diorama and XP row. Preserve stage-card geometry, bottom navigation and safe-area offset. Verified day/night portrait renders and relocated portrait, name and settings touch targets; Web export passed.
 
+
+## Dedicated timber sign and brown rope art
+Replace the rejected button-texture header with a dedicated transparent painted sign, generated using the built-in image tool from concept A. Asset: assets/ui/hanging-garden-sign.png (1774x887 RGBA), uniformly scaled; twisted brown hemp rope, drilled attachment holes, knots, irregular timber, corner clover. Rope extensions sample the artwork's own rope strands. Existing touch targets retained. Day/night renders and header touch checks passed; Web export passed.
+Prompt: Match concept A hanging garden sign, isolate a blank natural wooden board suspended from two thick twisted brown hemp ropes on transparent background. Warm honey weathered timber, matte storybook grain, subtle bevel, irregular corners, visible drilled holes and tied knots, small corner clover sprigs. No text, portrait, icons, UI, scenery, glossy rounded button borders. Revision: canvas 2:1, board approximately 3.2:1, more vertical writing space, preserve original texture and rope fiber detail.
+
