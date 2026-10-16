@@ -1,0 +1,33 @@
+Backyard Brave - Families release review
+Recorded 2026-10-16. User intends children under 13, teens and adults.
+Status: NOT CERTIFIED; real checkout remains disabled.
+
+Default design
+Use child-protective defaults for everyone. Keep gameplay local, without required accounts, chat, ad SDKs, advertising identifiers, behavioral analytics or unsolicited notifications. Do not add birthdates merely to claim compliance. Any future age-dependent data flow requires a neutral age screen and documented legal basis before SDK initialization. These are design constraints, not proof that the final binary meets them.
+
+Evidence currently inspected
+- commerce_config.json: enabled=false; verification URL and public key absent.
+- commerce.gd: native provider setup gated behind enabled/Android/configuration checks.
+- google_play_store.gd: receipts sent to verifier when enabled; Google billing queried on connection and restoration. This flow must be reviewed before enabling even if no purchase button has been pressed.
+- Core scout name/progress/settings are local; no cloud-save feature.
+- wardrobe.gd: optional cosmetics, no combat boosts or character bypass, explicit prices supplied by store, Back always available. Inspect final on-device prices and touch behavior before certification.
+- garden_settings.gd: external privacy/support links. Review destination content and hosting data handling, not merely the link label.
+- Backend ledger stores hashed tokens/product/state/check time; pruning currently occurs during verification. No deployed cleanup schedule or parent-request procedure is established.
+- Export presets do not establish the merged manifest, transitive SDK behavior, or runtime network behavior. No final AAB has been audited.
+
+Required closure evidence
+1. Content: inspect every stage/boss, audio, intro, warning flashes, frightening imagery, defeat presentation, reading and controls. Select only genuinely supported Play age bands. Under-13 intent does not prove suitability for preschoolers; IARC rating is separately determined from truthful answers.
+2. Data inventory: app, billing SDK, Google services, verifier host, CDN/web host and support email; identify fields, purpose, recipients, retention, backups and deletion. Include IP/logging and purchase tokens. Do not equate no analytics with no data collection.
+3. SDK/permissions: inspect final AAB merged manifest/dependencies, vendor terms and device traffic. Confirm no advertising or prohibited identifiers, unnecessary sensitive permissions, or child-ineligible SDK initialization.
+4. Monetization: clear real-money prices and permanent cosmetic contents, no pressure timers, misleading discounts, loot boxes, paid power or disruptive prompts. Consider a parent-facing purchase confirmation as a UX safeguard; it is not age verification or verifiable parental consent. Test Family Link purchase approval, cancellation, pending approval, restore, refund and restart on a supervised account.
+5. COPPA and regional law: qualified review of purchase/support/hosting data flows, applicable exceptions or consent requirements, and launch regions. Do not assume Google Play checkout or a math question supplies consent. If consent is required, implement compliant direct notice and verifiable consent before collection; core child gameplay stays available.
+6. Parent operations: create truthful parent-facing notice; verified parent access/deletion request handling; support-message retention; scheduled ledger/log/back-up cleanup and security controls. Confirm process on deployed infrastructure before promising it publicly. No request should require children to email identity documents or purchase tokens.
+7. Console: complete Target Audience and Content, IARC, Data Safety, ads and app-access declarations from the final implementation. Review all linked content and store assets. Do not claim Teacher Approved, COPPA certified, or Google approved without the applicable evidence.
+8. Release: signed Android artifact, internal tests/pre-launch report and real device tests. Keep checkout off until findings are closed. Browser hosting must also be reviewed; Families work does not apply only to the APK.
+
+Sources reviewed
+https://support.google.com/googleplay/android-developer/answer/9893335?hl=en
+https://support.google.com/googleplay/android-developer/answer/11043825?hl=en
+https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions
+
+This records an initial source review, not a legal opinion or complete policy audit.

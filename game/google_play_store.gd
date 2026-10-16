@@ -27,6 +27,7 @@ func setup(owner_store: Node) -> void:
  request=HTTPRequest.new()
  request.timeout=20
  request.body_size_limit=65536
+ request.max_redirects=0 # A receipt must never follow a redirect to another host.
  add_child(request)
  request.request_completed.connect(_verified)
  if FileAccess.file_exists(RECEIPTS):
@@ -96,7 +97,7 @@ func _purchases(result: Dictionary, complete_snapshot: bool = false) -> void:
     receipts.append(row)
  # A successful full Play query replaces ownership for the current account.
  # Incremental purchase callbacks merge; failed queries never clear receipts.
- var file=FileAccess.open(RECEIPTS,FileAccess.WRITE)
+ var file=FileAccess.open(RECEIPTS+".tmp",FileAccess.WRITE)
  if file==null:
   store.fail("Could not save purchase receipt. Please try Restore.")
   return
@@ -104,7 +105,7 @@ func _purchases(result: Dictionary, complete_snapshot: bool = false) -> void:
  file.flush()
  var saved=file.get_error()==OK
  file.close()
- if not saved:
+ if not saved or DirAccess.rename_absolute(RECEIPTS+".tmp",RECEIPTS)!=OK:
   store.fail("Could not save receipt. Please try Restore.")
   return
  payment_pending=pending

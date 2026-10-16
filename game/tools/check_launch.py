@@ -24,6 +24,11 @@ for page in ("privacy.html", "support.html"):
     if "Xevajius" not in text or "xevapps@gmail.com" not in text:
         errors.append("Missing developer contact in " + page)
 if "--production" in sys.argv:
+    audience = json.loads((root / "launch" / "audience-review.json").read_text(encoding="utf-8"))
+    if audience["includes_children_under_13"]:
+        for item in ("families_review_status", "purchase_data_review_status", "sdk_binary_review_status", "parent_notice_and_deletion_status", "content_age_suitability_status"):
+            if audience.get(item) != "reviewed":
+                errors.append("Children/families release evidence pending: " + item)
     if not config["enabled"]:
         errors.append("Real checkout is disabled pending certification")
     if not config["verification_url"].startswith("https://") or not config["public_key_pem"]:
@@ -34,5 +39,5 @@ if "--production" in sys.argv:
 for error in errors:
     print("BLOCKED:", error)
 if not errors:
-    print("LAUNCH PREVIEW CHECKS PASSED — purchases remain gated")
+    print("LAUNCH PREVIEW CHECKS PASSED - purchases remain gated")
 sys.exit(bool(errors))

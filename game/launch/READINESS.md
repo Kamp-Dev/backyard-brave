@@ -20,6 +20,10 @@ Google Play is the first target. Apple enrollment and an iOS build are separate 
 - Privacy/support pages, product configuration CSV and listing copy prepared. No ads, subscription or analytics SDK introduced.
 - Separate Google Play Candidate AAB preset prepared. Existing APK/signing identity preserved; no new APK or AAB produced in this task.
 
+## Children and Families release gate
+
+The intended audience includes children under 13, teens and adults. See `FAMILIES-REVIEW.txt` and `audience-review.json`. Exact age bands require suitability review; COPPA/SDK/data handling, parent notices, retention/deletion and supervised purchase tests remain pending. No compliance certification is claimed.
+
 ## Must finish before enabling purchases
 
 1. In the existing Play Console account, confirm account verification, merchant/payments setup, package availability and production access. Do not change the account to an organization simply for launch.

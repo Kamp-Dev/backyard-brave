@@ -1,0 +1,56 @@
+name: Android Families audit (no publication)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Godot and official templates
+        run: |
+          curl -fL --retry 3 https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          echo /tmp/godot >> "$GITHUB_PATH"
+          curl -fL --retry 3 https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz -o /tmp/templates.zip
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable evidence
+          unzip -q /tmp/templates.zip 'templates/android*' -d /tmp/templates
+          cp /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
+      - name: Configure isolated unsigned audit
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path('game/export_presets.cfg')
+          s=p.read_text(); a,b=s.split('[preset.2.options]')
+          b=b.replace('package/signed=true','package/signed=false')
+          p.write_text(a+'[preset.2.options]'+b)
+          home=Path.home()/'.config/godot'; home.mkdir(parents=True,exist_ok=True)
+          (home/'editor_settings-4.7.tres').write_text('[gd_resource type="EditorSettings" format=3]\n[resource]\nexport/android/android_sdk_path = "'+os.environ['ANDROID_HOME']+'"\nexport/android/java_sdk_path = "'+os.environ['JAVA_HOME']+'"\n')
+          PY
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path game --editor --import --quit
+      - name: Export release bundle with billing plugin, checkout disabled
+        run: |
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path game --install-android-build-template --export-release "Google Play Candidate" ../evidence/Backyard-Brave-audit.aab 2>&1 | tee evidence/export.log
+          test -s evidence/Backyard-Brave-audit.aab
+      - name: Inspect final bundle
+        run: |
+          curl -fL --retry 3 https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar -o /tmp/bundletool.jar
+          java -jar /tmp/bundletool.jar validate --bundle=evidence/Backyard-Brave-audit.aab
+          java -jar /tmp/bundletool.jar dump manifest --bundle=evidence/Backyard-Brave-audit.aab --module=base > evidence/manifest.xml
+          java -jar /tmp/bundletool.jar dump config --bundle=evidence/Backyard-Brave-audit.aab > evidence/bundle-config.json
+          python3 game/tools/audit_android.py evidence/Backyard-Brave-audit.aab evidence/manifest.xml evidence/bundle-config.json > evidence/audit.json
+          cd game/android/build
+          ./gradlew dependencies --configuration standardReleaseRuntimeClasspath > ../../../evidence/dependencies.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-families-audit
+          path: evidence/
+          retention-days: 14

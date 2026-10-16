@@ -1,0 +1,12 @@
+{
+  "intended_audience": "Children under 13, teens and adults",
+  "includes_children_under_13": true,
+  "exact_play_age_bands": "Pending suitability review, including ages 5 and under",
+  "baseline": "Apply child-protective privacy defaults to every player",
+  "families_review_status": "pending",
+  "purchase_data_review_status": "pending",
+  "sdk_binary_review_status": "pending",
+  "parent_notice_and_deletion_status": "pending",
+  "content_age_suitability_status": "pending",
+  "note": "Planning evidence only; not a certification, runtime age screen, or parental consent."
+}
