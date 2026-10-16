@@ -46,3 +46,7 @@ Added viewport-fit=cover, dynamic viewport sizing, translucent standalone iOS st
 
 ## v0.13.2-test — clean Entrance artwork
 Removed the loading-screen title overlay in both native and browser versions at user request. Entrance video, progress and wooden Enter button remain unchanged.
+
+## v0.13.3-test â€” iPhone Home Screen edge layout
+Use a fixed full-viewport page for both the loader and game canvas, remove the solid Safari theme tint, and declare translucent Home Screen launch metadata before styles/scripts with an explicit standalone manifest. Local 430x932 browser check passed for loading and camp, with no console errors. Physical iPhone standalone status-bar behavior still needs device verification; existing launch metadata may be cached by iOS.
+
