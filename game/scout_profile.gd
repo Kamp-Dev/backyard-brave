@@ -1,6 +1,6 @@
 extends RefCounted
-const PORTRAIT = Rect2(116,48,82,106)
-const NAME = Rect2(203,53,258,49)
+const PORTRAIT = Rect2(65,126,86,112)
+const NAME = Rect2(176,112,382,43)
 const CLOSE = Rect2(218,925,284,78)
 const SAVE = Rect2(377,780,220,76)
 const CANCEL = Rect2(123,780,220,76)

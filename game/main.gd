@@ -1929,8 +1929,6 @@ func home_center_text(y: float, label: String, size: int, color: Color) -> void:
 func draw_home() -> void:
 	home_garden.paint(self)
 	draw_campsite_header()
-	home_center_text(246,"BACKYARD BRAVE",44,JOURNAL_INK)
-	home_center_text(280,"Small scout. Big adventure.",23,LEAF_GREEN)
 	if home_tab == 1:
 		story_panel(Rect2(35,312,650,626))
 		center_text(376,"%02d / %s" % [selected_stage,Chapter.TITLES[selected_stage-1] if Chapter.active(selected_stage) else stage_theme_name(selected_stage)],30,JOURNAL_INK)
@@ -1965,11 +1963,6 @@ func draw_home() -> void:
 	for tab in range(3):
 		var rect = home_tab_rect(tab)
 		draw_garden_button(rect,["SCOUT","ADVENTURE","JOURNAL"][tab],home_tab==tab,24)
-	home_text(Vector2(65,184),"SCOUT LEVEL %d" % scout_experience.level,22,JOURNAL_INK)
-	home_text(Vector2(65,208),"%d / %d XP" % [scout_experience.xp,scout_experience.required()],16,LEAF_GREEN)
-	draw_style_box(bar_style(Color("9d9d6a")),Rect2(240,199,275,7))
-	draw_style_box(bar_style(LEAF_GREEN),Rect2(240,199,275*float(scout_experience.xp)/scout_experience.required(),7))
-	settings.draw_header()
 	scout_profile.paint()
 	settings.paint()
 
@@ -3672,25 +3665,32 @@ func pause_key(key: int) -> bool:
 	return true
 
 func draw_campsite_header() -> void:
-	var source = Rect2(20,200,1956,336)
-	var target = Rect2(18,38,684,source.size.y*684.0/source.size.x)
-	draw_texture_rect_region(CAMP_HEADER,target,source)
-	draw_garden_button(ScoutProfile.PORTRAIT.grow(4),"",false,12)
-	character_art[selected_character].portrait(self,ScoutProfile.PORTRAIT.grow(-3))
-	var name_size = 31
-	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>230:
-		name_size -= 1
-	card_text(ScoutProfile.NAME,87,scout_name,name_size,JOURNAL_INK)
-	var scale_factor = target.size.x/source.size.x
-	var plaque = Rect2(target.position+(Vector2(584,394)-source.position)*scale_factor,Vector2(640,100)*scale_factor)
-	card_text(plaque,plaque.get_center().y+8,"Stage %d unlocked" % unlocked_stage,22,LEAF_GREEN)
-	for i in range(2):
-		var counter = Rect2(target.position+(Vector2(1375+i*231,438)-source.position)*scale_factor,Vector2(162,64)*scale_factor)
-		var label = str(completed_runs if i==0 else cleared_runs)
-		var font_size = 28
-		while font_size>12 and ui_font(font_size).get_string_size(label,HORIZONTAL_ALIGNMENT_LEFT,-1,font_size).x>counter.size.x:
-			font_size -= 1
-		card_text(counter,counter.get_center().y+font_size*0.35,label,font_size,JOURNAL_INK)
+	# One restrained hanging sign. Background and stage/card geometry stay fixed.
+	for x in [65.0,655.0]:
+		draw_line(Vector2(x,-110-top_content_inset),Vector2(x,120),Color("705438"),5,true)
+		draw_line(Vector2(x-1,-110-top_content_inset),Vector2(x-1,120),Color("c6a574"),2,true)
+	home_center_text(38,"BACKYARD BRAVE",40,JOURNAL_INK)
+	home_center_text(68,"Small scout. Big adventure.",20,LEAF_GREEN)
+	illustrated_wood(Rect2(25,92,670,202),false)
+	for x in [65.0,655.0]:
+		draw_arc(Vector2(x,112),7,0,TAU,24,Color("705438"),3,true)
+	var portrait_center=ScoutProfile.PORTRAIT.get_center()
+	draw_circle(portrait_center,60,Color("8d6b40"),true,-1,true)
+	draw_circle(portrait_center,56,Color("f1dfb7"),true,-1,true)
+	character_art[selected_character].portrait(self,ScoutProfile.PORTRAIT.grow(-5))
+	var name_size=30
+	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>ScoutProfile.NAME.size.x:
+		name_size-=1
+	text_at(Vector2(176,145),scout_name,name_size,JOURNAL_INK)
+	text_at(Vector2(178,174),"Level %d" % scout_experience.level,20,JOURNAL_INK)
+	var meter=Rect2(178,185,265,12)
+	draw_style_box(bar_style(Color("b6b38b")),meter)
+	var fraction=clampf(float(scout_experience.xp)/scout_experience.required(),0,1)
+	if fraction>0: draw_style_box(bar_style(LEAF_GREEN),Rect2(meter.position,Vector2(meter.size.x*fraction,meter.size.y)))
+	text_at(Vector2(455,197),"%d / %d XP" % [scout_experience.xp,scout_experience.required()],17,JOURNAL_INK)
+	draw_line(Vector2(178,216),Vector2(650,216),Color(0.47,0.35,0.21,0.3),1,true)
+	text_at(Vector2(178,249),"Runs %d  /  Clears %d  /  Stage %d unlocked" % [completed_runs,cleared_runs,unlocked_stage],17,JOURNAL_INK)
+	settings.draw_header()
 
 func draw_workbench_header() -> void:
 	# Uniform source-to-screen scale preserves the selected artwork's proportions.
