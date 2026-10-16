@@ -22,3 +22,12 @@ Deploy behind TLS, request-size limits and per-IP rate limiting at ingress. Do n
 Use separate sandbox/production keys and databases. Test acknowledgement retry, concurrent duplicate requests, expired service credentials, Google 429/5xx, signing key rotation, disk failure and refunds on the actual deployed service. Back up the ledger and monitor aggregate availability/error counts without receipt bodies. No endpoint should return a signed positive entitlement when Google cannot be reached.
 
 Local tests do not establish store approval or production certification. See `game/launch/READINESS.md` for the release gate.
+
+Families audit hardening (2026-10-16): the verifier rejects extra request/receipt fields and multiple tokens for one product, accepts at most five receipt rows, and refuses HTTP redirects. No raw receipt bodies should reach access or error logs.
+
+Operator maintenance (not deployed or scheduled yet):
+- Schedule `python maintenance.py /durable/ledger.db prune` at least daily on the same durable volume as the service. Alert if the job fails. Test cleanup on an idle service as well as with traffic.
+- After verifying a parent/requester's authority and identifying the relevant record through authorized internal tools, use `delete-verified-hash`; pass the SHA-256 digest on stdin, never a raw token or command-line argument. This is an operator tool, not a public unauthenticated deletion endpoint.
+- This removes only the service ledger row. It does not refund/revoke a Google purchase, wipe a device, delete Gmail messages, delete Google-held data or clean infrastructure backups/logs. A later valid restore can create a new minimal verification record. Explain this accurately in parent responses.
+- Set and document provider logs, backups and support-mail retention; process those systems separately. Do not solicit a child's identity documents or receipt tokens by email. Do not mark parent access/deletion complete until requester verification, record lookup, and all provider cleanup have been exercised.
+- A Families/COPPA review of the actual billing SDK and processing purposes remains necessary. Neither Google checkout nor these technical tests establish parental consent or a lawful exception.

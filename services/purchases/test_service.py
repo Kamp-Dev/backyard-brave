@@ -2,6 +2,11 @@ import io
 import json
 import tempfile
 import unittest
+import hashlib
+import sqlite3
+from contextlib import closing
+from maintenance import prune, delete_hash
+from service import LEASE_SECONDS, NoRedirect
 from pathlib import Path
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
@@ -57,6 +62,39 @@ class Purchases(unittest.TestCase):
     def test_outage_fails_closed(self):
         self.play.failed = True
         with self.assertRaises(VerificationUnavailable): self.claims()
+    def test_no_raw_token_and_retention(self):
+        self.claims()
+        path=self.verifier.database
+        self.assertNotIn(b"fixture-token", Path(path).read_bytes())
+        with closing(sqlite3.connect(path)) as db:
+            db.execute("UPDATE purchases SET checked=1")
+            db.commit()
+        self.assertEqual(prune(path, LEASE_SECONDS+2), 1)
+        self.assertEqual(prune(path, LEASE_SECONDS+2), 0)
+
+    def test_verified_deletion(self):
+        self.claims()
+        with self.assertRaises(ValueError): delete_hash(self.verifier.database, "fixture-token")
+        digest=hashlib.sha256(b"fixture-token").hexdigest()
+        self.assertEqual(delete_hash(self.verifier.database, digest), 1)
+        self.assertEqual(delete_hash(self.verifier.database, digest), 0)
+
+    def test_extra_personal_fields_rejected(self):
+        self.receipts[0]["child_name"]="unneeded"
+        with self.assertRaises(ValueError): self.claims()
+        self.assertEqual(self.play.calls, [])
+
+    def test_no_redirect(self):
+        self.assertIsNone(NoRedirect().redirect_request(None,None,302,"",{},"https://other.example"))
+
+    def test_ack_failure_does_not_grant(self):
+        original=self.play.call
+        def fail_ack(product, token, acknowledge=False):
+            if acknowledge: raise VerificationUnavailable()
+            return original(product,token,acknowledge)
+        self.play.call=fail_ack
+        with self.assertRaises(VerificationUnavailable): self.claims()
+
     def test_http_rejects_oversized_request(self):
         statuses = []
         response = application_for(self.verifier)({"PATH_INFO":"/verify",

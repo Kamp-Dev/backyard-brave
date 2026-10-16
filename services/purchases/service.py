@@ -21,12 +21,21 @@ from cryptography.hazmat.primitives.asymmetric import padding
 PACKAGE = "com.kampdev.backyardbrave"
 PRODUCTS = {PACKAGE + "." + name for name in
             ("raincoat", "acorn", "moonflower", "strawberry", "supporter")}
-MAX_RECEIPTS = 32
+MAX_RECEIPTS = len(PRODUCTS)
 LEASE_SECONDS = 90 * 24 * 3600
 
 
 class VerificationUnavailable(Exception):
     pass
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Never forward authorization credentials or purchase URLs elsewhere.
+        return None
+
+
+HTTP = urllib.request.build_opener(NoRedirect)
 
 
 def b64(value):
@@ -58,7 +67,7 @@ class PlayAPI:
             body = urllib.parse.urlencode({"grant_type":
                 "urn:ietf:params:oauth:grant-type:jwt-bearer", "assertion": assertion}).encode()
             try:
-                with urllib.request.urlopen(urllib.request.Request(
+                with HTTP.open(urllib.request.Request(
                     "https://oauth2.googleapis.com/token", body), timeout=8) as response:
                     data = json.load(response)
                 self.token = data["access_token"]
@@ -77,7 +86,7 @@ class PlayAPI:
             headers={"Authorization": "Bearer " + self.access_token(),
                      "Content-Type": "application/json"})
         try:
-            with urllib.request.urlopen(req, timeout=8) as response:
+            with HTTP.open(req, timeout=8) as response:
                 body = response.read()
                 return json.loads(body) if body else {}
         except Exception:
@@ -97,15 +106,19 @@ class Verifier:
         if not isinstance(receipts, list) or len(receipts) > MAX_RECEIPTS:
             raise ValueError("Invalid receipt list")
         normalized = {}
+        seen_products = set()
         for row in receipts:
-            if not isinstance(row, dict) or row.get("product_id") not in PRODUCTS:
+            if not isinstance(row, dict) or set(row) != {"product_id", "token"} or row.get("product_id") not in PRODUCTS:
                 raise ValueError("Unknown product")
             token = row.get("token")
             if not isinstance(token, str) or not 1 <= len(token) <= 4096:
                 raise ValueError("Invalid receipt")
             if token in normalized and normalized[token] != row["product_id"]:
                 raise ValueError("Receipt reused for different products")
+            if row["product_id"] in seen_products and token not in normalized:
+                raise ValueError("Multiple tokens for one product")
             normalized[token] = row["product_id"]
+            seen_products.add(row["product_id"])
         with closing(sqlite3.connect(self.database)) as db:
             db.execute("DELETE FROM purchases WHERE checked < ?", (int(time.time()) - LEASE_SECONDS,))
             db.commit()
@@ -153,7 +166,7 @@ def application_for(verifier):
                 if not 1 <= length <= 65536:
                     raise ValueError("Invalid request size")
                 data = json.loads(environ["wsgi.input"].read(length))
-                if not isinstance(data, dict):
+                if not isinstance(data, dict) or set(data) != {"receipts"}:
                     raise ValueError("Invalid request")
                 result = verifier.verify(data.get("receipts"))
         except (ValueError, TypeError):

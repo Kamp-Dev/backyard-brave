@@ -24,6 +24,7 @@ jobs:
           cp /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
       - name: Configure isolated unsigned audit
         run: |
+          keytool -genkeypair -keystore /tmp/backyard-debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Disposable Audit" -keyalg RSA -validity 2
           python3 - <<'PY'
           import os
           from pathlib import Path

@@ -125,6 +125,9 @@ func _verified(result: int, code: int, _headers: PackedStringArray, body: Packed
  if verify_again:
   verify_again=false
   restore.call_deferred()
+  # A newer Play snapshot arrived while this request was in flight. Never apply
+  # the older account/purchase snapshot, even briefly, before reconciling it.
+  return
  if result!=HTTPRequest.RESULT_SUCCESS or code!=200:
   store.fail("Verification unavailable. Your outfits are unchanged; try Restore.")
   return
