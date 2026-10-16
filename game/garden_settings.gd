@@ -1,9 +1,9 @@
 extends RefCounted
 const BUTTON = Rect2(577,177,108,62)
 const CLOSE = Rect2(230,1022,260,70)
-const KEYS = ["sound","music","vibration","reduced_vfx","reduced_flashes","damage_numbers","show_joystick","low_graphics","battery_saver"]
-const LABELS = ["Sound effects","Music","Vibration","Reduced effects","Reduced flashes","Damage numbers","Show joystick","Graphics","Battery saver"]
-var values = {"sound":true,"music":false,"vibration":false,"reduced_vfx":false,"reduced_flashes":false,"damage_numbers":true,"show_joystick":false,"low_graphics":false,"battery_saver":false}
+const KEYS = ["sound","music","vibration","reduced_vfx","reduced_flashes","damage_numbers","show_joystick","low_graphics","battery_saver","dark_mode"]
+const LABELS = ["Sound effects","Music","Vibration","Reduced effects","Reduced flashes","Damage numbers","Show joystick","Graphics","Battery saver","Dark garden"]
+var values = {"sound":true,"music":false,"vibration":false,"reduced_vfx":false,"reduced_flashes":false,"damage_numbers":true,"show_joystick":false,"low_graphics":false,"battery_saver":false,"dark_mode":false}
 var host: Node2D
 var opened = false
 var tab = 0
@@ -65,7 +65,7 @@ func sync_music() -> void:
  if not music.playing: music.play()
 
 func row(index: int) -> Rect2:
- return Rect2(105,410+index*56,510,53)
+ return Rect2(105,410+index*50,510,49)
 
 func toggle(index: int) -> void:
  var key=KEYS[index]

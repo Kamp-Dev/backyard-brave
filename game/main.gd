@@ -1916,11 +1916,21 @@ func draw_reward_summary() -> void:
 func home_scout(rect: Rect2) -> void:
 	character_art[selected_character].portrait(self,rect)
 
+func home_text(at: Vector2, label: String, size: int, color: Color) -> void:
+	var night=settings.values.dark_mode
+	var ink=Color("f4edce") if night else color
+	var outline=Color(0.12,0.18,0.16,0.8) if night else Color(0.94,0.94,0.79,0.75)
+	draw_string_outline(ui_font(size),at,label,HORIZONTAL_ALIGNMENT_LEFT,-1,size,3,outline)
+	text_at(at,label,size,ink)
+
+func home_center_text(y: float, label: String, size: int, color: Color) -> void:
+	home_text(Vector2(360-ui_font(size).get_string_size(label,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x/2,y),label,size,color)
+
 func draw_home() -> void:
 	home_garden.paint(self)
 	draw_campsite_header()
-	center_text(246,"BACKYARD BRAVE",44,JOURNAL_INK)
-	center_text(280,"Small scout. Big adventure.",23,LEAF_GREEN)
+	home_center_text(246,"BACKYARD BRAVE",44,JOURNAL_INK)
+	home_center_text(280,"Small scout. Big adventure.",23,LEAF_GREEN)
 	if home_tab == 1:
 		story_panel(Rect2(35,312,650,626))
 		center_text(376,"%02d / %s" % [selected_stage,Chapter.TITLES[selected_stage-1] if Chapter.active(selected_stage) else stage_theme_name(selected_stage)],30,JOURNAL_INK)
@@ -1932,11 +1942,11 @@ func draw_home() -> void:
 		else:
 			draw_texture_rect_region(GrowthAlbum.ART,Rect2(146,626,428,147),GrowthAlbum.BANNER)
 			center_text(709,"LOCKED",40,JOURNAL_INK)
-		center_text(967,stage_status(),20,JOURNAL_INK)
+		home_center_text(967,stage_status(),20,JOURNAL_INK)
 		draw_stage_arrow(STAGE_PREVIOUS,-1,selected_stage > 1)
 		draw_stage_arrow(STAGE_NEXT,1,selected_stage < STAGE_COUNT)
 		draw_garden_button(HOME_PLAY,"PLAY" if selected_stage <= unlocked_stage else "LOCKED",false,39,selected_stage <= unlocked_stage)
-		center_text(1130,"5 minutes of waves / Then the guardian",20,JOURNAL_INK)
+		home_center_text(1130,"5 minutes of waves / Then the guardian",20,JOURNAL_INK)
 	elif home_tab == 0 and not scout_handbook:
 		draw_scout_growth()
 	elif home_tab == 0:
@@ -1955,8 +1965,8 @@ func draw_home() -> void:
 	for tab in range(3):
 		var rect = home_tab_rect(tab)
 		draw_garden_button(rect,["SCOUT","ADVENTURE","JOURNAL"][tab],home_tab==tab,24)
-	text_at(Vector2(65,184),"SCOUT LEVEL %d" % scout_experience.level,22,JOURNAL_INK)
-	text_at(Vector2(65,208),"%d / %d XP" % [scout_experience.xp,scout_experience.required()],16,LEAF_GREEN)
+	home_text(Vector2(65,184),"SCOUT LEVEL %d" % scout_experience.level,22,JOURNAL_INK)
+	home_text(Vector2(65,208),"%d / %d XP" % [scout_experience.xp,scout_experience.required()],16,LEAF_GREEN)
 	draw_style_box(bar_style(Color("9d9d6a")),Rect2(240,199,275,7))
 	draw_style_box(bar_style(LEAF_GREEN),Rect2(240,199,275*float(scout_experience.xp)/scout_experience.required(),7))
 	settings.draw_header()
