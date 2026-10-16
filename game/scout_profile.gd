@@ -1,6 +1,6 @@
 extends RefCounted
-const PORTRAIT = Rect2(65,126,86,112)
-const NAME = Rect2(176,112,382,43)
+const PORTRAIT = Rect2(74,132,102,102)
+const NAME = Rect2(190,115,356,42)
 const CLOSE = Rect2(218,925,284,78)
 const SAVE = Rect2(377,780,220,76)
 const CANCEL = Rect2(123,780,220,76)
@@ -40,11 +40,15 @@ func open_name() -> void:
  notice = ""
  edit.text = host.scout_name
  update_layout()
+ if OS.has_feature("web"):
+  JavaScriptBridge.eval("window.backyardNameEditor.open("+JSON.stringify(host.scout_name)+")",true)
+  return
  edit.show()
  edit.grab_focus()
  edit.select_all()
 
 func close() -> void:
+ if OS.has_feature("web"): JavaScriptBridge.eval("window.backyardNameEditor.close()",true)
  page = ""
  edit.release_focus()
  edit.hide()
@@ -65,6 +69,16 @@ func save_name() -> void:
   notice = "Could not save. Please try again."
   return
  close()
+
+func poll_browser_name() -> void:
+ if page!="name" or not OS.has_feature("web"): return
+ var result=JSON.parse_string(JavaScriptBridge.eval("window.backyardNameEditor.take()",true))
+ if not result is Array or result.is_empty(): return
+ if result[0]=="cancel": close()
+ elif result[0]=="save":
+  edit.text=str(result[1]).substr(0,18)
+  save_name()
+  if page=="name": JavaScriptBridge.eval("window.backyardNameEditor.error("+JSON.stringify(notice)+")",true)
 
 func select_character() -> void:
  if not host.lifetime.character_unlocked(character_choice,host.stage_records,host.scout_experience.level):
@@ -128,7 +142,7 @@ func handle(event: InputEvent) -> bool:
  return false
 
 func paint() -> void:
- if page.is_empty(): return
+ if page.is_empty() or (page=="name" and OS.has_feature("web")): return
  update_layout()
  host.draw_rect(Rect2(-host.ui_offset(),host.get_viewport_rect().size),Color(0.08,0.11,0.07,0.88))
  host.story_panel(Rect2(50,300,620,745))

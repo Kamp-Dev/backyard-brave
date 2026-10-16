@@ -770,6 +770,7 @@ func _notification(what: int) -> void:
 
 func _process(delta: float) -> void:
 	browser_touch.drain(self)
+	scout_profile.poll_browser_name()
 	settings.advance(delta)
 	if state=="title" and not screenshot_mode and not settings.values.low_graphics:
 		home_garden.advance(delta)
@@ -3676,22 +3677,25 @@ func draw_campsite_header() -> void:
 	draw_texture_rect(CAMP_HEADER,Rect2(Vector2(20,-19),sign_size),false)
 	home_center_text(38,"BACKYARD BRAVE",40,JOURNAL_INK)
 	home_center_text(68,"Small scout. Big adventure.",20,LEAF_GREEN)
-	var portrait_center=ScoutProfile.PORTRAIT.get_center()
-	draw_circle(portrait_center,60,Color("8d6b40"),true,-1,true)
-	draw_circle(portrait_center,56,Color("f1dfb7"),true,-1,true)
-	character_art[selected_character].portrait(self,ScoutProfile.PORTRAIT.grow(-5))
-	var name_size=30
-	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>ScoutProfile.NAME.size.x:
+	var portrait_center=Vector2(125,183)
+	draw_circle(portrait_center,51,Color("98784d"),true,-1,true)
+	draw_circle(portrait_center,48,Color("f1dfb7"),true,-1,true)
+	character_art[selected_character].portrait(self,Rect2(portrait_center-Vector2(32,43),Vector2(64,86)))
+	var name_size=28
+	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>350:
 		name_size-=1
-	text_at(Vector2(176,145),scout_name,name_size,JOURNAL_INK)
-	text_at(Vector2(178,174),"Level %d" % scout_experience.level,20,JOURNAL_INK)
-	var meter=Rect2(178,185,265,12)
-	draw_style_box(bar_style(Color("b6b38b")),meter)
+	text_at(Vector2(195,145),scout_name,name_size,JOURNAL_INK)
+	text_at(Vector2(195,174),"Scout level %d" % scout_experience.level,18,Color("655538"))
+	var meter=Rect2(195,186,246,14)
+	draw_style_box(bar_style(Color("987b4f")),meter.grow(2))
+	draw_style_box(bar_style(Color("e6d5ad")),meter)
 	var fraction=clampf(float(scout_experience.xp)/scout_experience.required(),0,1)
-	if fraction>0: draw_style_box(bar_style(LEAF_GREEN),Rect2(meter.position,Vector2(meter.size.x*fraction,meter.size.y)))
-	text_at(Vector2(455,197),"%d / %d XP" % [scout_experience.xp,scout_experience.required()],17,JOURNAL_INK)
-	draw_line(Vector2(178,216),Vector2(650,216),Color(0.47,0.35,0.21,0.3),1,true)
-	text_at(Vector2(178,249),"Runs %d  /  Clears %d  /  Stage %d unlocked" % [completed_runs,cleared_runs,unlocked_stage],17,JOURNAL_INK)
+	if fraction>0: draw_style_box(bar_style(Color("899c57")),Rect2(meter.position+Vector2(2,2),Vector2(maxf(3,(meter.size.x-4)*fraction),meter.size.y-4)))
+	text_at(Vector2(452,198),"%d / %d XP" % [scout_experience.xp,scout_experience.required()],16,Color("655538"))
+	draw_line(Vector2(195,216),Vector2(633,216),Color(0.47,0.35,0.21,0.22),1,true)
+	text_at(Vector2(195,243),"Runs %d" % completed_runs,18,JOURNAL_INK)
+	text_at(Vector2(335,243),"Clears %d" % cleared_runs,18,JOURNAL_INK)
+	text_at(Vector2(475,243),"Stage %d" % unlocked_stage,18,JOURNAL_INK)
 	settings.draw_header()
 
 func draw_workbench_header() -> void:

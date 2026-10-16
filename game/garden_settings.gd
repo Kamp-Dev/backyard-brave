@@ -1,5 +1,5 @@
 extends RefCounted
-const BUTTON = Rect2(571,123,100,62)
+const BUTTON = Rect2(563,137,86,54)
 const CLOSE = Rect2(230,1022,260,70)
 const KEYS = ["sound","music","vibration","reduced_vfx","reduced_flashes","damage_numbers","show_joystick","low_graphics","battery_saver","dark_mode"]
 const LABELS = ["Sound effects","Music","Vibration","Reduced effects","Reduced flashes","Damage numbers","Show joystick","Graphics","Battery saver","Dark garden"]

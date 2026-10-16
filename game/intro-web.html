@@ -105,3 +105,42 @@ document.addEventListener('DOMContentLoaded',()=>{
  observer.observe(document.body,{childList:true});play();
 });
 </script>
+
+<style>
+#scout-name-dialog {position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;width:min(82vw,380px);box-sizing:border-box;overflow:auto;border:5px solid #95703e;border-radius:18px;padding:24px;background:#f6e7c4;color:#49351e;box-shadow:0 6px 22px #17201066;font:18px Georgia,serif;touch-action:auto;}
+#scout-name-dialog::backdrop {background:#172010bb;}
+#scout-name-dialog h2 {margin:0 0 20px;text-align:center;font-size:25px;}
+#scout-name-dialog label {display:block;margin-bottom:8px;}
+#scout-name-dialog input {box-sizing:border-box;width:100%;padding:12px;border:2px solid #9a8555;border-radius:9px;background:#fff6dc;color:#49351e;font:20px Georgia,serif;touch-action:auto;user-select:text;-webkit-user-select:text;}
+#scout-name-dialog .actions {display:flex;gap:12px;margin-top:18px;}
+#scout-name-dialog button {flex:1;min-height:48px;border:2px solid #937343;border-radius:10px;background:#e7c48c;color:#49351e;font:bold 17px Georgia,serif;touch-action:manipulation;}
+#scout-name-dialog button[type=submit] {background:#647e46;color:#fff5d3;}
+#scout-name-dialog .notice {font-size:15px;min-height:20px;margin:8px 0;color:#85482f;}
+</style>
+<script>
+window.backyardNameEditor=(()=>{
+ let dialog=null, pending=null, reposition=null;
+ const close=()=>{if(!dialog)return;dialog.close();dialog.remove();dialog=null;pending=null;window.visualViewport?.removeEventListener('resize',reposition);window.visualViewport?.removeEventListener('scroll',reposition);document.getElementById('canvas')?.focus();};
+ return {
+  open(name){
+   close();pending=null;
+   dialog=document.createElement('dialog');dialog.id='scout-name-dialog';
+   dialog.innerHTML='<form><h2>Name your scout</h2><label for="scout-name-input">Scout name</label><input id="scout-name-input" type="text" maxlength="18" autocomplete="nickname" enterkeyhint="done" placeholder="Your scout’s name"><p class="notice" role="status"></p><div class="actions"><button type="button">Cancel</button><button type="submit">Save</button></div></form>';
+   const input=dialog.querySelector('input');input.value=name;
+   const submit=()=>{if(!input.value.trim()){dialog.querySelector('.notice').textContent='Please enter a name.';return;}pending=['save',input.value];};
+   dialog.querySelector('form').onsubmit=e=>{e.preventDefault();submit();};
+   dialog.querySelector('button[type=button]').onclick=()=>{pending=['cancel'];};
+   dialog.addEventListener('cancel',e=>{e.preventDefault();pending=['cancel'];});
+   dialog.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();pending=['cancel'];}});
+   dialog.addEventListener('keyup',e=>e.stopPropagation());
+   reposition=()=>{const v=window.visualViewport;dialog.style.top=((v?.offsetTop||0)+(v?.height||innerHeight)/2)+'px';dialog.style.maxHeight=Math.max(160,(v?.height||innerHeight)-24)+'px';};
+   document.body.append(dialog);dialog.showModal();reposition();
+   window.visualViewport?.addEventListener('resize',reposition);window.visualViewport?.addEventListener('scroll',reposition);
+   input.focus();input.select();
+  },
+  take(){const result=pending;pending=null;return JSON.stringify(result||[]);},
+  error(message){if(dialog)dialog.querySelector('.notice').textContent=message;},
+  close
+ };
+})();
+</script>
