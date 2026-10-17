@@ -18,7 +18,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-PACKAGE = "com.kampdev.backyardbrave"
+PACKAGE = "com.xevapps.backyardbrave"
 PRODUCTS = {PACKAGE + "." + name for name in
             ("raincoat", "acorn", "moonflower", "strawberry", "supporter")}
 MAX_RECEIPTS = len(PRODUCTS)

@@ -1,6 +1,6 @@
 extends SceneTree
 class FakeStore extends Node:
- var products={"com.kampdev.backyardbrave.raincoat":{}}
+ var products={"com.xevapps.backyardbrave.raincoat":{}}
  var config={"verification_url":"http://127.0.0.1:8787/verify"}
  var notice=""
  var busy=false
@@ -11,7 +11,7 @@ var store: FakeStore
 var adapter: Node
 func _initialize(): call_deferred("run")
 func response(state=1):
- return {"response_code":0,"purchases":[{"purchase_state":state,"product_ids":["com.kampdev.backyardbrave.raincoat"],"purchase_token":"fixture-token","account_email":"must-not-send","order_id":"must-not-send"}]}
+ return {"response_code":0,"purchases":[{"purchase_state":state,"product_ids":["com.xevapps.backyardbrave.raincoat"],"purchase_token":"fixture-token","account_email":"must-not-send","order_id":"must-not-send"}]}
 func wait_done():
  for i in range(500):
   await create_timer(0.01).timeout

@@ -13,7 +13,7 @@ Required environment variables:
 - `PURCHASE_DATABASE`: writable durable SQLite file. Use one host/shared local volume for this deployment model, or migrate the ledger to managed SQL before horizontally scaling.
 - `ALLOW_TEST_PURCHASES=true`: sandbox deployment only. Omit for production.
 
-POST `/verify` accepts `{"receipts":[{"product_id":"com.kampdev.backyardbrave.raincoat","token":"STORE_TOKEN"}]}`. Never log that body. GET `/health` returns health without exposing configuration.
+POST `/verify` accepts `{"receipts":[{"product_id":"com.xevapps.backyardbrave.raincoat","token":"STORE_TOKEN"}]}`. Never log that body. GET `/health` returns health without exposing configuration.
 
 The verifier fixes the package and allowlists products. It queries Google for every receipt, grants only completed non-consumed purchases, writes an idempotent hashed ledger, acknowledges, then signs the complete supplied ownership snapshot. A Google error fails the entire response; the client retains its previous verified cache. Cancellation/refund states remove the relevant entitlement on the next successful reconciliation. There is no RTDN push integration yet; offline refund propagation is bounded by the 90-day signed cache lifetime. This is cosmetic-only client enforcement, not tamper-proof DRM.
 

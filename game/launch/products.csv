@@ -1,6 +1,6 @@
 product_id,title,type,purchase_option_id,proposed_USD,contents
-com.kampdev.backyardbrave.raincoat,Raincoat Scout,Non-consumable,buy,2.99,raincoat
-com.kampdev.backyardbrave.acorn,Acorn Trail Scout,Non-consumable,buy,2.99,acorn
-com.kampdev.backyardbrave.moonflower,Moonflower Poppy,Non-consumable,buy,2.99,moonflower
-com.kampdev.backyardbrave.strawberry,Strawberry Poppy,Non-consumable,buy,2.99,strawberry
-com.kampdev.backyardbrave.supporter,Garden Friends Pack,Non-consumable,buy,8.99,honeybee; honeyblossom; honey_garden; supporter_badge
+com.xevapps.backyardbrave.raincoat,Raincoat Scout,Non-consumable,buy,2.99,raincoat
+com.xevapps.backyardbrave.acorn,Acorn Trail Scout,Non-consumable,buy,2.99,acorn
+com.xevapps.backyardbrave.moonflower,Moonflower Poppy,Non-consumable,buy,2.99,moonflower
+com.xevapps.backyardbrave.strawberry,Strawberry Poppy,Non-consumable,buy,2.99,strawberry
+com.xevapps.backyardbrave.supporter,Garden Friends Pack,Non-consumable,buy,8.99,honeybee; honeyblossom; honey_garden; supporter_badge

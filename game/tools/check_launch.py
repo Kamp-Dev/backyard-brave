@@ -7,6 +7,11 @@ root = Path(__file__).resolve().parents[1]
 catalog = json.loads((root / "cosmetic_catalog.json").read_text(encoding="utf-8"))
 config = json.loads((root / "commerce_config.json").read_text(encoding="utf-8"))
 errors = []
+expected_package = "com.xevapps.backyardbrave"
+if config.get("package") != expected_package:
+    errors.append("Unexpected commerce package identity")
+if any(not p["id"].startswith(expected_package + ".") for p in catalog["products"]):
+    errors.append("Product IDs do not match the Google Play package namespace")
 ids = {p["id"] for p in catalog["products"]}
 if len(ids) != 5:
     errors.append("Expected five unique non-consumable products")
