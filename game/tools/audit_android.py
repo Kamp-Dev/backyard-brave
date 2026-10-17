@@ -8,7 +8,7 @@ root = ET.parse(manifest).getroot()
 permissions = sorted(e.attrib[android+"name"] for e in root.findall("uses-permission"))
 allowed = {"android.permission.INTERNET", "android.permission.VIBRATE", "android.permission.ACCESS_NETWORK_STATE", "com.android.vending.BILLING"}
 errors = []
-if root.attrib.get("package") != "com.xevapps.backyardbrave":
+if root.attrib.get("package") != "com.kampdev.backyardbrave":
     errors.append("Unexpected Google Play package identity")
 # AndroidX uses an app-specific signature permission to protect receivers on
 # older Android versions. Only allow our exact name with signature protection.

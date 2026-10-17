@@ -7,7 +7,7 @@ root = Path(__file__).resolve().parents[1]
 catalog = json.loads((root / "cosmetic_catalog.json").read_text(encoding="utf-8"))
 config = json.loads((root / "commerce_config.json").read_text(encoding="utf-8"))
 errors = []
-expected_package = "com.xevapps.backyardbrave"
+expected_package = "com.kampdev.backyardbrave"
 if config.get("package") != expected_package:
     errors.append("Unexpected commerce package identity")
 if any(not p["id"].startswith(expected_package + ".") for p in catalog["products"]):

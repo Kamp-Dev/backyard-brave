@@ -14,7 +14,7 @@
       "id": "raincoat",
       "name": "Raincoat Scout",
       "character": 0,
-      "product": "com.xevapps.backyardbrave.raincoat",
+      "product": "com.kampdev.backyardbrave.raincoat",
       "earned_mastery": 0,
       "description": "Sunflower coat and puddle-ready boots.",
       "atlas": "res://assets/cosmetics/raincoat.png"
@@ -23,7 +23,7 @@
       "id": "acorn",
       "name": "Acorn Trail Scout",
       "character": 0,
-      "product": "com.xevapps.backyardbrave.acorn",
+      "product": "com.kampdev.backyardbrave.acorn",
       "earned_mastery": 0,
       "description": "Oak embroidery and a warm knitted shirt.",
       "atlas": "res://assets/cosmetics/acorn.png"
@@ -32,7 +32,7 @@
       "id": "honeybee",
       "name": "Honeybee Scout",
       "character": 0,
-      "product": "com.xevapps.backyardbrave.supporter",
+      "product": "com.kampdev.backyardbrave.supporter",
       "earned_mastery": 0,
       "description": "Honeycomb stitching for a garden friend.",
       "atlas": "res://assets/cosmetics/honeybee.png"
@@ -59,7 +59,7 @@
       "id": "moonflower",
       "name": "Moonflower Poppy",
       "character": 1,
-      "product": "com.xevapps.backyardbrave.moonflower",
+      "product": "com.kampdev.backyardbrave.moonflower",
       "earned_mastery": 0,
       "description": "Indigo workwear with ivory blossoms.",
       "atlas": "res://assets/cosmetics/moonflower.png"
@@ -68,7 +68,7 @@
       "id": "strawberry",
       "name": "Strawberry Poppy",
       "character": 1,
-      "product": "com.xevapps.backyardbrave.strawberry",
+      "product": "com.kampdev.backyardbrave.strawberry",
       "earned_mastery": 0,
       "description": "Berry embroidery and soft gingham cuffs.",
       "atlas": "res://assets/cosmetics/strawberry.png"
@@ -77,7 +77,7 @@
       "id": "honeyblossom",
       "name": "Honey Blossom Poppy",
       "character": 1,
-      "product": "com.xevapps.backyardbrave.supporter",
+      "product": "com.kampdev.backyardbrave.supporter",
       "earned_mastery": 0,
       "description": "Chamomile flowers and golden overalls.",
       "atlas": "res://assets/cosmetics/honeyblossom.png"
@@ -94,7 +94,7 @@
   ],
   "products": [
     {
-      "id": "com.xevapps.backyardbrave.raincoat",
+      "id": "com.kampdev.backyardbrave.raincoat",
       "title": "Raincoat Scout",
       "proposed_usd": 2.99,
       "type": "non_consumable",
@@ -103,7 +103,7 @@
       ]
     },
     {
-      "id": "com.xevapps.backyardbrave.acorn",
+      "id": "com.kampdev.backyardbrave.acorn",
       "title": "Acorn Trail Scout",
       "proposed_usd": 2.99,
       "type": "non_consumable",
@@ -112,7 +112,7 @@
       ]
     },
     {
-      "id": "com.xevapps.backyardbrave.moonflower",
+      "id": "com.kampdev.backyardbrave.moonflower",
       "title": "Moonflower Poppy",
       "proposed_usd": 2.99,
       "type": "non_consumable",
@@ -121,7 +121,7 @@
       ]
     },
     {
-      "id": "com.xevapps.backyardbrave.strawberry",
+      "id": "com.kampdev.backyardbrave.strawberry",
       "title": "Strawberry Poppy",
       "proposed_usd": 2.99,
       "type": "non_consumable",
@@ -130,7 +130,7 @@
       ]
     },
     {
-      "id": "com.xevapps.backyardbrave.supporter",
+      "id": "com.kampdev.backyardbrave.supporter",
       "title": "Garden Friends Pack",
       "proposed_usd": 8.99,
       "type": "non_consumable",

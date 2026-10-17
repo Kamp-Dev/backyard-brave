@@ -5,7 +5,7 @@ func check(condition: bool, message: String) -> void:
   failures+=1
   push_error(message)
 func _initialize(): call_deferred("run")
-func envelope(key: CryptoKey, products: Array, package: String = "com.xevapps.backyardbrave", expires: int = 0) -> Dictionary:
+func envelope(key: CryptoKey, products: Array, package: String = "com.kampdev.backyardbrave", expires: int = 0) -> Dictionary:
  var now=int(Time.get_unix_time_from_system())
  var payload=JSON.stringify({"package":package,"products":products,"issued_at":now,"expires_at":now+3600 if expires==0 else expires})
  return {"payload":payload,"signature":Marshalls.raw_to_base64(Crypto.new().sign(HashingContext.HASH_SHA256,payload.sha256_buffer(),key))}
@@ -15,7 +15,7 @@ func run():
  root.add_child(game)
  game.set_process(false)
  var shop=game.commerce
- var product="com.xevapps.backyardbrave.raincoat"
+ var product="com.kampdev.backyardbrave.raincoat"
  check(not shop.config.enabled,"Production billing must remain off before launch certification")
  shop.purchase(product)
  check(not shop.owns(product),"Unavailable purchase must not grant")
@@ -26,7 +26,7 @@ func run():
  check(shop.accept_envelope(envelope(key,[product]),false),"Accept trusted signed entitlement")
  check(shop.owns(product),"Purchased outfit available")
  check(not shop.accept_envelope(envelope(key,[product],"other.app"),false),"Reject wrong package")
- check(not shop.accept_envelope(envelope(key,[product],"com.xevapps.backyardbrave",1),false),"Reject expired entitlement")
+ check(not shop.accept_envelope(envelope(key,[product],"com.kampdev.backyardbrave",1),false),"Reject expired entitlement")
  check(not shop.accept_envelope(envelope(key,["power.cheat"]),false),"Reject unknown product")
  var altered=envelope(key,[product]); altered.payload=altered.payload.replace("raincoat","acorn")
  check(not shop.accept_envelope(altered,false),"Reject altered claim")

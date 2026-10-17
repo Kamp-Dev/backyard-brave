@@ -3700,7 +3700,7 @@ func draw_campsite_header() -> void:
 	home_center_text(68,"Small scout. Big adventure.",20,LEAF_GREEN)
 	var portrait_center=Vector2(125,183)
 	character_art[selected_character].head_badge(self,portrait_center,49)
-	if commerce.owns("com.xevapps.backyardbrave.supporter"):
+	if commerce.owns("com.kampdev.backyardbrave.supporter"):
 		draw_arc(portrait_center,54,0.2,PI-0.2,32,Color("c39446"),3,true)
 	var name_size=28
 	while name_size>16 and heading_font.get_string_size(scout_name,HORIZONTAL_ALIGNMENT_LEFT,-1,name_size).x>350:

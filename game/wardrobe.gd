@@ -64,7 +64,7 @@ func write_config(save: ConfigFile) -> void:
  save.set_value("wardrobe","honey_garden",honey_garden)
 
 func has_honey_garden() -> bool:
- return honey_garden and host.commerce.owns("com.xevapps.backyardbrave.supporter")
+ return honey_garden and host.commerce.owns("com.kampdev.backyardbrave.supporter")
 
 func entries() -> Array:
  return catalog.skins.filter(func(entry): return entry.character==tab)
@@ -77,7 +77,7 @@ func open(character: int) -> void:
 
 func activate() -> void:
  if tab==2:
-  var product="com.xevapps.backyardbrave.supporter"
+  var product="com.kampdev.backyardbrave.supporter"
   if host.commerce.owns(product):
    honey_garden=not honey_garden
    if not host.save_progress():
@@ -133,7 +133,7 @@ func paint() -> void:
  host.story_panel(Rect2(40,250,640,850))
  host.center_text(315,"GARDEN WARDROBE",32,host.JOURNAL_INK)
  for i in range(3): host.draw_garden_button(Rect2(80+i*190,345,180,64),["SCOUT","POPPY","FRIENDS"][i],tab==i,22)
- var product="com.xevapps.backyardbrave.supporter"
+ var product="com.kampdev.backyardbrave.supporter"
  var label=""
  var enabled=true
  if tab==2:
